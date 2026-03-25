@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}User Profile: {{ user.name }} – Admin Hub{% endblock %}
+{% block page_title %}User Profile Details{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline btn-sm">
+      <i class="fas fa-arrow-left"></i> Back to Users
+    </a>
+    <div class="action-buttons">
+      {% if user.status == 'active' %}
+      <form method="POST" action="{{ url_for('admin.suspend_user', user_id=user.id) }}" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-warning btn-sm">Suspend Account</button>
+      </form>
+      {% else %}
+      <form method="POST" action="{{ url_for('admin.reactivate_user', user_id=user.id) }}" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-success btn-sm">Reactivate Account</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Profile Card -->
+    <div class="col-md-4">
+      <div class="card text-center mb-4">
+        <div class="card-body py-5">
+          <img src="{{ user.profile_picture or url_for('static', filename='img/default_avatar.png') }}" 
+               class="rounded-circle mb-3" width="120" height="120" style="object-fit:cover; border: 4px solid var(--border);">
+          <h2 class="mb-1">{{ user.name }}</h2>
+          <p class="text-muted mb-3">{{ user.email }}</p>
+          <div class="role-badge mb-3">
+             {% if user.role == 'super_admin' %}
+               <span class="badge bg-purple">Super Admin</span>
+             {% elif user.role == 'admin' %}
+               <span class="badge bg-indigo">Admin</span>
+             {% else %}
+               <span class="badge bg-secondary">User</span>
+             {% endif %}
+          </div>
+          <p class="small-text">Member since {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Academic Info</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-item mb-3">
+            <label class="text-muted small d-block">Department</label>
+            <strong>{{ user.department or "Not set" }}</strong>
+          </div>
+          <div class="info-item mb-3">
+            <label class="text-muted small d-block">Academic Field</label>
+            <strong>{{ user.academic_field or "Not set" }}</strong>
+          </div>
+          <div class="info-item mb-3">
+            <label class="text-muted small d-block">Cumulative GPA</label>
+            <strong class="text-primary">{{ "%.2f"|format(user.gpa) if user.gpa else "0.00" }}</strong>
+          </div>
+          <div class="info-item">
+            <label class="text-muted small d-block">Status</label>
+            {% if user.status == 'active' %}
+              <span class="text-success">● Active</span>
+            {% else %}
+              <span class="text-danger">● Suspended</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats & Activity -->
+    <div class="col-md-8">
+      <div class="stats-grid mb-4" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-card">
+          <div class="stat-value">{{ recommendations|length }}</div>
+          <div class="stat-label">Recommendations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ complaints|length }}</div>
+          <div class="stat-label">Complaints</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ user.interests|length if user.interests else 0 }}</div>
+          <div class="stat-label">Interests</div>
+        </div>
+      </div>
+
+      <!-- Tabbed Activity -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Recent Activity</h3>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for comp in complaints[:5] %}
+                <tr>
+                  <td><span class="badge bg-warning">Complaint</span></td>
+                  <td>{{ comp.subject }}</td>
+                  <td class="small-text">{{ comp.created_at.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+                {% for rec in recommendations[:5] %}
+                <tr>
+                  <td><span class="badge bg-info">Rec</span></td>
+                  <td>Course ID: {{ rec.course_id }} (Score: {{ "%.2f"|format(rec.score) }})</td>
+                  <td class="small-text">{{ rec.created_at.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+                {% if not complaints and not recommendations %}
+                <tr><td colspan="3" class="text-center py-5">No recent activity detected.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

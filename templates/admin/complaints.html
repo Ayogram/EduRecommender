@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Complaints – Admin – EduRecommender{% endblock %}
+{% block page_title %}Complaint Management{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <p style="color:var(--text-secondary);margin-bottom:24px;">Review and respond to user complaints and messages.</p>
+
+  {% if complaints|length > 0 %}
+    {% for c in complaints %}
+    <div class="complaint-card fade-in" style="animation-delay:{{ loop.index0 * 0.06 }}s">
+      <div class="complaint-header">
+        <div>
+          <div class="complaint-subject">{{ c.subject }}</div>
+          <span style="font-size:0.8rem;color:var(--text-muted);">From: {{ c.user_name }} ({{ c.user_email }})</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge badge-{{ c.status }}">{{ c.status }}</span>
+          <span class="complaint-date">{{ c.created_at }}</span>
+        </div>
+      </div>
+
+      <div class="complaint-body">{{ c.message }}</div>
+
+      {% if c.admin_response %}
+      <div class="complaint-response">
+        <strong>Your Response:</strong><br>
+        {{ c.admin_response }}
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">Resolved: {{ c.resolved_at }}</div>
+      </div>
+      {% else %}
+      <form method="POST" action="{{ url_for('admin.respond_complaint', complaint_id=c.id) }}" style="margin-top:12px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group" style="margin-bottom:12px;">
+          <textarea name="response" class="form-control" placeholder="Type your response..." required style="min-height:80px;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Response & Resolve
+        </button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <h3>No complaints</h3>
+      <p>All clear! No pending complaints to review.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

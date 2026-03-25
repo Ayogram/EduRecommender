@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Recommendations – EduRecommender{% endblock %}
+{% block page_title %}AI Recommendations{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <!-- Evaluation Metrics -->
+  {% if metrics %}
+  <div class="metrics-bar">
+    <div class="metric-item">
+      <div class="metric-value">{{ "%.0f"|format(metrics.precision * 100) }}%</div>
+      <div class="metric-label">Precision</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">{{ "%.0f"|format(metrics.recall * 100) }}%</div>
+      <div class="metric-label">Recall</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">{{ "%.0f"|format(metrics.f1 * 100) }}%</div>
+      <div class="metric-label">F1 Score</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">{{ recommendations|length }}</div>
+      <div class="metric-label">Courses Found</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recommendation Cards -->
+  {% if recommendations|length > 0 %}
+  <div class="rec-grid">
+    {% for rec in recommendations %}
+    <div class="rec-card fade-in shadow-sm hover-shadow transition-all" style="animation-delay:{{ loop.index0 * 0.08 }}s; cursor: pointer; border-radius: 20px; border-left: 6px solid var(--accent) !important; background: var(--bg-card); display: flex; flex-direction: column; overflow: hidden;" onclick="window.location.href='{{ url_for('recommendations.course_details', course_id=rec.id) }}'">
+      <div class="p-4" style="flex-grow: 1; display: flex; flex-direction: column;">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="badge rounded-pill bg-primary text-white px-3 py-1 shadow-sm" style="font-size: 0.8rem; font-weight: 700;">
+            <i class="fas fa-robot me-1"></i> {{ (rec.score * 100)|round|int }}% MATCH
+          </div>
+          <span class="badge bg-light text-secondary border px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
+             {{ rec.difficulty|upper }}
+          </span>
+        </div>
+
+        <h3 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 1.4rem; line-height: 1.2;">
+          {{ rec.title }}
+        </h3>
+
+        <div class="d-flex align-items-center mb-3">
+          <div class="success-prediction me-3">
+            <span class="text-muted extra-small d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;">Success Potential</span>
+            {% if rec.score >= 0.8 %}
+              <span class="fw-bold text-success" style="font-size: 0.9rem;"><i class="fas fa-arrow-trend-up me-1"></i> Very High</span>
+            {% elif rec.score >= 0.6 %}
+              <span class="fw-bold text-info" style="font-size: 0.9rem;"><i class="fas fa-arrow-trend-up me-1"></i> High</span>
+            {% else %}
+              <span class="fw-bold text-primary" style="font-size: 0.9rem;"><i class="fas fa-arrow-trend-up me-1"></i> Moderate</span>
+            {% endif %}
+          </div>
+          <div class="vr mx-2" style="height: 30px; opacity: 0.1;"></div>
+          <div class="difficulty-level ms-2">
+            <span class="text-muted extra-small d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;">Difficulty</span>
+            <span class="fw-bold text-dark" style="font-size: 0.9rem;">{{ rec.difficulty|capitalize }}</span>
+          </div>
+        </div>
+
+        <div class="rec-meta d-flex gap-2 flex-wrap mb-3">
+          <span class="badge bg-soft-primary text-primary px-2 py-1"><i class="fas fa-university me-1"></i> {{ rec.department or rec.category }}</span>
+          <span class="badge bg-light text-muted border px-2 py-1"><i class="fas fa-clock me-1"></i> {{ rec.credits }} Units</span>
+        </div>
+
+        <div class="rec-explanation p-3 rounded-4 mb-3" style="background: rgba(108, 99, 255, 0.08); border: 1px dashed var(--accent); position: relative;">
+          <div class="small fw-bold text-primary mb-2" style="letter-spacing: 0.5px;">
+            <i class="fas fa-comment-dots me-1"></i> AI INSIGHT
+          </div>
+          <p class="mb-0 text-dark fw-medium" style="font-size: 0.95rem; line-height: 1.5; font-style: italic;">
+            "{{ rec.explanation or 'This course aligns perfectly with your academic background and expressed interests.' }}"
+          </p>
+        </div>
+
+        <p class="text-muted small mb-3">{{ rec.description[:120] }}...</p>
+
+        <div class="rec-tags mt-auto pt-2">
+          {% if rec.tags %}
+            {% for tag in (rec.tags if rec.tags is iterable else [])[:3] %}
+              <span class="badge bg-white text-muted border me-1 fw-normal">#{{ tag }}</span>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card-footer bg-white border-top-0 p-4 pt-0">
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('recommendations.course_details', course_id=rec.id) }}" class="btn btn-primary fw-bold">
+              Research Course <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+            <form method="POST" action="{{ url_for('recommendations.enroll', course_id=rec.id) }}" onclick="event.stopPropagation();">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                Quick Enroll
+              </button>
+            </form>
+        </div>
+      </div>
+
+      <div class="score-bar-container" style="height: 6px;">
+        <div class="score-bar-bg" style="height: 100%; width: 100%; background: #eee;">
+          <div class="score-bar-fill" style="height: 100%; width:{{ rec.score * 100 }}%; background: var(--accent);"></div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    <h3>No recommendations available</h3>
+    <p>Enroll in some courses and rate them to get personalised AI recommendations.</p>
+    <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary">Browse Courses</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

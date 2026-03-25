@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Invite Administrator – EduRecommender Hub{% endblock %}
+
+{% block content %}
+<div class="admin-view">
+  <div class="container py-5">
+    <div class="admin-hero">
+      <div class="admin-hero-content">
+        <span class="admin-badge-large">Super Admin Privileges</span>
+        <h1>Invite New Administrator</h1>
+        <p>Grant administrative access to trusted system managers.</p>
+      </div>
+      <div class="admin-hero-icon">
+        <i class="fas fa-user-shield"></i>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card fade-in">
+          <div class="card-header">
+            <h3 class="card-title">Invitation Details</h3>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-4">
+              Enter the email address of the user you want to promote to Admin status. 
+              If the user already exists, their role will be updated. If not, a new account will be prepared.
+            </p>
+            
+            <form method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              
+              <div class="form-group mb-4">
+                <label for="email" class="form-label">Administrator Email</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-envelope"></i>
+                  <input type="email" id="email" name="email" class="form-control" 
+                         placeholder="colleague@university.edu" required autofocus>
+                </div>
+              </div>
+
+              <div class="alert alert-warning small-text mb-4">
+                <i class="fas fa-info-circle"></i> Administrators can manage users and respond to complaints, but they cannot invite other admins.
+              </div>
+
+              <div class="action-buttons" style="justify-content: space-between;">
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                  <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-paper-plane"></i> Send Admin Access
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

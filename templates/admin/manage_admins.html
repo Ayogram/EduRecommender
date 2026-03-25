@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Manage Administrators – EduRecommender Admin{% endblock %}
+{% block page_title %}Administrator Control{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="admin-hero" style="background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);">
+    <div class="admin-hero-content">
+      <span class="admin-badge-large">Super Admin Controls</span>
+      <h1>Administrator Hub</h1>
+      <p>Manage permissions and roles for your administration team.</p>
+    </div>
+    <div class="admin-hero-icon">
+       <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+  </div>
+
+  <div class="mb-4 d-flex justify-content-between align-items-center">
+    <h3>Active Administrators</h3>
+    <a href="{{ url_for('admin.invite_admin') }}" class="btn btn-primary">
+      <i class="fas fa-plus-circle"></i> Invite New Admin
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Name & Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Last Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for admin in admins %}
+          <tr>
+            <td>
+              <div class="user-info-cell">
+                <strong>{{ admin.name }}</strong>
+                <span class="user-email">{{ admin.email }}</span>
+              </div>
+            </td>
+            <td>
+              {% if admin.is_super_admin %}
+                <span class="badge bg-purple">Super Admin</span>
+              {% else %}
+                <span class="badge bg-indigo">Admin</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if admin.status == 'active' %}
+                <span class="status-badge status-active">Active</span>
+              {% else %}
+                <span class="status-badge status-suspended">Suspended</span>
+              {% endif %}
+            </td>
+            <td class="small-text">{{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at else 'N/A' }}</td>
+            <td>
+              {% if current_user.is_super_admin and not admin.is_super_admin %}
+              <div class="action-buttons">
+                {% if admin.status == 'active' %}
+                <form method="POST" action="{{ url_for('admin.suspend_user', user_id=admin.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-warning btn-sm">Suspend</button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('admin.reactivate_user', user_id=admin.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('admin.delete_user', user_id=admin.id) }}" style="display:inline;">
+                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                   <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Kill admin access for {{ admin.name }}?')">Revoke Access</button>
+                </form>
+              </div>
+              {% else %}
+                <span class="text-muted small">N/A</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

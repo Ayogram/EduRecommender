@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – EduRecommender{% endblock %}
+{% block page_title %}Overview{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <!-- Greeting Banner -->
+  <div class="card mb-4" style="background:linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border:none; border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 10px 20px rgba(108, 99, 255, 0.2);">
+    <div style="position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.15); border-radius: 50%;"></div>
+    <div class="card-body p-4 p-md-5" style="position: relative; z-index: 1;">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h2 class="display-6 fw-bold mb-2">
+            {% set hour = now.hour if now is defined else 12 %}
+            Good {{ "Morning" if hour < 12 else ("Afternoon" if hour < 17 else "Evening") }}, {{ current_user.name.split()[0] }}!
+            <span class="greeting-icon" style="display:inline-block;margin-left:8px;vertical-align:middle; animation: wave 2s infinite;">👋</span>
+          </h2>
+          <p class="lead mb-4 opacity-90">
+            {% if enrolled_courses|length > 0 %}
+              You're currently taking <strong>{{ enrolled_courses|length }}</strong> courses. 
+              {% if recent_recs|length > 0 %}We've found <strong>{{ recent_recs|length }}</strong> new opportunities for you today!{% endif %}
+            {% else %}
+              Ready to start your academic journey? Let's find your first course.
+            {% endif %}
+          </p>
+          <div class="d-flex gap-3 flex-wrap">
+            <a href="{{ url_for('recommendations.recommend') }}" class="btn btn-light btn-lg px-4 shadow-sm fw-bold" style="color: var(--primary);">
+              <i class="fas fa-magic me-2"></i> Get Recommendations
+            </a>
+            <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-outline-light btn-lg px-4" style="backdrop-filter: blur(5px);">
+              <i class="fas fa-search me-2"></i> Browse Courses
+            </a>
+          </div>
+        </div>
+        <div class="col-md-4 d-none d-md-block text-center">
+          <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 25px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.3);">
+            <div class="text-white small mb-1 opacity-75">Academic Standing</div>
+            <div class="h2 fw-bold mb-0">{{ "%.2f"|format(current_user.gpa or 0.0) }}</div>
+            <div class="small fw-semibold">Current CGPA</div>
+            <hr class="my-3 opacity-25">
+            <div class="small opacity-90">{{ current_user.department or 'General' }} Student</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-grid mb-4">
+    <div class="stat-card shadow-sm border-0">
+      <div class="stat-value text-primary">{{ enrolled_courses|length }}</div>
+      <div class="stat-label">Enrolled</div>
+    </div>
+    <div class="stat-card shadow-sm border-0">
+      <div class="stat-value text-success">{{ enrolled_courses|selectattr('completed')|list|length }}</div>
+      <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card shadow-sm border-0">
+      <div class="stat-value text-warning">{{ recent_recs|length }}</div>
+      <div class="stat-label">AI Suggestions</div>
+    </div>
+    <div class="stat-card shadow-sm border-0">
+      <div class="stat-value text-info">
+        {% set rated_courses = enrolled_courses|selectattr('rating', 'gt', 0)|list %}
+        {% if rated_courses|length > 0 %}
+          {{ "%.1f"|format(rated_courses|map(attribute='rating')|list|sum / rated_courses|length) }}
+        {% else %}0.0{% endif %}
+      </div>
+      <div class="stat-label">Your Avg. Rating</div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Enrolled Courses -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+          <h5 class="mb-0 fw-bold">
+            <i class="fas fa-book-reader text-primary me-2"></i> Current Enrolled Courses
+          </h5>
+          <span class="badge bg-light text-dark">{{ enrolled_courses|length }} Total</span>
+        </div>
+        <div class="card-body p-0">
+          {% if enrolled_courses|length > 0 %}
+            <div class="list-group list-group-flush">
+              {% for course in enrolled_courses[:5] %}
+              <div class="list-group-item p-4 border-0 border-bottom-dashed">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h6 class="fw-bold mb-1">{{ course.title }}</h6>
+                    <div class="d-flex gap-2 mb-2">
+                      <span class="badge bg-soft-{{ course.difficulty }}">{{ course.difficulty|capitalize }}</span>
+                      <span class="badge bg-light text-muted">{{ course.category }}</span>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    {% if course.completed %}
+                      <span class="badge bg-success py-2 px-3 rounded-pill">
+                        <i class="fas fa-check-circle me-1"></i> Completed
+                      </span>
+                    {% else %}
+                      <span class="badge bg-primary py-2 px-3 rounded-pill">
+                        <i class="fas fa-spinner fa-spin me-1"></i> In Progress
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+                
+                {% if not course.rating or course.rating == 0 %}
+                <div class="alert alert-warning border-0 p-2 d-flex align-items-center justify-content-between shadow-sm" style="border-radius: 12px; font-size: 0.85rem;">
+                  <span><i class="fas fa-star text-warning me-2"></i> You haven't rated this course yet!</span>
+                  <a href="{{ url_for('recommendations.course_details', course_id=course.id) }}" class="btn btn-warning btn-sm p-1 px-3 fw-bold" style="font-size: 0.75rem;">Rate Now</a>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between align-items-center mt-2 small text-muted">
+                  <span>Enrolled on {{ course.enrolled_at.strftime('%b %d, %Y') if course.enrolled_at else 'Recent' }}</span>
+                  <span><i class="fas fa-clock me-1"></i> {{ course.credits }} Credits</span>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% if enrolled_courses|length > 5 %}
+            <div class="card-footer bg-white border-0 text-center py-3">
+              <a href="#" class="text-decoration-none small fw-bold">View and manage all enrolled courses <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+            {% endif %}
+          {% else %}
+            <div class="p-5 text-center">
+              <div class="display-4 text-muted mb-3 opacity-20"><i class="fas fa-graduation-cap"></i></div>
+              <h5 class="text-muted">No courses enrolled yet</h5>
+              <p class="small text-muted mb-4">Start your journey by enrolling in some recommendations!</p>
+              <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary rounded-pill px-4">Browse Catalog</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+          <h5 class="mb-0 fw-bold">
+            <i class="fas fa-star text-warning me-2"></i> AI Top Picks for You
+          </h5>
+          <a href="{{ url_for('recommendations.recommend') }}" class="text-decoration-none small fw-bold">View All</a>
+        </div>
+        <div class="card-body p-4">
+          {% if recent_recs|length > 0 %}
+            <div class="row g-3">
+              {% for rec in recent_recs[:4] %}
+              <div class="col-12">
+                <a href="{{ url_for('recommendations.course_details', course_id=rec.id) }}" class="text-decoration-none">
+                  <div class="p-3 rounded-4 border hover-shadow-sm transition-all rec-item-card" style="background: var(--bg-input); border-left: 4px solid var(--accent) !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <h6 class="fw-bold mb-0 text-truncate" style="max-width: 80%; color: var(--text-primary); font-size: 1rem;">{{ rec.title }}</h6>
+                      <span class="badge rounded-pill bg-primary text-white px-2 py-1" style="font-size: 0.7rem;">
+                        {{ (rec.score * 100)|round|int }}% Match
+                      </span>
+                    </div>
+                    <div class="d-flex gap-3 mb-2">
+                      <span class="small text-secondary fw-medium"><i class="fas fa-tag me-1 text-primary"></i> {{ rec.category }}</span>
+                      <span class="small text-secondary fw-medium"><i class="fas fa-chart-line me-1 text-primary"></i> {{ rec.difficulty|capitalize }}</span>
+                    </div>
+                    <div class="rec-reason small py-1 px-2 rounded-2 mt-1" style="background: rgba(108, 99, 255, 0.05); color: var(--text-secondary); border-left: 2px solid var(--accent);">
+                      <i class="fas fa-info-circle me-1" style="font-size: 0.75rem;"></i> 
+                      <em style="font-size: 0.8rem;">{{ rec.explanation or "Curated for your profile" }}</em>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="mt-4 p-4 rounded-4 bg-light text-center border-dashed">
+              <h6 class="fw-bold mb-2">Want more specifics?</h6>
+              <p class="small text-muted mb-3">Updating your interests helps our AI refine these suggestions even further.</p>
+              <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Update Interests</a>
+            </div>
+          {% else %}
+            <div class="empty-state p-4 text-center">
+              <div class="mb-3 text-warning opacity-50"><i class="fas fa-brain fa-3x"></i></div>
+              <p class="small text-muted mb-4">We need a bit more info to calculate your perfect matches.</p>
+              <a href="{{ url_for('recommendations.recommend') }}" class="btn btn-primary btn-sm rounded-pill px-4">Calibrate AI</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Animate stat values
+  document.querySelectorAll('.stat-value').forEach(el => {
+    const target = parseFloat(el.textContent);
+    if (isNaN(target)) return;
+    let current = 0;
+    const step = target / 30;
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = Number.isInteger(target) ? Math.round(current) : current.toFixed(1);
+    }, 20);
+  });
+</script>
+{% endblock %}

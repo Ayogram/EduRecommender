@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}My Messages – EduRecommender{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <p style="color:var(--text-secondary);">Your complaints and messages to the admin team.</p>
+    <a href="{{ url_for('complaints.submit_complaint') }}" class="btn btn-primary btn-sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Message
+    </a>
+  </div>
+
+  {% if complaints|length > 0 %}
+    {% for c in complaints %}
+    <div class="complaint-card fade-in" style="animation-delay:{{ loop.index0 * 0.06 }}s">
+      <div class="complaint-header">
+        <div class="complaint-subject">{{ c.subject }}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge badge-{{ c.status }}">{{ c.status }}</span>
+          <span class="complaint-date">{{ c.created_at }}</span>
+        </div>
+      </div>
+      <div class="complaint-body">{{ c.message }}</div>
+      {% if c.admin_response %}
+      <div class="complaint-response">
+        <strong>Admin Response:</strong><br>
+        {{ c.admin_response }}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <h3>No messages yet</h3>
+      <p>Have a question or concern? Send us a message.</p>
+      <a href="{{ url_for('complaints.submit_complaint') }}" class="btn btn-primary btn-sm">Send Message</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

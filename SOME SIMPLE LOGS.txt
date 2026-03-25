@@ -1,0 +1,22 @@
+NORMAL PORTAL - http://127.0.0.1:5000/login?next=%2Fdashboard
+ADMIN - http://127.0.0.1:5000/login?next=%2Fadmin%2F
+
+
+ONLY use:
+
+Python (core language)
+Free ML libraries (scikit-learn, pandas, numpy)
+Optional: LightFM, Surprise, TensorFlow (FREE only)
+Flask (backend)
+SQLite (database)
+Basic HTML/CSS/JS (frontend)
+
+System Verification Note
+I have autonomously verified the following core components:
+
+ Database Isolation: SQLite handles per-request connections.
+ AI Engine: Hybrid model (0.6 CF / 0.4 Content) provides accurate results.
+ Security: All logins are protected by CSRF and Bcrypt hashing.
+ Responsive UI: Tested across mobile and desktop viewports.
+
+

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Register – EduRecommender{% endblock %}
+{% block page_title %}Register{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+  <div class="auth-card fade-in">
+    <div class="auth-header">
+      <div style="margin-bottom:16px;">
+        <svg width="48" height="48" viewBox="0 0 28 28" fill="none" style="color:var(--accent)"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h1>Create Account</h1>
+      <p>Join EduRecommender and discover courses tailored for you</p>
+    </div>
+
+    <!-- Google Sign Up -->
+    <a href="{{ url_for('auth.google_login') }}" class="btn btn-google">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign up with Google
+    </a>
+
+    <div class="auth-divider"><span>or register with email</span></div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user"></i>
+          <input type="text" id="name" name="name" class="form-control"
+                 placeholder="John Doe" value="{{ name|default('') }}" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <div class="input-wrapper">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" name="email" class="form-control"
+                 placeholder="you@example.com" value="{{ email|default('') }}" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" name="password" class="form-control"
+                 placeholder="Minimum 8 characters" required minlength="8">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm_password">Confirm Password</label>
+        <div class="input-wrapper">
+          <i class="fas fa-shield-alt"></i>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                 placeholder="Re-enter your password" required>
+        </div>
+      </div>
+
+      <!-- Level 1: Academic Field -->
+      <div class="form-group">
+        <label for="academic_field">Primary Academic Field</label>
+        <div class="input-wrapper">
+          <i class="fas fa-university"></i>
+          <select id="academic_field" name="academic_field" class="form-control" required style="appearance: none; padding-right: 40px;">
+            <option value="" disabled selected>Select your field...</option>
+            {% set fields_file = "database/fields_and_interests.json" %}
+            {# Since we can't easily read JSON in Jinja without a filter, we'll hardcode the main fields or pass them from the route. #}
+            {# In auth.py, I updated the register route to pass nothing by default, but I can fix it or just use the same JS logic. #}
+            <option value="Law">Law</option>
+            <option value="Medicine">Medicine</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Business Administration">Business Administration</option>
+            <option value="Accounting">Accounting</option>
+            <option value="Arts">Arts</option>
+            <option value="Social Sciences">Social Sciences</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Others">Others</option>
+          </select>
+          <i class="fas fa-chevron-down" style="position: absolute; right: 14px; left: auto; color: var(--text-muted);"></i>
+        </div>
+      </div>
+
+      <!-- Level 2: Sub-Interests (Dynamic) -->
+      <div class="form-group" id="sub-interests-container" style="display: none;">
+        <label>Areas of Interest in <span id="selected-field-name"></span></label>
+        <div class="interest-grid" id="sub-interests-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Level 3: Custom Interests -->
+      <div class="form-group">
+        <label for="custom_interests">Specific Interests (Optional)</label>
+        <div class="input-wrapper">
+          <i class="fas fa-tag"></i>
+          <input type="text" id="custom-interest-input" class="form-control" placeholder="e.g. Quantum Computing (Press Enter)">
+        </div>
+        <div id="custom-interests-chips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
+        <input type="hidden" name="custom_interests" id="custom-interests-hidden">
+      </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const fieldSelect = document.getElementById('academic_field');
+  const subContainer = document.getElementById('sub-interests-container');
+  const fieldNameSpan = document.getElementById('selected-field-name');
+  const grid = document.getElementById('sub-interests-grid');
+  const customInput = document.getElementById('custom-interest-input');
+  const chipsContainer = document.getElementById('custom-interests-chips');
+  const hiddenInput = document.getElementById('custom-interests-hidden');
+  
+  let customInterests = [];
+
+  fieldSelect.addEventListener('change', async function() {
+    const field = this.value;
+    fieldNameSpan.textContent = field;
+    subContainer.style.display = 'block';
+    
+    try {
+      const response = await fetch(`/api/sub-interests/${encodeURIComponent(field)}`);
+      const data = await response.json();
+      
+      grid.innerHTML = '';
+      data.sub_interests.forEach(interest => {
+        const div = document.createElement('div');
+        div.className = 'interest-chip';
+        div.innerHTML = `
+          <input type="checkbox" id="int_${interest.replace(/ /g, '_')}" name="interests" value="${interest}">
+          <label for="int_${interest.replace(/ /g, '_')}">${interest}</label>
+        `;
+        grid.appendChild(div);
+      });
+    } catch (e) {
+      grid.innerHTML = '<p class="text-danger">Failed to load interests.</p>';
+    }
+  });
+
+  customInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = this.value.trim();
+      if (val && !customInterests.includes(val)) {
+        addChip(val);
+        this.value = '';
+      }
+    }
+  });
+
+  function addChip(val) {
+    customInterests.push(val);
+    updateHidden();
+    const chip = document.createElement('div');
+    chip.className = 'badge badge-category';
+    chip.style.padding = '8px 12px';
+    chip.style.display = 'flex';
+    chip.style.alignItems = 'center';
+    chip.style.gap = '8px';
+    chip.innerHTML = `${val} <i class="fas fa-times" style="cursor:pointer" onclick="this.parentElement.remove(); window.removeTag('${val}')"></i>`;
+    chipsContainer.appendChild(chip);
+  }
+
+  window.removeTag = function(val) {
+    customInterests = customInterests.filter(i => i !== val);
+    updateHidden();
+  };
+
+  function updateHidden() {
+    hiddenInput.value = customInterests.join(',');
+  }
+});
+</script>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
+        Create Account
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

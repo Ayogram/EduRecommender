@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}My Profile – EduRecommender{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="row">
+    <!-- Profile Card (Left) -->
+    <div class="col-md-4">
+      <div class="card text-center mb-4 sticky-top" style="top: 20px; z-index: 10;">
+        <div class="card-body py-5">
+          <div class="profile-image-container mb-3 position-relative d-inline-block" onclick="document.getElementById('avatar-input').click();">
+            {% if current_user.profile_picture and current_user.profile_picture.strip() %}
+              <img src="{{ current_user.profile_picture }}" id="avatar-preview"
+                   class="rounded-circle shadow-sm" width="150" height="150" style="object-fit:cover; border: 5px solid var(--border); transition: 0.3s;">
+            {% else %}
+              <div id="avatar-initials" class="avatar-initials-circle shadow-sm">
+                {% set name_parts = current_user.name.replace('(', '').replace(')', '').split() %}
+                {{ name_parts[0][0]|upper if name_parts|length > 0 else 'U' }}{{ name_parts[1][0]|upper if name_parts|length > 1 else '' }}
+              </div>
+            {% endif %}
+            <label for="avatar-input" class="avatar-edit-btn" title="Change Avatar">
+              <i class="fas fa-camera"></i>
+            </label>
+            <div class="avatar-overlay">
+              <span>Change Photo</span>
+            </div>
+          </div>
+          <h2 class="mb-1">{{ current_user.name }}</h2>
+          <p class="text-muted mb-4">{{ current_user.nickname or "@" + current_user.name.split(' ')[0]|lower }}</p>
+          
+          <div class="academic-standing p-3 rounded mb-4" style="background: rgba(var(--primary-rgb), 0.05); border-left: 4px solid var(--primary);">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted small">Department:</span>
+              <span class="fw-bold">{{ current_user.department or 'Not Set' }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted small">Current CGPA:</span>
+              <span class="badge {% if current_user.gpa >= 4.5 %}bg-success{% elif current_user.gpa >= 3.5 %}bg-primary{% else %}bg-warning{% endif %}">
+                {{ "%.2f"|format(current_user.gpa or 0.0) }} / 5.0
+              </span>
+            </div>
+          </div>
+
+          <div class="text-start">
+            <div class="info-item mb-2">
+              <span class="text-muted small">Email:</span> <br><strong>{{ current_user.email }}</strong>
+            </div>
+            <div class="info-item">
+              <span class="text-muted small">Member since:</span> <br><strong>{{ current_user.created_at.strftime('%Y-%B %d') if current_user.created_at else 'N/A' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Form (Right) -->
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Edit Profile</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data" id="profile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Hidden File Input -->
+            <input type="file" name="avatar" id="avatar-input" hidden accept="image/*">
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nickname</label>
+                <input type="text" name="nickname" class="form-control" value="{{ current_user.nickname or '' }}" placeholder="Enter a cool nickname">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Department</label>
+                <input type="text" name="department" class="form-control" value="{{ current_user.department or '' }}" placeholder="e.g. Computer Science">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Main Academic Field</label>
+                <select name="academic_field" class="form-control" id="field-select">
+                  <option value="">Select Field...</option>
+                  {% for field in fields_map.keys() %}
+                    <option value="{{ field }}" {% if current_user.academic_field == field %}selected{% endif %}>{{ field }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Cumulative GPA (4.0 or 5.0 scale)</label>
+              <input type="number" name="gpa" class="form-control" value="{{ current_user.gpa or 0.0 }}" step="0.01" min="0" max="5.0" placeholder="e.g. 3.85">
+              <div class="form-text small">Your CGPA helps us recommend courses that match your academic performance level.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Interests & Focused Topics</label>
+              <div id="interests-container" class="interests-flex mb-3">
+                {% if current_user.interests %}
+                  {% for interest in current_user.interests %}
+                    <div class="interest-tag">
+                      <input type="checkbox" name="interests" value="{{ interest }}" checked id="int-{{ loop.index }}">
+                      <label for="int-{{ loop.index }}">{{ interest }} <i class="fas fa-times ms-2"></i></label>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="text-muted small">No interests added yet. Add some below!</p>
+                {% endif %}
+              </div>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-plus"></i></span>
+                <input type="text" name="custom_interests" class="form-control" placeholder="Add more topics (e.g. Artificial Intelligence, Cryptography)...">
+              </div>
+              <div class="form-text small">Separate multiple interests with commas.</div>
+            </div>
+
+            <hr class="my-4">
+            
+            <div class="mb-3">
+              <label class="form-label">Change Password (leave blank to keep current)</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" name="password" class="form-control" placeholder="New Password (min 8 chars)">
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary px-5 py-2 fw-bold">
+                <i class="fas fa-save me-2"></i> Update Profile
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.profile-image-container {
+  cursor: pointer;
+  z-index: 5;
+}
+.avatar-initials-circle {
+  width: 150px;
+  height: 150px;
+  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: 700;
+  border-radius: 50%;
+  border: 5px solid var(--border);
+  transition: 0.3s;
+}
+.profile-image-container:hover .avatar-initials-circle,
+.profile-image-container:hover #avatar-preview {
+  filter: brightness(0.7);
+}
+.avatar-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 600;
+  opacity: 0;
+  transition: 0.3s;
+  pointer-events: none;
+}
+.profile-image-container:hover .avatar-overlay {
+  opacity: 1;
+}
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: var(--primary);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 3px solid var(--surface);
+  transition: transform 0.2s, background 0.2s;
+  z-index: 10;
+}
+.avatar-edit-btn:hover {
+  transform: scale(1.1);
+  background: var(--secondary);
+}
+.interest-tag {
+  display: inline-block;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+.interest-tag input {
+  display: none;
+}
+.interest-tag label {
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+  padding: 8px 16px;
+  border-radius: 30px;
+  cursor: pointer;
+  border: 1px solid rgba(var(--primary-rgb), 0.3);
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  user-select: none;
+}
+.interest-tag input:checked + label {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 6px rgba(var(--primary-rgb), 0.2);
+}
+.interest-tag label i {
+  font-size: 0.7rem;
+}
+</style>
+
+<script>
+// Preview avatar upload
+document.getElementById('avatar-input').onchange = function(event) {
+    if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            let preview = document.getElementById('avatar-preview');
+            let initials = document.getElementById('avatar-initials');
+            
+            if (!preview) {
+                // If initials circle was showing, replace it with an img
+                const container = document.querySelector('.profile-image-container');
+                preview = document.createElement('img');
+                preview.id = 'avatar-preview';
+                preview.className = 'rounded-circle shadow-sm';
+                preview.width = 150;
+                preview.height = 150;
+                preview.style.objectFit = 'cover';
+                preview.style.border = '5px solid var(--border)';
+                
+                if (initials) {
+                    container.replaceChild(preview, initials);
+                }
+            }
+            
+            preview.src = e.target.result;
+            
+            // Show toast or info
+            showNotification("Image selected! Don't forget to click 'Update Profile' to save.", "info");
+        }
+        
+        reader.readAsDataURL(file);
+    }
+};
+
+function showNotification(msg, type) {
+    // Check if toast container exists
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.position = 'fixed';
+        container.style.bottom = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} fade show shadow`;
+    toast.innerHTML = msg;
+    toast.style.minWidth = '250px';
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
+</script>
+{% endblock %}

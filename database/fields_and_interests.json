@@ -1,0 +1,11 @@
+{
+  "Law": ["Criminal Law", "Corporate Law", "International Law", "Human Rights", "Constitutional Law", "Environmental Law", "IP Law"],
+  "Medicine": ["Surgery", "Pediatrics", "Pharmacology", "Anatomy", "Neurology", "Psychiatry", "Public Health", "Genetics"],
+  "Engineering": ["Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Aerospace Engineering", "Chemical Engineering", "Robotics"],
+  "Business Administration": ["Management", "Marketing", "Entrepreneurship", "Human Resources", "Supply Chain", "Business Ethics"],
+  "Accounting": ["Financial Accounting", "Audit", "Taxation", "Management Accounting", "Forensic Accounting"],
+  "Arts": ["Fine Arts", "Graphic Design", "History of Art", "Music Theory", "Performing Arts", "Literature"],
+  "Social Sciences": ["Psychology", "Sociology", "Political Science", "Economics", "Anthropology", "International Relations"],
+  "Computer Science": ["Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", "Cloud Computing", "Web Development", "Mobile Dev"],
+  "Others": ["Mathematics", "Physics", "Chemistry", "Biology", "Environmental Science", "Architecture", "Education"]
+}

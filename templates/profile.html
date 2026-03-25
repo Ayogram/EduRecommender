@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - EduRecommender{% endblock %}
+
+{% block content %}
+<div class="profile-container container">
+    <div class="dashboard-header">
+        <h1>Profile Settings</h1>
+        <p>Manage your account information and security.</p>
+    </div>
+
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-md-4">
+            <div class="premium-card text-center p-4 h-100">
+                <div class="profile-avatar-large mx-auto mb-3">
+                    <img src="{{ current_user.profile_picture }}" alt="{{ current_user.name }}">
+                </div>
+                <h3>{{ current_user.name }}</h3>
+                <p class="text-muted">{{ current_user.email }}</p>
+                <span class="badge badge-primary">{{ current_user.role | capitalize }}</span>
+            </div>
+        </div>
+
+        <!-- Settings Form -->
+        <div class="col-md-8">
+            <div class="premium-card p-4">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <h4 class="mb-4">Update Account</h4>
+                    
+                    <div class="form-group">
+                        <label for="name">Display Name</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="name" name="name" class="form-control" value="{{ current_user.name }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" class="form-control" value="{{ current_user.email }}" readonly>
+                        </div>
+                        <small class="text-muted">Email cannot be changed for security.</small>
+                    </div>
+
+                    <h4 class="mb-4">Academic Background</h4>
+                    
+                    <div class="form-group">
+                        <label for="academic_field">Primary Academic Field</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-university"></i>
+                            <select id="academic_field" name="academic_field" class="form-control" style="appearance: none; padding-right: 40px;">
+                                <option value="" disabled>Select your field...</option>
+                                {% for field in fields_map.keys() %}
+                                <option value="{{ field }}" {{ 'selected' if current_user.academic_field == field else '' }}>{{ field }}</option>
+                                {% endfor %}
+                            </select>
+                            <i class="fas fa-chevron-down" style="position: absolute; right: 14px; left: auto; color: var(--text-muted);"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="sub-interests-container">
+                        <label>Areas of Interest in <span id="selected-field-name">{{ current_user.academic_field or 'Your Field' }}</span></label>
+                        <div class="interest-grid" id="sub-interests-grid">
+                            {% if current_user.academic_field and fields_map[current_user.academic_field] %}
+                                {% for interest in fields_map[current_user.academic_field] %}
+                                <div class="interest-chip">
+                                    <input type="checkbox" id="int_{{ interest|replace(' ','_') }}" name="interests" value="{{ interest }}" {{ 'checked' if interest in current_user.interests else '' }}>
+                                    <label for="int_{{ interest|replace(' ','_') }}">{{ interest }}</label>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="custom_interests">Additional Specific Interests</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-tag"></i>
+                            <input type="text" id="custom-interest-input" class="form-control" placeholder="Add more interests...">
+                        </div>
+                        <div id="custom-interests-chips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                            {# Pre-populate custom interests that are NOT in the predefined list #}
+                            {% if current_user.academic_field %}
+                                {% for interest in current_user.interests %}
+                                    {% if interest not in fields_map[current_user.academic_field] %}
+                                    <div class="badge badge-category" style="padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
+                                        {{ interest }}
+                                        <i class="fas fa-times" style="cursor:pointer" onclick="this.parentElement.remove(); window.removeTag('{{ interest }}')"></i>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <input type="hidden" name="custom_interests" id="custom-interests-hidden" value="{{ current_user.interests | join(',') }}">
+                    </div>
+
+                    <hr class="my-4">
+                    
+                    <h4 class="mb-4">Change Password</h4>
+                    <p class="text-muted small">Leave blank if you don't want to change it.</p>
+                    
+                    <div class="form-group">
+                        <label for="password">New Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••">
+                        </div>
+                    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fieldSelect = document.getElementById('academic_field');
+    const subContainer = document.getElementById('sub-interests-container');
+    const fieldNameSpan = document.getElementById('selected-field-name');
+    const grid = document.getElementById('sub-interests-grid');
+    const customInput = document.getElementById('custom-interest-input');
+    const chipsContainer = document.getElementById('custom-interests-chips');
+    const hiddenInput = document.getElementById('custom-interests-hidden');
+    
+    let customInterests = hiddenInput.value ? hiddenInput.value.split(',').filter(i => i) : [];
+
+    fieldSelect.addEventListener('change', async function() {
+        const field = this.value;
+        fieldNameSpan.textContent = field;
+        
+        try {
+            const response = await fetch(`/api/sub-interests/${encodeURIComponent(field)}`);
+            const data = await response.json();
+            
+            grid.innerHTML = '';
+            data.sub_interests.forEach(interest => {
+                const isChecked = customInterests.includes(interest);
+                const div = document.createElement('div');
+                div.className = 'interest-chip';
+                div.innerHTML = `
+                    <input type="checkbox" id="int_${interest.replace(/ /g, '_')}" name="interests" value="${interest}" ${isChecked ? 'checked' : ''}>
+                    <label for="int_${interest.replace(/ /g, '_')}">${interest}</label>
+                `;
+                grid.appendChild(div);
+            });
+        } catch (e) {
+            console.error("Failed to load interests", e);
+        }
+    });
+
+    customInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = this.value.trim();
+            if (val && !customInterests.includes(val)) {
+                addChip(val);
+                this.value = '';
+            }
+        }
+    });
+
+    function addChip(val) {
+        if (!customInterests.includes(val)) customInterests.push(val);
+        updateHidden();
+        const chip = document.createElement('div');
+        chip.className = 'badge badge-category';
+        chip.style.padding = '8px 12px';
+        chip.style.display = 'flex';
+        chip.style.alignItems = 'center';
+        chip.style.gap = '8px';
+        chip.innerHTML = `${val} <i class="fas fa-times" style="cursor:pointer" onclick="this.parentElement.remove(); window.removeTag('${val}')"></i>`;
+        chipsContainer.appendChild(chip);
+    }
+
+    window.removeTag = function(val) {
+        customInterests = customInterests.filter(i => i !== val);
+        updateHidden();
+    };
+
+    function updateHidden() {
+        // Collect all checked predefined interests
+        const checkedInterests = Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(i => i.value);
+        const all = [...new Set([...checkedInterests, ...customInterests])];
+        hiddenInput.value = all.join(',');
+    }
+    
+    // Initial sync
+    document.querySelectorAll('input[name="interests"]').forEach(i => {
+        i.addEventListener('change', updateHidden);
+    });
+});
+</script>
+
+                    <button type="submit" class="btn btn-primary mt-3">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--accent);
+}
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+</style>
+{% endblock %}
