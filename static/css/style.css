@@ -16,9 +16,9 @@
   --bg-input:       #f8f9fa;
   --bg-hover:       #e9ecef;
 
-  --text-primary:   #1a1a2e;
-  --text-secondary: #6c757d;
-  --text-muted:     #adb5bd;
+  --text-primary:   #111827; /* Darker for accessibility */
+  --text-secondary: #4b5563; /* Darker for accessibility */
+  --text-muted:     #6b7280; /* Darker for accessibility */
 
   /* Theme Specifics */
   --primary:        #6c63ff;
@@ -1092,7 +1092,7 @@ textarea.form-control {
 }
 
 .admin-hero-content p {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.95); /* Increased contrast */
     font-size: 1rem;
 }
 

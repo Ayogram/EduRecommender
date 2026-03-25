@@ -30,7 +30,7 @@
   {% if recommendations|length > 0 %}
   <div class="rec-grid">
     {% for rec in recommendations %}
-    <div class="rec-card fade-in shadow-sm hover-shadow transition-all" style="animation-delay:{{ loop.index0 * 0.08 }}s; cursor: pointer; border-radius: 20px; border-left: 6px solid var(--accent) !important; background: var(--bg-card); display: flex; flex-direction: column; overflow: hidden;" onclick="window.location.href='{{ url_for('recommendations.course_details', course_id=rec.id) }}'">
+    <div class="rec-card fade-in shadow-sm hover-shadow transition-all" style="animation-delay:{{ loop.index0 * 0.08 }}s; cursor: pointer; border-radius: 20px; border-left: 6px solid var(--accent) !important; background: var(--bg-card); display: flex; flex-direction: column; overflow: hidden;" onclick="window.location.href='{{ url_for('recommendations.course_details', course_id=rec.course_id) }}'">
       <div class="p-4" style="flex-grow: 1; display: flex; flex-direction: column;">
         <div class="d-flex justify-content-between align-items-start mb-3">
           <div class="badge rounded-pill bg-primary text-white px-3 py-1 shadow-sm" style="font-size: 0.8rem; font-weight: 700;">
@@ -68,13 +68,11 @@
           <span class="badge bg-light text-muted border px-2 py-1"><i class="fas fa-clock me-1"></i> {{ rec.credits }} Units</span>
         </div>
 
-        <div class="rec-explanation p-3 rounded-4 mb-3" style="background: rgba(108, 99, 255, 0.08); border: 1px dashed var(--accent); position: relative;">
-          <div class="small fw-bold text-primary mb-2" style="letter-spacing: 0.5px;">
-            <i class="fas fa-comment-dots me-1"></i> AI INSIGHT
+        <div class="ai-insight mb-4">
+          <div class="ai-badge mb-2">
+            <i class="fas fa-robot"></i> AI INSIGHT
           </div>
-          <p class="mb-0 text-dark fw-medium" style="font-size: 0.95rem; line-height: 1.5; font-style: italic;">
-            "{{ rec.explanation or 'This course aligns perfectly with your academic background and expressed interests.' }}"
-          </p>
+          <p class="mb-0">{{ rec.explanation }}</p>
         </div>
 
         <p class="text-muted small mb-3">{{ rec.description[:120] }}...</p>
@@ -90,10 +88,10 @@
 
       <div class="card-footer bg-white border-top-0 p-4 pt-0">
         <div class="d-grid gap-2">
-            <a href="{{ url_for('recommendations.course_details', course_id=rec.id) }}" class="btn btn-primary fw-bold">
+            <a href="{{ url_for('recommendations.course_details', course_id=rec.course_id) }}" class="btn btn-primary fw-bold">
               Research Course <i class="fas fa-arrow-right ms-2"></i>
             </a>
-            <form method="POST" action="{{ url_for('recommendations.enroll', course_id=rec.id) }}" onclick="event.stopPropagation();">
+            <form method="POST" action="{{ url_for('recommendations.enroll', course_id=rec.course_id) }}" onclick="event.stopPropagation();">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-outline-primary btn-sm w-100">
                 Quick Enroll
