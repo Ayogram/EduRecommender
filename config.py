@@ -11,7 +11,10 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", os.urandom(32).hex())
 
     # ── Database ────────────────────────────────────────────────
-    DATABASE_PATH = os.path.join(BASE_DIR, "database", "edurecommender.db")
+    if os.environ.get('VERCEL') or os.environ.get('NOW_REGION'):
+        DATABASE_PATH = "/tmp/edurecommender.db"
+    else:
+        DATABASE_PATH = os.path.join(BASE_DIR, "database", "edurecommender.db")
 
     # ── Session ─────────────────────────────────────────────────
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
