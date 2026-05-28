@@ -552,9 +552,17 @@
             <label>Field of Study</label>
             <select id="sim-dept" class="form-select" onchange="updateSuggestedInterests()">
               <option value="Computer Science">Computer Science</option>
+              <option value="Information and Computer Engineering">Information and Computer Engineering</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Petroleum Engineering">Petroleum Engineering</option>
+              <option value="Electrical Engineering">Electrical Engineering</option>
+              <option value="Industrial Mathematics">Industrial Mathematics</option>
+              <option value="Industrial Physics">Industrial Physics</option>
+              <option value="Psychology">Psychology</option>
+              <option value="Economics">Economics</option>
+              <option value="Fintech">Fintech</option>
               <option value="Law">Law</option>
               <option value="Medicine">Medicine</option>
-              <option value="Engineering">Engineering</option>
               <option value="Business Administration">Business Administration</option>
               <option value="Accounting">Accounting</option>
               <option value="Arts">Arts</option>
@@ -641,6 +649,47 @@
 
   <script>
     const interestsMap = {
+      "Computer Science": [
+        "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", 
+        "Cloud Computing", "Web Development", "Machine Learning", "Database Management", 
+        "Networks & Distributed Systems", "Algorithms & Data Structures"
+      ],
+      "Information and Computer Engineering": [
+        "Software Engineering", "Computer Architecture", "Computer Networks", "Database Management", "Embedded Systems", 
+        "Information Security", "System Architecture", "VLSI Design", "Digital Signal Processing", "Operating Systems"
+      ],
+      "Mechanical Engineering": [
+        "Fluid Mechanics", "Thermodynamics", "Machine Design", "Materials Science", "CAD/CAM", 
+        "Manufacturing Processes", "Control Systems", "Heat Transfer", "Solid Mechanics", "Robotics"
+      ],
+      "Petroleum Engineering": [
+        "Drilling Engineering", "Reservoir Engineering", "Production Engineering", "Petrophysics", "Geology", 
+        "Well Logging", "Enhanced Oil Recovery", "Natural Gas Engineering", "Offshore Drilling", "Reservoir Simulation"
+      ],
+      "Electrical Engineering": [
+        "AC/DC Circuits", "Electromagnetism", "Power Systems", "Control Systems", "Signal Processing", 
+        "Digital Electronics", "Power Electronics", "Analog Circuits", "Renewable Energy Systems", "High Voltage Engineering"
+      ],
+      "Industrial Mathematics": [
+        "Calculus", "Linear Algebra", "Numerical Analysis", "Operations Research", "Probability & Statistics", 
+        "Mathematical Modeling", "Differential Equations", "Optimization Theory", "Data Analytics", "Financial Mathematics"
+      ],
+      "Industrial Physics": [
+        "Thermodynamics", "Quantum Mechanics", "Electromagnetism", "Optics", "Fluid Dynamics", 
+        "Solid State Physics", "Laser Physics", "Materials Physics", "Acoustics", "Nuclear Physics"
+      ],
+      "Psychology": [
+        "Clinical Psychology", "Cognitive Psychology", "Behavioral Analysis", "Social Psychology", "Neuropsychology", 
+        "Developmental Psychology", "Psychopathology", "Research Methods", "Organizational Psychology", "Forensic Psychology"
+      ],
+      "Economics": [
+        "Microeconomics", "Macroeconomics", "Econometrics", "Behavioral Economics", "Development Economics", 
+        "Financial Markets", "International Economics", "Public Economics", "Game Theory", "Environmental Economics"
+      ],
+      "Fintech": [
+        "Blockchain & Crypto", "Quantitative Finance", "Algorithmic Trading", "Risk Management", "Data Analytics in Finance", 
+        "Financial Regulation", "Machine Learning in Finance", "Payment Systems", "Digital Banking", "Financial Technology Innovation"
+      ],
       "Law": [
         "Criminal Law", "Corporate Law", "International Law", "Human Rights", 
         "Constitutional Law", "IP Law", "Civil Rights", "Legal Writing", 
@@ -650,10 +699,6 @@
         "Surgery", "Pediatrics", "Pharmacology", "Anatomy", 
         "Neurology", "Psychiatry", "Public Health", "Genetics", 
         "Medical Ethics", "Clinical Research"
-      ],
-      "Engineering": [
-        "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Aerospace Engineering", 
-        "Chemical Engineering", "Robotics", "Embedded Systems", "Renewable Energy"
       ],
       "Business Administration": [
         "Management", "Marketing", "Entrepreneurship", "Human Resources", 
@@ -673,11 +718,6 @@
         "Psychology", "Sociology", "Political Science", "Economics", 
         "Anthropology", "International Relations", "Criminology", "Media Studies"
       ],
-      "Computer Science": [
-        "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", 
-        "Cloud Computing", "Web Development", "Machine Learning", "Database Management", 
-        "Networks & Distributed Systems", "Algorithms & Data Structures"
-      ],
       "Others": [
         "Mathematics", "Physics", "Chemistry", "Biology", 
         "Environmental Science", "Architecture", "Education", "Statistics", 
@@ -695,6 +735,44 @@
         { title: "Research Methodology", tags: ["research", "methodology", "writing", "data analysis"], reason: "Fosters academic investigation, proposal writing, and data analysis." },
         { title: "Final Year Research Project", tags: ["research", "dissertation", "project", "thesis"], reason: "Cap-stone course to apply your theoretical concepts in a research thesis." }
       ],
+      "Information and Computer Engineering": [
+        { title: "Computer Network Architectures", tags: ["networks", "routing", "tcp"], reason: "Aligned with networks engineering and TCP/IP routing preferences." },
+        { title: "Embedded Systems Design", tags: ["embedded", "microcontrollers", "hardware"], reason: "Matches hardware interfacing and microcontroller programming." }
+      ],
+      "Mechanical Engineering": [
+        { title: "Mechanical Engineering Principles", tags: ["physics", "machines", "engineering"], reason: "Statics, dynamics, and structural analysis of machinery." },
+        { title: "Fluid Mechanics & Heat Transfer", tags: ["fluids", "mechanics", "heat"], reason: "Suited for thermodynamics and hydro-dynamics engineering profiles." }
+      ],
+      "Petroleum Engineering": [
+        { title: "Introduction to Reservoir Engineering", tags: ["reservoir", "oil", "gas", "geology"], reason: "Ideal for petroleum geology, drilling, and volume estimation." },
+        { title: "Drilling Engineering & Operations", tags: ["drilling", "petrophysics", "engineering"], reason: "Matches focus on heavy machinery and deep-well structural drilling." }
+      ],
+      "Electrical Engineering": [
+        { title: "Electrical Circuits", tags: ["electricity", "circuits", "engineering"], reason: "Fundamental AC/DC grid calculations and networking." },
+        { title: "Power Systems & Renewable Energy", tags: ["power", "grid", "electricity", "renewable"], reason: "Matches clean energy, solar arrays, and high-voltage transmission lines." }
+      ],
+      "Industrial Mathematics": [
+        { title: "Applied Mathematics", tags: ["math", "science", "logic"], reason: "High-performance mathematics for physics modeling and data structures." },
+        { title: "Mathematical Modeling & Simulation", tags: ["modeling", "differential equations", "simulation"], reason: "Simulates industrial fluid and thermodynamics problems." },
+        { title: "Linear Optimization & Operations Research", tags: ["optimization", "programming", "operations"], reason: "Solves resource allocation problems via linear programming matrices." }
+      ],
+      "Industrial Physics": [
+        { title: "Fundamentals of Thermodynamics", tags: ["thermodynamics", "physics", "heat"], reason: "Ideal for thermodynamic power cycles and heat dynamics studies." },
+        { title: "Quantum Mechanics for Engineers", tags: ["quantum", "physics", "lasers"], reason: "Fosters principles of quantum computing and solid-state materials physics." }
+      ],
+      "Psychology": [
+        { title: "Introduction to Psychology", tags: ["mind", "behavior", "psychology"], reason: "Surveys behavioral analysis and basic cognitive processes." },
+        { title: "Cognitive Psychology", tags: ["cognitive", "memory", "mind"], reason: "Details human memory structures and reasoning processes." },
+        { title: "Clinical Psychology Methods", tags: ["clinical", "therapy", "assessment"], reason: "Suited for diagnostic and clinical assessment procedures." }
+      ],
+      "Economics": [
+        { title: "Microeconomics", tags: ["economy", "money", "markets"], reason: "Focuses on firm choices, consumer utility, and market equilibrium." },
+        { title: "Macroeconomics & Public Policy", tags: ["macroeconomics", "policy", "finance"], reason: "Covers aggregate fiscal policy, inflation, and public finance structures." }
+      ],
+      "Fintech": [
+        { title: "Blockchain & Cryptocurrencies", tags: ["blockchain", "crypto", "bitcoin"], reason: "Covers decentralized consensus ledgers and smart contracts." },
+        { title: "Algorithmic Trading & Quantitative Finance", tags: ["trading", "algorithms", "finance"], reason: "Builds quantitative models and python scripts for trading." }
+      ],
       "Law": [
         { title: "Criminal Law 101", tags: ["law", "justice", "court"], reason: "Introduces criminal justice, case analysis, and court procedures." },
         { title: "Corporate Law", tags: ["business", "contracts", "law"], reason: "Teaches commercial structures, transactional law, and legal compliance." },
@@ -707,11 +785,6 @@
         { title: "Pharmacology", tags: ["drugs", "medicine", "biology"], reason: "Focuses on drug interactions, biochemistry, and therapeutic actions." },
         { title: "Public Health Global Trends", tags: ["health", "policy", "global"], reason: "Examines worldwide health policy, disease prevention, and statistics." }
       ],
-      "Engineering": [
-        { title: "Mechanical Engineering Principles", tags: ["physics", "machines", "engineering"], reason: "Covers mechanics, thermodynamics, and statics calculations." },
-        { title: "Robotics & Automation", tags: ["robotics", "ai", "hardware"], reason: "Teaches micro-controller programming and robotic system design." },
-        { title: "Electrical Circuits", tags: ["electricity", "circuits", "engineering"], reason: "Essential core course on AC/DC circuit analysis and electrical networks." }
-      ],
       "Business Administration": [
         { title: "Principles of Management", tags: ["management", "business", "leadership"], reason: "Lays foundations for corporate management and executive strategy." },
         { title: "Management Information", tags: ["management", "information systems", "business", "technology"], reason: "Details how corporate organizations implement MIS to support decision-making." },
@@ -722,18 +795,15 @@
         { title: "Financial Accounting", tags: ["finance", "numbers", "accounting"], reason: "Lays standard methods for recording transactions and preparing statements." },
         { title: "Forensic Accounting", tags: ["fraud", "investigation", "accounting"], reason: "Focuses on auditing standards, asset tracking, and fraud investigation." }
       ],
-      "Social Sciences": [
-        { title: "Introduction to Psychology", tags: ["mind", "behavior", "psychology"], reason: "Surveys behavioral analysis, mental health, and cognitive processes." },
-        { title: "International Relations", tags: ["politics", "global", "diplomacy"], reason: "Examines diplomatic dynamics, global conflicts, and foreign policy." },
-        { title: "Microeconomics", tags: ["economy", "money", "markets"], reason: "Teaches market equilibrium, firm decisions, and consumer demand." }
-      ],
       "Arts": [
         { title: "Graphic Design Basics", tags: ["design", "art", "creative"], reason: "Develops typographic layout and digital illustration workflows." },
         { title: "History of Modern Art", tags: ["art", "history", "culture"], reason: "Surveys artistic movements from the 19th century to the present." }
       ],
+      "Social Sciences": [
+        { title: "International Relations", tags: ["politics", "global", "diplomacy"], reason: "Examines diplomatic dynamics, global conflicts, and foreign policy." }
+      ],
       "Others": [
-        { title: "Introduction to Architecture", tags: ["design", "building", "architecture"], reason: "Teaches architectural design theory, spatial planning, and drafting." },
-        { title: "Applied Mathematics", tags: ["math", "science", "logic"], reason: "Details numerical methods used in mathematical physics models." }
+        { title: "Introduction to Architecture", tags: ["design", "building", "architecture"], reason: "Teaches architectural design theory, spatial planning, and drafting." }
       ]
     };
 
@@ -745,7 +815,8 @@
       grid.innerHTML = "";
       selectedInterests = [];
       
-      interestsMap[dept].forEach(interest => {
+      const list = interestsMap[dept] || [];
+      list.forEach(interest => {
         const chip = document.createElement("div");
         chip.className = "interest-chip";
         chip.innerText = interest;
@@ -786,7 +857,6 @@
         }
 
         courses.forEach((c, index) => {
-          // Adjust match rate based on GPA and interest tags matching
           let interestMatchCount = 0;
           c.tags.forEach(tag => {
             if (selectedInterests.some(sel => sel.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(sel.toLowerCase()))) {
@@ -794,7 +864,6 @@
             }
           });
 
-          // Baseline match based on GPA, plus boost for interest matching
           const gpaFactor = (gpa / 5.0);
           let matchPercent = Math.round(65 + (gpaFactor * 25) + (interestMatchCount * 4));
           matchPercent = Math.min(99, Math.max(45, matchPercent));

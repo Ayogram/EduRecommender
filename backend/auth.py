@@ -169,6 +169,11 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
 
+    # Load field mappings for the template
+    fields_file = os.path.join(current_app.root_path, "database", "fields_and_interests.json")
+    with open(fields_file, "r") as f:
+        fields_map = json.load(f)
+
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -192,7 +197,7 @@ def register():
         if errors:
             for e in errors:
                 flash(e, "error")
-            return render_template("auth/register.html", name=name, email=email)
+            return render_template("auth/register.html", name=name, email=email, fields_map=fields_map)
 
         # Handle academic data
         academic_field = request.form.get("academic_field")
@@ -219,7 +224,7 @@ def register():
 
         return redirect(url_for("auth.verify_please", email=user.email))
 
-    return render_template("auth/register.html")
+    return render_template("auth/register.html", fields_map=fields_map)
 
 
 @auth_bp.route("/verify/<token>")

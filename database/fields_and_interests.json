@@ -1,54 +1,77 @@
 {
-  "Law": [
-    "Criminal Law", "Corporate Law", "International Law", "Human Rights", "Constitutional Law", 
-    "Environmental Law", "IP Law", "Family Law", "Labor Law", "Tort Law", "Commercial Law", 
-    "Contract Law", "Legal Writing", "Advocacy", "Maritime Law", "Tax Law", "Media Law", 
-    "Arbitration & Dispute Resolution", "Jurisprudence", "Medical Jurisprudence", "Civil Rights", "Immigration Law"
-  ],
-  "Medicine": [
-    "Surgery", "Pediatrics", "Pharmacology", "Anatomy", "Neurology", "Psychiatry", "Public Health", 
-    "Genetics", "Pathology", "Biochemistry", "Epidemiology", "Microbiology", "Physiology", 
-    "Immunology", "Medical Ethics", "Clinical Research", "Cardiology", "Dermatology", "Radiology", 
-    "Oncology", "Nursing", "Nutrition", "Emergency Medicine"
-  ],
-  "Engineering": [
-    "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Aerospace Engineering", 
-    "Chemical Engineering", "Robotics", "Embedded Systems", "Telecommunications", "Structural Engineering", 
-    "Control Systems", "Material Science", "Renewable Energy", "Fluid Mechanics", "Thermodynamics", 
-    "Nanotechnology", "Industrial Design", "Biomedical Engineering", "Environmental Engineering"
-  ],
-  "Business Administration": [
-    "Management", "Marketing", "Entrepreneurship", "Human Resources", "Supply Chain", "Business Ethics", 
-    "Strategic Planning", "Financial Management", "Organizational Behavior", "Operations Management", 
-    "Business Analytics", "Project Management", "Microeconomics", "Macroeconomics", "E-Commerce", 
-    "International Business", "Corporate Governance", "Leadership", "Brand Management"
-  ],
-  "Accounting": [
-    "Financial Accounting", "Audit", "Taxation", "Management Accounting", "Forensic Accounting", 
-    "Corporate Finance", "Cost Accounting", "Financial Reporting", "Tax Planning", "QuickBooks", 
-    "Excel for Accounting", "Risk Management", "Auditing Standards", "International Accounting", 
-    "Accounting Information Systems"
-  ],
-  "Arts": [
-    "Fine Arts", "Graphic Design", "History of Art", "Music Theory", "Performing Arts", "Literature", 
-    "Visual Communication", "Creative Writing", "Photography", "Cinematography", "Digital Illustration", 
-    "Animation", "Sculpting", "Theatre Arts", "Fashion Design", "Industrial Design", "Interior Design", "Painting"
-  ],
-  "Social Sciences": [
-    "Psychology", "Sociology", "Political Science", "Economics", "Anthropology", "International Relations", 
-    "Criminology", "Media Studies", "Philosophy", "Social Policy", "Gender Studies", "Human Geography", 
-    "Demography", "Behavioral Economics", "Public Policy"
-  ],
   "Computer Science": [
     "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", "Cloud Computing", 
     "Web Development", "Mobile Dev", "Machine Learning", "Database Management", "Networks & Distributed Systems", 
     "Human-Computer Interaction", "Game Development", "Computer Graphics", "Natural Language Processing", 
-    "DevOps", "Blockchain", "Cryptography", "Algorithms & Data Structures", "UI/UX Design", "Computer Vision", 
-    "Internet of Things", "Embedded Systems", "Compiler Design", "Agile Methodologies", "CompTIA", "Virtual Reality"
+    "DevOps", "Blockchain", "Cryptography", "Algorithms & Data Structures", "UI/UX Design", "Computer Vision"
+  ],
+  "Information and Computer Engineering": [
+    "Software Engineering", "Computer Architecture", "Computer Networks", "Database Management", "Embedded Systems", 
+    "Information Security", "System Architecture", "VLSI Design", "Digital Signal Processing", "Operating Systems", 
+    "Microprocessors", "Compiler Design"
+  ],
+  "Mechanical Engineering": [
+    "Fluid Mechanics", "Thermodynamics", "Machine Design", "Materials Science", "CAD/CAM", 
+    "Manufacturing Processes", "Control Systems", "Heat Transfer", "Solid Mechanics", "Kinematics", 
+    "Robotics", "Automotive Engineering"
+  ],
+  "Petroleum Engineering": [
+    "Drilling Engineering", "Reservoir Engineering", "Production Engineering", "Petrophysics", "Geology", 
+    "Well Logging", "Enhanced Oil Recovery", "Natural Gas Engineering", "Offshore Drilling", "Reservoir Simulation"
+  ],
+  "Electrical Engineering": [
+    "AC/DC Circuits", "Electromagnetism", "Power Systems", "Control Systems", "Signal Processing", 
+    "Digital Electronics", "Power Electronics", "Analog Circuits", "Renewable Energy Systems", "High Voltage Engineering"
+  ],
+  "Industrial Mathematics": [
+    "Calculus", "Linear Algebra", "Numerical Analysis", "Operations Research", "Probability & Statistics", 
+    "Mathematical Modeling", "Differential Equations", "Optimization Theory", "Data Analytics", "Financial Mathematics"
+  ],
+  "Industrial Physics": [
+    "Thermodynamics", "Quantum Mechanics", "Electromagnetism", "Optics", "Fluid Dynamics", 
+    "Solid State Physics", "Laser Physics", "Materials Physics", "Acoustics", "Nuclear Physics"
+  ],
+  "Psychology": [
+    "Clinical Psychology", "Cognitive Psychology", "Behavioral Analysis", "Social Psychology", "Neuropsychology", 
+    "Developmental Psychology", "Psychopathology", "Research Methods in Psychology", "Organizational Psychology", "Forensic Psychology"
+  ],
+  "Economics": [
+    "Microeconomics", "Macroeconomics", "Econometrics", "Behavioral Economics", "Development Economics", 
+    "Financial Markets", "International Economics", "Public Economics", "Game Theory", "Environmental Economics"
+  ],
+  "Fintech": [
+    "Blockchain & Crypto", "Quantitative Finance", "Algorithmic Trading", "Risk Management", "Data Analytics in Finance", 
+    "Financial Regulation", "Machine Learning in Finance", "Payment Systems", "Digital Banking", "Financial Technology Innovation"
+  ],
+  "Law": [
+    "Criminal Law", "Corporate Law", "International Law", "Human Rights", "Constitutional Law", 
+    "Environmental Law", "IP Law", "Family Law", "Labor Law", "Tort Law", "Commercial Law", 
+    "Contract Law", "Legal Writing", "Advocacy", "Arbitration & Dispute Resolution", "Jurisprudence"
+  ],
+  "Medicine": [
+    "Surgery", "Pediatrics", "Pharmacology", "Anatomy", "Neurology", "Psychiatry", "Public Health", 
+    "Genetics", "Pathology", "Biochemistry", "Epidemiology", "Microbiology", "Physiology", 
+    "Immunology", "Medical Ethics", "Clinical Research"
+  ],
+  "Business Administration": [
+    "Management", "Marketing", "Entrepreneurship", "Human Resources", "Supply Chain", "Business Ethics", 
+    "Strategic Planning", "Financial Management", "Organizational Behavior", "Operations Management", 
+    "Business Analytics", "Project Management", "E-Commerce", "Corporate Governance"
+  ],
+  "Accounting": [
+    "Financial Accounting", "Audit", "Taxation", "Management Accounting", "Forensic Accounting", 
+    "Corporate Finance", "Cost Accounting", "Financial Reporting", "Tax Planning", "Risk Management"
+  ],
+  "Arts": [
+    "Fine Arts", "Graphic Design", "History of Art", "Music Theory", "Performing Arts", "Literature", 
+    "Visual Communication", "Creative Writing", "Photography", "Digital Illustration", "Animation"
+  ],
+  "Social Sciences": [
+    "Psychology", "Sociology", "Political Science", "Economics", "Anthropology", "International Relations", 
+    "Criminology", "Media Studies", "Philosophy", "Public Policy"
   ],
   "Others": [
     "Mathematics", "Physics", "Chemistry", "Biology", "Environmental Science", "Architecture", 
-    "Education", "Statistics", "Calculus", "Linear Algebra", "Organic Chemistry", "Biochemistry", 
-    "Genetics", "Astronomy", "Microbiology", "Ecology", "Research Methodology"
+    "Education", "Statistics", "Research Methodology"
   ]
 }
