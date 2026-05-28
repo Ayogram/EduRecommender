@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% block title %}Classroom: {{ module.title }} – EduRecommender{% endblock %}
+{% block page_title %}Learning Hub{% endblock %}
+
+{% block content %}
+<!-- Back/Exit Button -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+  <a href="{{ url_for('recommendations.course_details', course_id=course_id) }}" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:var(--text-secondary);text-decoration:none;transition:var(--transition);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Exit Classroom
+  </a>
+</div>
+
+<div class="classroom-container fade-in">
+  <div class="row g-0 h-100">
+    <!-- Sidebar (Course Navigation) -->
+    <div class="col-lg-3 col-md-4 classroom-sidebar border-end bg-white">
+      <div class="p-4 border-bottom bg-light">
+        <h6 class="text-uppercase small fw-bold text-muted tracking-wide mb-1">Current Course</h6>
+        <h5 class="fw-bold mb-0 text-dark" style="font-size:0.95rem; line-height: 1.4;">{{ course.title if course else module.course_id }}</h5> 
+      </div>
+      
+      <div class="syllabus-nav py-3">
+        {% for mod in all_modules %}
+        <div class="module-group">
+          <a href="{{ url_for('learning.view_lesson', course_id=course_id, module_id=mod.id) }}" 
+             class="module-header p-3 px-4 d-flex align-items-center justify-content-between text-decoration-none {% if mod.id == module.id %}bg-soft-primary text-primary{% else %}text-secondary hover-bg-light{% endif %}" style="display: flex;">
+            <span class="fw-bold small">
+              <i class="fas {% if mod.id == module.id %}fa-folder-open{% else %}fa-folder{% endif %} me-2"></i>
+              Module {{ loop.index }}: {{ mod.title }}
+            </span>
+            <i class="fas {% if mod.id == module.id %}fa-chevron-down{% else %}fa-chevron-right{% endif %} small"></i>
+          </a>
+          
+          {% if mod.id == module.id %}
+          <div class="lesson-list">
+            {% for lesson in lessons %}
+            {% set week_num = (mod.sort_order - 1) * 4 + loop.index %}
+            <a href="{{ url_for('learning.view_lesson', course_id=course_id, module_id=mod.id, lesson_id=lesson.id) }}" 
+               class="lesson-item p-3 px-5 d-flex align-items-center gap-3 {% if lesson.id == current_lesson.id %}active{% endif %}">
+              <div class="status-icon">
+                {% if lesson.id < current_lesson.id %}
+                  <i class="fas fa-check-circle text-success"></i>
+                {% elif lesson.id == current_lesson.id %}
+                  <i class="fas fa-play-circle text-primary"></i>
+                {% else %}
+                  <i class="far fa-circle text-muted"></i>
+                {% endif %}
+              </div>
+              <span class="small fw-medium">Week {{ week_num }}: {{ lesson.title }}</span>
+            </a>
+            {% endfor %}
+            
+            {% set quiz_week = mod.sort_order * 4 %}
+            <a href="{{ url_for('learning.start_exam', module_id=mod.id) }}" class="lesson-item p-3 px-5 d-flex align-items-center gap-3 bg-soft-warning text-decoration-none">
+              <i class="fas fa-file-alt text-warning"></i>
+              <span class="small fw-bold text-dark">Week {{ quiz_week }}: Take Module Quiz</span>
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="col-lg-9 col-md-8 classroom-main bg-light">
+      <div class="content-wrapper p-4 p-md-5">
+        
+        <!-- Modern Custom Video Player (Udemy Style) -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-dark position-relative" style="height: 440px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
+          {% if current_lesson.video_url %}
+            <iframe id="classroom-video" class="w-100 h-100" src="{{ current_lesson.video_url }}?autoplay=1&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border: none;"></iframe>
+          {% else %}
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#9ca3af;gap:16px;">
+              <div class="spinner-border text-primary" role="status"></div>
+              <span class="fw-medium">Searching YouTube for dynamic lesson video...</span>
+            </div>
+          {% endif %}
+          
+          <!-- Video Player Custom UI Control Overlay -->
+          <div class="video-overlay-ui" style="position: absolute; bottom: 16px; left: 16px; pointer-events: none; z-index: 10;">
+            <!-- Topic Watermark -->
+            <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.02em; border-left: 3px solid #8b5cf6; width: fit-content; pointer-events: auto; color: white;">
+              <span class="pulse-red-dot"></span> AI-CURATED LECTURE: {{ current_lesson.title }}
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+          <div class="card-header bg-white p-4 border-bottom">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div>
+                <nav aria-label="breadcrumb">
+                  <ol class="breadcrumb mb-1" style="font-size:0.78rem;">
+                    <li class="breadcrumb-item"><a href="#" style="color:var(--text-muted);text-decoration:none;">{{ module.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" style="color:var(--text-primary);font-weight:600;">Week {{ (module.sort_order - 1) * 4 + current_lesson.sort_order }}</li>
+                  </ol>
+                </nav>
+                <h2 class="fw-bold mb-0" style="font-size:1.35rem; color:var(--text-primary); letter-spacing:-0.02em;">{{ current_lesson.title }}</h2>
+              </div>
+              <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold" style="font-size:0.75rem;">Week {{ (module.sort_order - 1) * 4 + current_lesson.sort_order }}</span>
+            </div>
+          </div>
+          
+          <div class="card-body p-4 p-md-5 lesson-content-body shadow-inner">
+             <!-- Rendered Markdown Container -->
+             <div id="lesson-content-rendered">
+                <div class="spinner-border spinner-border-sm text-primary"></div> Loading lesson content...
+             </div>
+             <!-- Hidden raw markdown content -->
+             <textarea id="raw-lesson-content" style="display:none;">{{ current_lesson.content }}</textarea>
+          </div>
+          
+          <div class="card-footer bg-white p-4 d-flex justify-content-between align-items-center">
+             {% if prev_lesson %}
+               <a href="{{ url_for('learning.view_lesson', course_id=course_id, module_id=module.id, lesson_id=prev_lesson.id) }}" class="btn btn-outline-secondary px-4 rounded-pill fw-bold" style="display:inline-flex;align-items:center;gap:6px;">
+                 <i class="fas fa-arrow-left"></i> Previous
+               </a>
+             {% else %}
+               <button class="btn btn-outline-secondary px-4 rounded-pill fw-bold" disabled>
+                 <i class="fas fa-arrow-left"></i> Previous
+               </button>
+             {% endif %}
+             
+             <div class="progress flex-grow-1 mx-4" style="height: 8px;">
+               <div class="progress-bar bg-primary animate-width" style="width: {{ progress_pct }}%"></div>
+             </div>
+
+             {% if next_lesson %}
+               <a href="{{ url_for('learning.view_lesson', course_id=course_id, module_id=module.id, lesson_id=next_lesson.id) }}" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm" style="display:inline-flex;align-items:center;gap:6px;">
+                 Next Lesson <i class="fas fa-arrow-right"></i>
+               </a>
+             {% else %}
+               <a href="{{ url_for('learning.start_exam', module_id=module.id) }}" class="btn btn-warning px-5 rounded-pill fw-bold shadow-sm text-dark" style="display:inline-flex;align-items:center;gap:6px;">
+                 Take Module Quiz <i class="fas fa-graduation-cap"></i>
+               </a>
+             {% endif %}
+          </div>
+        </div>
+        
+        <!-- AI Study Companion Chat Widget -->
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-lg overflow-hidden mb-4">
+          <div class="card-header bg-dark border-bottom border-secondary p-4 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <div class="ai-icon bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width:40px;height:40px;flex-shrink:0;">
+                <!-- Embedded Project Logo (White Checkmark in Circle) -->
+                <svg viewBox="0 0 28 28" fill="none" style="width:22px;height:22px;stroke:#fff;"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold" style="font-size: 1rem; color: #fff;">AI Study Companion</h5>
+                <span class="small text-success d-flex align-items-center gap-1 mt-1" style="font-size: 0.75rem;">
+                  <span style="width:8px;height:8px;background:#10b981;border-radius:50%;display:inline-block;"></span> Online & Ready
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-body p-4" id="chat-messages-container" style="height: 300px; overflow-y: auto; background: #18181b; display: flex; flex-direction: column; gap: 16px;">
+            <!-- Initial Greeting -->
+            <div class="d-flex align-items-start gap-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 28 28" fill="none" style="width:16px;height:16px;stroke:#fff;"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="p-3 rounded-4 text-white" style="max-width: 85%; font-size: 0.88rem; line-height: 1.55; background: #27272a;">
+                Hello! I am your AI Study Companion. Ask me anything about today's lesson: <strong>{{ current_lesson.title }}</strong>. How can I help you understand this concept better?
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer bg-dark border-top border-secondary p-3">
+            <form id="ai-chat-form" class="d-flex gap-2">
+              <input type="text" id="chat-input" class="form-control border-secondary bg-transparent text-white rounded-pill px-4" placeholder="Ask a question about this lesson..." style="font-size:0.88rem;">
+              <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width:42px;height:42px;flex-shrink:0;">
+                <i class="fas fa-paper-plane" style="font-size: 0.9rem;"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.classroom-container {
+  height: auto;
+  min-height: calc(100vh - 120px);
+  margin: -20px;
+}
+
+.classroom-sidebar {
+  z-index: 10;
+  border-right: 1px solid var(--border) !important;
+}
+
+.lesson-item {
+  text-decoration: none;
+  color: #6c757d;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.lesson-item:hover {
+  background: rgba(var(--primary-rgb), 0.05);
+  color: var(--primary);
+}
+
+.lesson-item.active {
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+  border-left-color: var(--primary);
+  font-weight: 600;
+}
+
+.bg-soft-primary { background: rgba(var(--primary-rgb), 0.1); }
+.bg-soft-warning { background: rgba(255, 193, 7, 0.1); }
+
+.lesson-content-body {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+
+.lesson-content-body h3 {
+  color: var(--text-primary);
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.lesson-content-body ul, .lesson-content-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.lesson-content-body blockquote {
+  border-left: 4px solid var(--accent);
+  background: var(--bg-input);
+  padding: 12px 20px;
+  font-style: italic;
+  border-radius: 0 8px 8px 0;
+  margin: 1.5rem 0;
+}
+
+.lesson-content-body pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 16px 20px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.lesson-content-body code {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  padding: 0;
+}
+
+.lesson-content-body p code {
+  background: var(--bg-input);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+/* Pulsing red dot for AI video watermark */
+.pulse-red-dot {
+  width: 8px;
+  height: 8px;
+  background: #dc2626;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.animate-width {
+  transition: width 0.6s ease-in-out;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  // Parse markdown content dynamically
+  document.addEventListener('DOMContentLoaded', () => {
+    const rawMarkdown = document.getElementById('raw-lesson-content').value;
+    const parsedHTML = marked.parse(rawMarkdown);
+    document.getElementById('lesson-content-rendered').innerHTML = parsedHTML;
+  });
+
+  // AI Study Companion Chat Script
+  const chatForm = document.getElementById('ai-chat-form');
+  const chatInput = document.getElementById('chat-input');
+  const messagesContainer = document.getElementById('chat-messages-container');
+  
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const query = chatInput.value.trim();
+    if (!query) return;
+    
+    // Clear input
+    chatInput.value = '';
+    
+    // 1. Append User Message
+    appendMessage(query, 'user');
+    
+    // 2. Append Loading Indicator
+    const loadingId = 'loading-' + Date.now();
+    appendLoadingIndicator(loadingId);
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    try {
+      const response = await fetch('/learning/ask-tutor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+          query: query,
+          lesson_title: "{{ current_lesson.title }}",
+          lesson_content: document.getElementById('raw-lesson-content').value
+        })
+      });
+      
+      const data = await response.json();
+      
+      // Remove loading indicator
+      document.getElementById(loadingId).remove();
+      
+      if (data.error) {
+        appendMessage('Sorry, I encountered an error: ' + data.error, 'ai');
+      } else {
+        appendMessage(data.response, 'ai');
+      }
+    } catch (err) {
+      if (document.getElementById(loadingId)) {
+        document.getElementById(loadingId).remove();
+      }
+      appendMessage('Sorry, I failed to communicate with the server.', 'ai');
+    }
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  });
+  
+  function appendMessage(text, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'd-flex align-items-start gap-3 ' + (sender === 'user' ? 'justify-content-end' : '');
+    
+    const avatarHtml = sender === 'ai' 
+      ? `<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 28 28" fill="none" style="width:16px;height:16px;stroke:#fff;"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`
+      : `<div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0; font-size: 0.85rem;"><i class="fas fa-user"></i></div>`;
+      
+    const bubbleBg = sender === 'ai' ? '#27272a' : 'var(--accent)';
+    const bubbleAlign = sender === 'user' ? 'order: -1;' : '';
+    
+    // Parse markdown if it's the AI response
+    const formattedText = sender === 'ai' ? marked.parse(text) : text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    
+    msgDiv.innerHTML = `
+      ${sender === 'ai' ? avatarHtml : ''}
+      <div class="p-3 rounded-4 text-white" style="max-width: 85%; font-size: 0.88rem; line-height: 1.55; background: ${bubbleBg}; ${bubbleAlign}">
+        ${formattedText}
+      </div>
+      ${sender === 'user' ? avatarHtml : ''}
+    `;
+    messagesContainer.appendChild(msgDiv);
+  }
+  
+  function appendLoadingIndicator(id) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'd-flex align-items-start gap-3';
+    msgDiv.id = id;
+    msgDiv.innerHTML = `
+      <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 28 28" fill="none" style="width:16px;height:16px;stroke:#fff;"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="p-3 rounded-4 text-white d-flex align-items-center gap-2" style="max-width: 85%; background: #27272a;">
+        <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+        <span style="font-size:0.85rem; opacity:0.8;">Thinking...</span>
+      </div>
+    `;
+    messagesContainer.appendChild(msgDiv);
+  }
+</script>
+{% endblock %}

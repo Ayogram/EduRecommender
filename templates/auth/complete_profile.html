@@ -1,161 +1,195 @@
 {% extends "base.html" %}
 {% block title %}Complete Your Profile – EduRecommender{% endblock %}
+{% block page_title %}Onboarding{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-  <div class="auth-card fade-in" style="max-width: 600px;">
-    <div class="auth-header">
-      <div style="margin-bottom:16px;">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)">
-          <path d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3z"/><path d="M12 13c-2.761 0-5 2.239-5 5v1h10v-1c0-2.761-2.239-5-5-5z"/>
-          <circle cx="12" cy="12" r="10"/>
-        </svg>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden fade-in">
+        <div class="card-header bg-primary text-white p-5 text-center">
+          <div class="mb-3">
+             <i class="fas fa-user-graduate fa-3x"></i>
+          </div>
+          <h2 class="fw-bold">Almost There!</h2>
+          <p class="mb-0 opacity-75">Tell us about your background to calibrate your AI recommendations.</p>
+        </div>
+        
+        <div class="card-body p-4 p-md-5">
+          <form method="POST" id="complete-profile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="row g-4 mb-4">
+              <div class="col-md-6">
+                <div class="form-group mb-0">
+                  <label class="form-label fw-bold small text-uppercase text-muted">Primary Academic Field</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-university text-primary"></i></span>
+                    <select id="academic_field" name="academic_field" class="form-select bg-light border-start-0" required>
+                      <option value="" disabled selected>Select field...</option>
+                      {% for field in fields_map.keys() %}
+                      <option value="{{ field }}">{{ field }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-0">
+                  <label class="form-label fw-bold small text-uppercase text-muted">Department</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-building text-primary"></i></span>
+                    <input type="text" name="department" class="form-control bg-light border-start-0" placeholder="e.g. Computer Science" required>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold small text-uppercase text-muted">Current Cumulative GPA</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="fas fa-chart-line text-primary"></i></span>
+                <input type="number" name="gpa" class="form-control bg-light border-start-0" step="0.01" min="0" max="5.0" placeholder="e.g. 3.50 (Leave 0.0 if first year)" required>
+              </div>
+            </div>
+
+            <!-- Dynamic Interests Section -->
+            <div class="form-group mb-4" id="interests-section" style="display:none;">
+              <label class="form-label fw-bold small text-uppercase text-muted">What are your interests in <span id="field-display" class="text-primary"></span>?</label>
+              <div class="interest-grid-container p-3 border rounded-4 bg-light">
+                <div id="sub-interests-grid" class="d-flex flex-wrap gap-2">
+                  <!-- JS Populated -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Hidden input to store selected interests as comma separated string -->
+            <input type="hidden" name="interests" id="interests-input">
+
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold small text-uppercase text-muted">Search or Add Specific Interests</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-primary"></i></span>
+                <input type="text" id="custom-interest-input" class="form-control bg-light border-start-0" placeholder="Type an interest and press Enter...">
+              </div>
+              <div id="selected-chips-container" class="mt-3 d-flex flex-wrap gap-2">
+                <!-- Selected items show here -->
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow-sm mt-4">
+              Finish Setup & View Dashboard <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </form>
+        </div>
       </div>
-      <h1>Almost There!</h1>
-      <p>Tell us about your academic background to get the best recommendations.</p>
     </div>
-
-    <form method="POST" id="complete-profile-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-      <!-- Level 1: Academic Field -->
-      <div class="row">
-        <div class="col-md-6">
-          <div class="form-group">
-            <label for="academic_field">Primary Academic Field</label>
-            <div class="input-wrapper">
-              <i class="fas fa-university"></i>
-              <select id="academic_field" name="academic_field" class="form-control" required style="appearance: none; padding-right: 40px;">
-                <option value="" disabled selected>Select field...</option>
-                {% for field in fields_map.keys() %}
-                <option value="{{ field }}">{{ field }}</option>
-                {% endfor %}
-              </select>
-              <i class="fas fa-chevron-down" style="position: absolute; right: 14px; left: auto; color: var(--text-muted);"></i>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-            <label for="department">Department</label>
-            <div class="input-wrapper">
-              <i class="fas fa-building"></i>
-              <input type="text" name="department" class="form-control" placeholder="e.g. Computer Science" required>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="gpa">Current Cumulative GPA</label>
-        <div class="input-wrapper">
-          <i class="fas fa-chart-line"></i>
-          <input type="number" name="gpa" class="form-control" step="0.01" min="0" max="5.0" placeholder="e.g. 3.50 (Leave 0.0 if first year)" required>
-        </div>
-      </div>
-
-      <!-- Level 2: Sub-Interests (Dynamic) -->
-      <div class="form-group" id="sub-interests-container" style="display: none;">
-        <label>Areas of Interest in <span id="selected-field-name"></span></label>
-        <p class="text-muted small mb-2">Select all that apply:</p>
-        <div class="interest-grid" id="sub-interests-grid">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-
-      <!-- Level 3: Custom Interests -->
-      <div class="form-group">
-        <label for="custom_interests">Add Specific Interests</label>
-        <div class="input-wrapper">
-          <i class="fas fa-tag"></i>
-          <input type="text" id="custom-interest-input" class="form-control" placeholder="e.g. Quantum Computing, Civil Law (Press Enter)">
-        </div>
-        <div id="custom-interests-chips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
-        <input type="hidden" name="custom_interests" id="custom-interests-hidden">
-      </div>
-
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;margin-top:20px;">
-        Complete Registration
-      </button>
-    </form>
   </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const fieldSelect = document.getElementById('academic_field');
-  const subContainer = document.getElementById('sub-interests-container');
-  const fieldNameSpan = document.getElementById('selected-field-name');
-  const grid = document.getElementById('sub-interests-grid');
+  const interestsSection = document.getElementById('interests-section');
+  const subGrid = document.getElementById('sub-interests-grid');
+  const fieldDisplay = document.getElementById('field-display');
   const customInput = document.getElementById('custom-interest-input');
-  const chipsContainer = document.getElementById('custom-interests-chips');
-  const hiddenInput = document.getElementById('custom-interests-hidden');
+  const chipsContainer = document.getElementById('selected-chips-container');
+  const hiddenInput = document.getElementById('interests-input');
   
-  let customInterests = [];
+  let selectedInterests = [];
 
-  // 1. Dynamic Sub-Interests
   fieldSelect.addEventListener('change', async function() {
     const field = this.value;
-    fieldNameSpan.textContent = field;
-    subContainer.style.display = 'block';
-    grid.innerHTML = '<p class="text-muted">Loading...</p>';
+    fieldDisplay.textContent = field;
+    interestsSection.style.display = 'block';
+    subGrid.innerHTML = '<div class="spinner-border spinner-border-sm text-primary"></div>';
     
     try {
-      const response = await fetch(`/api/sub-interests/${encodeURIComponent(field)}`);
-      const data = await response.json();
+      const resp = await fetch(`/api/sub-interests/${encodeURIComponent(field)}`);
+      const data = await resp.json();
+      subGrid.innerHTML = '';
       
-      grid.innerHTML = '';
       data.sub_interests.forEach(interest => {
-        const div = document.createElement('div');
-        div.className = 'interest-chip';
-        div.innerHTML = `
-          <input type="checkbox" id="int_${interest.replace(/ /g, '_')}" name="interests" value="${interest}">
-          <label for="int_${interest.replace(/ /g, '_')}">${interest}</label>
-        `;
-        grid.appendChild(div);
+        const chip = document.createElement('div');
+        chip.className = 'interest-pill px-3 py-2 rounded-pill border cursor-pointer transition-all small fw-medium';
+        chip.textContent = interest;
+        if (selectedInterests.includes(interest)) chip.classList.add('active');
+        
+        chip.onclick = () => toggleInterest(interest, chip);
+        subGrid.appendChild(chip);
       });
     } catch (e) {
-      grid.innerHTML = '<p class="text-danger">Failed to load interests.</p>';
+      subGrid.innerHTML = '<span class="text-danger small">Error loading interests.</span>';
     }
   });
 
-  // 2. Custom Interest Chips
   customInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
       const val = this.value.trim();
-      if (val && !customInterests.includes(val)) {
-        addChip(val);
+      if (val && !selectedInterests.includes(val)) {
+        addInterest(val);
         this.value = '';
       }
     }
   });
 
-  function addChip(val) {
-    customInterests.push(val);
+  function toggleInterest(val, element) {
+    if (selectedInterests.includes(val)) {
+      selectedInterests = selectedInterests.filter(i => i !== val);
+      if (element) element.classList.remove('active');
+      removeChip(val);
+    } else {
+      selectedInterests.push(val);
+      if (element) element.classList.add('active');
+      addChip(val);
+    }
     updateHidden();
-    
+  }
+
+  function addInterest(val) {
+    if (!selectedInterests.includes(val)) {
+      selectedInterests.push(val);
+      addChip(val);
+      updateHidden();
+    }
+  }
+
+  function addChip(val) {
+    if (document.querySelector(`[data-interest="${val}"]`)) return;
     const chip = document.createElement('div');
-    chip.className = 'badge badge-category';
-    chip.style.padding = '8px 12px';
-    chip.style.display = 'flex';
-    chip.style.alignItems = 'center';
-    chip.style.gap = '8px';
-    chip.innerHTML = `
-      ${val} 
-      <i class="fas fa-times" style="cursor:pointer" onclick="this.parentElement.remove(); removeTag('${val}')"></i>
-    `;
+    chip.className = 'badge bg-soft-primary text-primary border border-primary px-3 py-2 rounded-pill d-flex align-items-center gap-2';
+    chip.dataset.interest = val;
+    chip.innerHTML = `${val} <i class="fas fa-times cursor-pointer" onclick="removeInterest('${val}')"></i>`;
     chipsContainer.appendChild(chip);
   }
 
-  window.removeTag = function(val) {
-    customInterests = customInterests.filter(i => i !== val);
+  function removeChip(val) {
+    const chip = document.querySelector(`[data-interest="${val}"]`);
+    if (chip) chip.remove();
+  }
+
+  window.removeInterest = function(val) {
+    selectedInterests = selectedInterests.filter(i => i !== val);
+    removeChip(val);
+    // Also toggle grid state if exists
+    const gridItem = Array.from(subGrid.children).find(c => c.textContent === val);
+    if (gridItem) gridItem.classList.remove('active');
     updateHidden();
-  };
+  }
 
   function updateHidden() {
-    hiddenInput.value = customInterests.join(',');
+    hiddenInput.value = selectedInterests.join(',');
   }
 });
 </script>
+
+<style>
+.interest-pill { background: white; border-color: #dee2e6 !important; }
+.interest-pill:hover { border-color: var(--primary) !important; color: var(--primary); }
+.interest-pill.active { background: var(--primary); color: white; border-color: var(--primary) !important; }
+.cursor-pointer { cursor: pointer; }
+.bg-soft-primary { background: rgba(var(--primary-rgb), 0.1); }
+</style>
 {% endblock %}

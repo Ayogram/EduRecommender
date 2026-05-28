@@ -56,6 +56,11 @@ def patch_db():
     )
     """)
 
+    # 5. Patch Recommendations
+    if not column_exists("recommendations", col := "success_probability"):
+        print(f"Adding column {col} to recommendations...")
+        cursor.execute(f"ALTER TABLE recommendations ADD COLUMN {col} REAL DEFAULT 0.0")
+
     conn.commit()
     conn.close()
     print("Database patched successfully.")

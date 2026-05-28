@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Exam Results – EduRecommender{% endblock %}
+{% block page_title %}Assessment Results{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Back Button -->
+  <div style="margin-bottom: 20px;">
+    <a href="{{ url_for('main.dashboard') }}" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:var(--text-secondary);text-decoration:none;transition:var(--transition);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Dashboard
+    </a>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden text-center">
+        <div class="card-header {% if score >= 70 %}bg-success{% elif score >= 40 %}bg-warning{% else %}bg-danger{% endif %} text-white py-5">
+          <div class="result-icon-bg mb-3 mx-auto">
+            {% if score >= 70 %}
+              <i class="fas fa-trophy fa-3x"></i>
+            {% elif score >= 40 %}
+              <i class="fas fa-medal fa-3x"></i>
+            {% else %}
+              <i class="fas fa-redo fa-3x"></i>
+            {% endif %}
+          </div>
+          <h1 class="display-3 fw-bold mb-0">{{ score|round|int }}%</h1>
+          <p class="lead opacity-75 fw-medium">
+            {% if score >= 70 %}
+              Outstanding! You've mastered this module.
+            {% elif score >= 40 %}
+              Good effort! Room for improvement.
+            {% else %}
+              Don't worry, even the best students need retakes.
+            {% endif %}
+          </p>
+        </div>
+        
+        <div class="card-body p-4 p-md-5">
+          <div class="stats-row d-flex justify-content-around mb-5 p-4 bg-light rounded-4">
+            <div class="stat-item">
+              <div class="text-muted small fw-bold text-uppercase">Score</div>
+              <div class="h3 fw-bold mb-0 text-dark">{{ score|round|int }}%</div>
+            </div>
+            <div class="stat-item border-start ps-4">
+              <div class="text-muted small fw-bold text-uppercase">Attempts</div>
+              <div class="h3 fw-bold mb-0 text-dark">{{ attempts or 1 }}</div>
+            </div>
+            <div class="stat-item border-start ps-4">
+              <div class="text-muted small fw-bold text-uppercase">Best Score</div>
+              <div class="h3 fw-bold mb-0 text-success">{{ (best_score or score)|round|int }}%</div>
+            </div>
+            <div class="stat-item border-start ps-4">
+              <div class="text-muted small fw-bold text-uppercase">Status</div>
+              <div class="h3 fw-bold mb-0 {% if score >= 50 %}text-success{% else %}text-danger{% endif %}">
+                {% if score >= 50 %}PASS{% else %}FAIL{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <h5 class="fw-bold mb-4 text-start"><i class="fas fa-tasks text-primary me-2"></i> Question Breakdown</h5>
+          <div class="results-list text-start mb-5">
+            {% for res in results %}
+            <div class="result-item p-3 border-bottom d-flex align-items-center gap-3">
+              <div class="result-status">
+                {% if res.is_correct %}
+                  <i class="fas fa-check-circle text-success h4 mb-0"></i>
+                {% else %}
+                  <i class="fas fa-times-circle text-danger h4 mb-0"></i>
+                {% endif %}
+              </div>
+              <div class="flex-grow-1">
+                <div class="fw-bold small text-dark">{{ res.question }}</div>
+                {% if not res.is_correct %}
+                  <div class="extra-small text-muted mt-1">
+                    Your answer: <span class="text-danger strike">{{ res.your_answer }}</span> | 
+                    Correct: <span class="text-success fw-bold">{{ res.correct_answer }}</span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex flex-column flex-md-row justify-content-center gap-3">
+            <a href="{{ url_for('learning.start_exam', module_id=module_id) }}" class="btn btn-outline-primary btn-lg rounded-pill px-5 fw-bold">
+              <i class="fas fa-redo me-2"></i> Retake Exam
+            </a>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow">
+              Continue Learning <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.result-icon-bg {
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.strike { text-decoration: line-through; }
+.extra-small { font-size: 0.75rem; }
+</style>
+{% endblock %}

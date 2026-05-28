@@ -3,51 +3,64 @@
 {% block page_title %}Account Settings{% endblock %}
 
 {% block content %}
-<div class="fade-in">
-  <div class="row">
+<div class="fade-in container-fluid py-4">
+  <!-- Back Button + Page Header -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+    <button type="button" onclick="history.back()" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:var(--transition);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back
+    </button>
+  </div>
+  <div class="row g-4">
     <!-- Profile Card (Left) -->
-    <div class="col-md-4">
-      <div class="card text-center mb-4 sticky-top" style="top: 20px; z-index: 10;">
-        <div class="card-body py-5">
-          <div class="profile-image-container mb-3 position-relative d-inline-block" onclick="document.getElementById('avatar-input').click();">
+    <div class="col-xl-4 col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-primary py-5 text-center position-relative">
+          <div class="profile-avatar-wrapper shadow">
             {% if current_user.profile_picture and current_user.profile_picture.strip() %}
-              <img src="{{ current_user.profile_picture }}" id="avatar-preview"
-                   class="rounded-circle shadow-sm" width="150" height="150" style="object-fit:cover; border: 5px solid var(--border); transition: 0.3s;">
+              <img src="{{ current_user.profile_picture }}" id="avatar-preview" class="profile-avatar-img">
             {% else %}
-              <div id="avatar-initials" class="avatar-initials-circle shadow-sm">
-                {% set name_parts = current_user.name.replace('(', '').replace(')', '').split() %}
+              <div id="avatar-initials" class="profile-avatar-initials">
+                {% set name_parts = current_user.name.split() %}
                 {{ name_parts[0][0]|upper if name_parts|length > 0 else 'U' }}{{ name_parts[1][0]|upper if name_parts|length > 1 else '' }}
               </div>
             {% endif %}
-            <label for="avatar-input" class="avatar-edit-btn" title="Change Avatar">
-              <i class="fas fa-camera"></i>
-            </label>
-            <div class="avatar-overlay">
-              <span>Change Photo</span>
-            </div>
+            <button class="avatar-edit-overlay" onclick="document.getElementById('avatar-input').click();">
+              <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
+            </button>
           </div>
-          <h2 class="mb-1">{{ current_user.name }}</h2>
-          <p class="text-muted mb-4">{{ current_user.nickname or "@" + current_user.name.split(' ')[0]|lower }}</p>
+        </div>
+        <div class="card-body text-center pt-5 pb-4">
+          <h3 class="fw-bold mb-1">{{ current_user.name }}</h3>
+          <p class="text-muted small mb-4">@{{ current_user.nickname or current_user.name.split(' ')[0]|lower }}</p>
           
-          <div class="academic-standing p-3 rounded mb-4" style="background: rgba(var(--primary-rgb), 0.05); border-left: 4px solid var(--primary);">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted small">Department:</span>
-              <span class="fw-bold">{{ current_user.department or 'Not Set' }}</span>
-            </div>
-            <div class="d-flex justify-content-between">
-              <span class="text-muted small">Current CGPA:</span>
-              <span class="badge {% if current_user.gpa >= 4.5 %}bg-success{% elif current_user.gpa >= 3.5 %}bg-primary{% else %}bg-warning{% endif %}">
-                {{ "%.2f"|format(current_user.gpa or 0.0) }} / 5.0
-              </span>
-            </div>
+          <div class="d-flex justify-content-center gap-2 mb-4">
+            <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill d-flex align-items-center">
+              <i data-lucide="tag" class="me-1" style="width: 14px; height: 14px;"></i> {{ current_user.role|capitalize }}
+            </span>
+            <span class="badge bg-soft-success text-success px-3 py-2 rounded-pill d-flex align-items-center">
+              <i data-lucide="check-circle" class="me-1" style="width: 14px; height: 14px;"></i> Verified
+            </span>
           </div>
 
-          <div class="text-start">
-            <div class="info-item mb-2">
-              <span class="text-muted small">Email:</span> <br><strong>{{ current_user.email }}</strong>
+          <div class="border-top pt-4 text-start">
+            <div class="mb-3 d-flex align-items-center">
+              <div class="icon-box bg-light text-primary me-3">
+                <i data-lucide="mail"></i>
+              </div>
+              <div>
+                <div class="text-muted extra-small">Email Address</div>
+                <div class="fw-bold small">{{ current_user.email }}</div>
+              </div>
             </div>
-            <div class="info-item">
-              <span class="text-muted small">Member since:</span> <br><strong>{{ current_user.created_at.strftime('%Y-%B %d') if current_user.created_at else 'N/A' }}</strong>
+            <div class="mb-0 d-flex align-items-center">
+              <div class="icon-box bg-light text-primary me-3">
+                <i data-lucide="calendar"></i>
+              </div>
+              <div>
+                <div class="text-muted extra-small">Member Since</div>
+                <div class="fw-bold small">{{ current_user.created_at.strftime('%B %Y') if current_user.created_at else 'N/A' }}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -55,235 +68,499 @@
     </div>
 
     <!-- Edit Form (Right) -->
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Edit Profile</h3>
-        </div>
-        <div class="card-body">
-          <form method="POST" enctype="multipart/form-data" id="profile-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            
-            <!-- Hidden File Input -->
-            <input type="file" name="avatar" id="avatar-input" hidden accept="image/*">
+    <div class="col-xl-8 col-lg-7">
+      <form method="POST" enctype="multipart/form-data" id="profile-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="file" name="avatar" id="avatar-input" hidden accept="image/*">
 
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Full Name</label>
-                <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
+        <!-- Personal Information -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="border-radius: 24px !important;">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="mb-0 fw-bold d-flex align-items-center"><i data-lucide="user" class="text-primary me-2"></i> Personal Information</h5>
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Full Name</label>
+                <input type="text" name="name" class="form-control form-control-lg bg-light border-0 rounded-3" value="{{ current_user.name }}" required>
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Nickname</label>
-                <input type="text" name="nickname" class="form-control" value="{{ current_user.nickname or '' }}" placeholder="Enter a cool nickname">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Nickname</label>
+                <input type="text" name="nickname" class="form-control form-control-lg bg-light border-0 rounded-3" value="{{ current_user.nickname or '' }}" placeholder="How should we call you?">
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Department</label>
-                <input type="text" name="department" class="form-control" value="{{ current_user.department or '' }}" placeholder="e.g. Computer Science">
+        <!-- Academic Profile -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="border-radius: 24px !important;">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="mb-0 fw-bold d-flex align-items-center"><i data-lucide="graduation-cap" class="text-primary me-2"></i> Academic Profile</h5>
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Department</label>
+                <input type="text" name="department" class="form-control form-control-lg bg-light border-0 rounded-3" value="{{ current_user.department or '' }}" placeholder="e.g. Computer Science">
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Main Academic Field</label>
-                <select name="academic_field" class="form-control" id="field-select">
-                  <option value="">Select Field...</option>
-                  {% for field in fields_map.keys() %}
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Academic Field</label>
+                <select name="academic_field" class="form-select form-select-lg bg-light border-0 rounded-3" id="field-select">
+                  <option value="">Select your field...</option>
+                  {% for field in fields_map.keys()|sort %}
                     <option value="{{ field }}" {% if current_user.academic_field == field %}selected{% endif %}>{{ field }}</option>
                   {% endfor %}
                 </select>
               </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Cumulative GPA (4.0 or 5.0 scale)</label>
-              <input type="number" name="gpa" class="form-control" value="{{ current_user.gpa or 0.0 }}" step="0.01" min="0" max="5.0" placeholder="e.g. 3.85">
-              <div class="form-text small">Your CGPA helps us recommend courses that match your academic performance level.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Interests & Focused Topics</label>
-              <div id="interests-container" class="interests-flex mb-3">
-                {% if current_user.interests %}
-                  {% for interest in current_user.interests %}
-                    <div class="interest-tag">
-                      <input type="checkbox" name="interests" value="{{ interest }}" checked id="int-{{ loop.index }}">
-                      <label for="int-{{ loop.index }}">{{ interest }} <i class="fas fa-times ms-2"></i></label>
-                    </div>
-                  {% endfor %}
-                {% else %}
-                  <p class="text-muted small">No interests added yet. Add some below!</p>
-                {% endif %}
-              </div>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-plus"></i></span>
-                <input type="text" name="custom_interests" class="form-control" placeholder="Add more topics (e.g. Artificial Intelligence, Cryptography)...">
-              </div>
-              <div class="form-text small">Separate multiple interests with commas.</div>
-            </div>
-
-            <hr class="my-4">
-            
-            <div class="mb-3">
-              <label class="form-label">Change Password (leave blank to keep current)</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" name="password" class="form-control" placeholder="New Password (min 8 chars)">
+              <div class="col-md-12">
+                <label class="form-label small fw-bold">Current CGPA (out of 5.0)</label>
+                <div class="d-flex align-items-center gap-3">
+                  <input type="range" class="form-range flex-grow-1" min="0" max="5" step="0.01" value="{{ current_user.gpa or 0.0 }}" oninput="this.nextElementSibling.value = this.value; document.getElementById('gpa-input').value = this.value">
+                  <output class="fw-bold h4 mb-0 text-primary" style="min-width: 60px;">{{ "%.2f"|format(current_user.gpa or 0.0) }}</output>
+                  <input type="hidden" name="gpa" id="gpa-input" value="{{ current_user.gpa or 0.0 }}">
+                </div>
               </div>
             </div>
-
-            <div class="d-flex justify-content-end">
-              <button type="submit" class="btn btn-primary px-5 py-2 fw-bold">
-                <i class="fas fa-save me-2"></i> Update Profile
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
-      </div>
+
+        <!-- Interests System -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="border-radius: 24px !important;">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold d-flex align-items-center"><i data-lucide="heart" class="text-danger me-2"></i> My Interests</h5>
+            <span class="badge bg-light text-muted rounded-pill px-3">{{ current_user.interests|length }} Topics</span>
+          </div>
+          <div class="card-body p-4">
+            <div id="interests-display" class="d-flex flex-wrap gap-2 mb-4">
+              {% for interest in current_user.interests %}
+                <div class="interest-chip" data-interest="{{ interest }}">
+                  <span>{{ interest }}</span>
+                  <button type="button" class="remove-interest" onclick="removeInterest(this)"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+                  <input type="hidden" name="interests" value="{{ interest }}">
+                </div>
+              {% endfor %}
+              {% if not current_user.interests %}
+                <p id="no-interests-msg" class="text-muted small italic">No interests saved yet. Add some below to help our AI help you!</p>
+              {% endif %}
+            </div>
+            
+            <!-- Suggested Interests based on Selected Field -->
+            <div class="mb-4" id="suggested-interests-container" style="display:none;">
+              <label class="form-label small fw-bold text-muted text-uppercase mb-2">Suggested Topics for <span id="field-display-interests" class="text-primary"></span></label>
+              <div class="p-3 border rounded-3 bg-light" style="max-height: 200px; overflow-y: auto;">
+                <div id="suggested-interests-grid" class="d-flex flex-wrap gap-2">
+                  <!-- JS Populated -->
+                </div>
+              </div>
+              <div class="form-text mt-1 small">Click on any suggested topic to toggle it in your interests.</div>
+            </div>
+            
+            <div class="row g-2">
+              <div class="col">
+                <input type="text" id="custom-interest-input" class="form-control form-control-lg bg-light border-0 rounded-3" placeholder="Add a topic (e.g. Machine Learning, Data Science)">
+              </div>
+              <div class="col-auto">
+                <button type="button" class="btn btn-primary btn-lg rounded-3 px-4" onclick="addInterest()">
+                  <i data-lucide="plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-text mt-2 small">Press Enter or click (+) to add a topic. These help us recommend the best courses for you.</div>
+          </div>
+        </div>
+
+        <!-- Security -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="border-radius: 24px !important;">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="mb-0 fw-bold d-flex align-items-center"><i data-lucide="shield" class="text-warning me-2"></i> Security</h5>
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-12">
+                <label class="form-label small fw-bold">Update Password</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-0"><i data-lucide="lock" style="width: 16px; height: 16px;"></i></span>
+                  <input type="password" name="password" class="form-control form-control-lg bg-light border-0" placeholder="Leave blank to keep current password">
+                  <button class="btn btn-light bg-light border-0 text-muted password-toggle-btn rounded-end-3" type="button" tabindex="-1" style="border-left: none; display: flex; align-items: center; justify-content: center; padding: 0 16px;">
+                    <i class="fas fa-eye" style="font-size: 16px;"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-end gap-3 pb-5">
+          <button type="reset" class="btn btn-light btn-lg px-5 rounded-3 fw-bold">Discard</button>
+          <button type="submit" class="btn btn-primary btn-lg px-5 rounded-3 fw-bold shadow-sm d-flex align-items-center">
+            Save All Changes <i data-lucide="save" class="ms-2" style="width: 18px; height: 18px;"></i>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
 
 <style>
-.profile-image-container {
-  cursor: pointer;
-  z-index: 5;
+/* ── Profile Header ────────────────────────────────────────── */
+.profile-avatar-wrapper {
+  width: 130px;
+  height: 130px;
+  margin: 0 auto;
+  position: relative;
+  background: white;
+  border-radius: 50%;
+  padding: 5px;
+  transform: translateY(50px);
 }
-.avatar-initials-circle {
-  width: 150px;
-  height: 150px;
-  background: var(--primary);
+
+.profile-avatar-img, .profile-avatar-initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar-initials {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.5rem;
-  font-weight: 700;
-  border-radius: 50%;
-  border: 5px solid var(--border);
-  transition: 0.3s;
+  font-size: 3rem;
+  font-weight: 800;
 }
-.profile-image-container:hover .avatar-initials-circle,
-.profile-image-container:hover #avatar-preview {
-  filter: brightness(0.7);
-}
-.avatar-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: 600;
-  opacity: 0;
-  transition: 0.3s;
-  pointer-events: none;
-}
-.profile-image-container:hover .avatar-overlay {
-  opacity: 1;
-}
-.avatar-edit-btn {
+
+.avatar-edit-overlay {
   position: absolute;
   bottom: 5px;
   right: 5px;
-  background: var(--primary);
-  color: white;
-  width: 36px;
-  height: 36px;
+  background: white;
+  color: var(--primary);
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 3px solid var(--surface);
-  transition: transform 0.2s, background 0.2s;
-  z-index: 10;
+  transition: all 0.2s;
 }
-.avatar-edit-btn:hover {
+
+.avatar-edit-overlay:hover {
+  background: var(--primary);
+  color: white;
   transform: scale(1.1);
-  background: var(--secondary);
 }
-.interest-tag {
-  display: inline-block;
-  margin-right: 8px;
-  margin-bottom: 8px;
+
+/* ── UI Components ────────────────────────────────────────── */
+.icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.interest-tag input {
-  display: none;
+
+.extra-small {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-.interest-tag label {
+
+/* ── Interest Chips ───────────────────────────────────────── */
+.interest-chip {
   background: rgba(var(--primary-rgb), 0.1);
   color: var(--primary);
   padding: 8px 16px;
   border-radius: 30px;
-  cursor: pointer;
-  border: 1px solid rgba(var(--primary-rgb), 0.3);
-  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
   transition: all 0.2s;
-  user-select: none;
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
 }
-.interest-tag input:checked + label {
-  background: var(--primary);
-  color: white;
+
+.interest-chip:hover {
+  background: rgba(var(--primary-rgb), 0.15);
+  transform: translateY(-1px);
+}
+
+.remove-interest {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.remove-interest:hover {
+  opacity: 1;
+}
+
+/* ── Inputs ───────────────────────────────────────────────── */
+.form-control:focus, .form-select:focus {
+  background: #fff !important;
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.15);
   border-color: var(--primary);
-  box-shadow: 0 4px 6px rgba(var(--primary-rgb), 0.2);
 }
-.interest-tag label i {
-  font-size: 0.7rem;
+
+/* Suggested Interest Pills */
+.interest-pill-suggested {
+  background: white;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary);
+  border-radius: 30px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.interest-pill-suggested:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.02);
+}
+.interest-pill-suggested.active {
+  background: var(--primary);
+  color: white !important;
+  border-color: var(--primary) !important;
 }
 </style>
 
 <script>
-// Preview avatar upload
+// Avatar Preview Logic
 document.getElementById('avatar-input').onchange = function(event) {
-    if (this.files && this.files[0]) {
-        const file = this.files[0];
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            let preview = document.getElementById('avatar-preview');
-            let initials = document.getElementById('avatar-initials');
-            
-            if (!preview) {
-                // If initials circle was showing, replace it with an img
-                const container = document.querySelector('.profile-image-container');
-                preview = document.createElement('img');
-                preview.id = 'avatar-preview';
-                preview.className = 'rounded-circle shadow-sm';
-                preview.width = 150;
-                preview.height = 150;
-                preview.style.objectFit = 'cover';
-                preview.style.border = '5px solid var(--border)';
-                
-                if (initials) {
-                    container.replaceChild(preview, initials);
-                }
-            }
-            
-            preview.src = e.target.result;
-            
-            // Show toast or info
-            showNotification("Image selected! Don't forget to click 'Update Profile' to save.", "info");
-        }
-        
-        reader.readAsDataURL(file);
+  if (this.files && this.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('avatar-preview');
+      const initials = document.getElementById('avatar-initials');
+      if (preview) {
+        preview.src = e.target.result;
+      } else if (initials) {
+        const img = document.createElement('img');
+        img.id = 'avatar-preview';
+        img.className = 'profile-avatar-img';
+        img.src = e.target.result;
+        initials.parentNode.replaceChild(img, initials);
+      }
+      showNotification("Avatar updated! Save changes to persist.", "info");
     }
+    reader.readAsDataURL(this.files[0]);
+  }
 };
 
-function showNotification(msg, type) {
-    // Check if toast container exists
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        container.style.position = 'fixed';
-        container.style.bottom = '20px';
-        container.style.right = '20px';
-        container.style.zIndex = '9999';
-        document.body.appendChild(container);
+// Interest Management Logic
+const interestInput = document.getElementById('custom-interest-input');
+const interestsContainer = document.getElementById('interests-display');
+const fieldSelect = document.getElementById('field-select');
+
+// Load suggestions on initialization and on change
+document.addEventListener('DOMContentLoaded', () => {
+  if (fieldSelect) {
+    loadSuggestedInterests(fieldSelect.value);
+    fieldSelect.addEventListener('change', function() {
+      loadSuggestedInterests(this.value);
+    });
+  }
+  
+  // Password toggle
+  document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const input = this.parentElement.querySelector('input');
+      const icon = this.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+  });
+});
+
+async function loadSuggestedInterests(field) {
+  const container = document.getElementById('suggested-interests-container');
+  const grid = document.getElementById('suggested-interests-grid');
+  const display = document.getElementById('field-display-interests');
+  
+  if (!field) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  display.textContent = field;
+  container.style.display = 'block';
+  grid.innerHTML = '<div class="spinner-border spinner-border-sm text-primary"></div>';
+  
+  try {
+    const resp = await fetch(`/api/sub-interests/${encodeURIComponent(field)}`);
+    const data = await resp.json();
+    grid.innerHTML = '';
+    
+    // Get currently selected interests (lowercase for comparison)
+    const getSelected = () => {
+      return Array.from(document.querySelectorAll('#interests-display input[name="interests"]'))
+                  .map(i => i.value.toLowerCase().trim());
+    };
+    
+    const selected = getSelected();
+    
+    if (data.sub_interests && data.sub_interests.length > 0) {
+      data.sub_interests.forEach(interest => {
+        const isActive = selected.includes(interest.toLowerCase().trim());
+        const pill = document.createElement('div');
+        pill.className = `interest-pill-suggested ${isActive ? 'active' : ''}`;
+        pill.textContent = interest;
+        pill.onclick = () => toggleSuggestedInterest(interest, pill);
+        grid.appendChild(pill);
+      });
+    } else {
+      grid.innerHTML = '<span class="text-muted small italic">No standard topics suggested for this field. Add custom topics below!</span>';
     }
+  } catch (e) {
+    grid.innerHTML = '<span class="text-danger small">Error loading suggested topics.</span>';
+  }
+}
+
+function toggleSuggestedInterest(val, element) {
+  const existingInputs = Array.from(interestsContainer.querySelectorAll('input[name="interests"]'));
+  const foundInput = existingInputs.find(i => i.value.toLowerCase().trim() === val.toLowerCase().trim());
+  
+  if (foundInput) {
+    // Remove it
+    const chip = foundInput.closest('.interest-chip');
+    if (chip) chip.remove();
+    element.classList.remove('active');
+  } else {
+    // Add it
+    const emptyMsg = document.getElementById('no-interests-msg');
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    
+    const chip = document.createElement('div');
+    chip.className = 'interest-chip';
+    chip.dataset.interest = val;
+    chip.innerHTML = `
+      <span>${val}</span>
+      <button type="button" class="remove-interest" onclick="removeInterest(this)"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+      <input type="hidden" name="interests" value="${val}">
+    `;
+    interestsContainer.appendChild(chip);
+    element.classList.add('active');
+    
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  }
+  
+  // Show empty message if none left
+  if (interestsContainer.querySelectorAll('.interest-chip').length === 0) {
+    const emptyMsg = document.getElementById('no-interests-msg');
+    if (emptyMsg) emptyMsg.style.display = 'block';
+  }
+}
+
+interestInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addInterest();
+  }
+});
+
+function addInterest() {
+  const value = interestInput.value.trim();
+  if (!value) return;
+
+  // Check for duplicates
+  const existing = Array.from(interestsContainer.querySelectorAll('input[name="interests"]'))
+                        .map(i => i.value.toLowerCase().trim());
+  
+  if (existing.includes(value.toLowerCase().trim())) {
+    showNotification("Topic already added!", "warning");
+    return;
+  }
+
+  // Hide empty message
+  const emptyMsg = document.getElementById('no-interests-msg');
+  if (emptyMsg) emptyMsg.style.display = 'none';
+
+  // Create Chip
+  const chip = document.createElement('div');
+  chip.className = 'interest-chip';
+  chip.innerHTML = `
+    <span>${value}</span>
+    <button type="button" class="remove-interest" onclick="removeInterest(this)"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+    <input type="hidden" name="interests" value="${value}">
+  `;
+
+  interestsContainer.appendChild(chip);
+  interestInput.value = '';
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+
+  // Sync with suggested grid if it exists
+  const suggestedGrid = document.getElementById('suggested-interests-grid');
+  if (suggestedGrid) {
+    const pills = Array.from(suggestedGrid.querySelectorAll('.interest-pill-suggested'));
+    const matchingPill = pills.find(p => p.textContent.toLowerCase().trim() === value.toLowerCase().trim());
+    if (matchingPill) {
+      matchingPill.classList.add('active');
+    }
+  }
+}
+
+function removeInterest(btn) {
+  const chip = btn.closest('.interest-chip');
+  const val = chip.querySelector('input[name="interests"]').value;
+  chip.remove();
+  
+  // Sync with suggested grid if it exists
+  const suggestedGrid = document.getElementById('suggested-interests-grid');
+  if (suggestedGrid) {
+    const pills = Array.from(suggestedGrid.querySelectorAll('.interest-pill-suggested'));
+    const matchingPill = pills.find(p => p.textContent.toLowerCase().trim() === val.toLowerCase().trim());
+    if (matchingPill) {
+      matchingPill.classList.remove('active');
+    }
+  }
+  
+  // Show empty message if none left
+  if (interestsContainer.querySelectorAll('.interest-chip').length === 0) {
+    const emptyMsg = document.getElementById('no-interests-msg');
+    if (emptyMsg) emptyMsg.style.display = 'block';
+  }
+}
+
+function showNotification(msg, type) {
+    let container = document.getElementById('toast-container') || (function(){
+        const c = document.createElement('div');
+        c.id = 'toast-container';
+        c.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999;';
+        document.body.appendChild(c);
+        return c;
+    })();
     
     const toast = document.createElement('div');
-    toast.className = `alert alert-${type} fade show shadow`;
+    toast.className = `alert alert-${type} fade show border-0 shadow-lg rounded-3 mb-2`;
     toast.innerHTML = msg;
     toast.style.minWidth = '250px';
     container.appendChild(toast);

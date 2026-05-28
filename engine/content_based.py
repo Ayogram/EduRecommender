@@ -40,10 +40,10 @@ def _user_profile_text(user_id):
 
     # Highly rated courses
     rows = db.execute(
-        """SELECT c.title, c.description, c.category, c.tags
+        """SELECT c.title, c.description, c.category, c.tags, sc.grade
            FROM student_courses sc JOIN courses c ON sc.course_id = c.id
-           WHERE sc.user_id = ? AND sc.rating >= 3.0
-           ORDER BY sc.rating DESC LIMIT 10""",
+           WHERE sc.user_id = ? AND (sc.rating >= 3.0 OR sc.grade IN ('A', 'B'))
+           ORDER BY sc.enrolled_at DESC LIMIT 15""",
         (user_id,),
     ).fetchall()
 
@@ -55,7 +55,10 @@ def _user_profile_text(user_id):
         parts.extend([department] * 3)
     for r in rows:
         tags = " ".join(json.loads(r["tags"])) if r["tags"] else ""
-        parts.append(f"{r['title']} {r['description']} {r['category']} {tags}")
+        text = f"{r['title']} {r['description']} {r['category']} {tags}"
+        # Condition 1: Performance Match (Heavily weight 'A' grades)
+        weight = 3 if r["grade"] == "A" else (2 if r["grade"] == "B" else 1)
+        parts.extend([text] * weight)
 
     return " ".join(parts) if parts else ""
 

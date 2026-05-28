@@ -44,6 +44,14 @@ class Complaint:
         return rows
 
     @staticmethod
+    def get_by_id(complaint_id):
+        row = get_db().execute(
+            "SELECT * FROM complaints WHERE id = ?",
+            (complaint_id,),
+        ).fetchone()
+        return Complaint(row) if row else None
+
+    @staticmethod
     def respond(complaint_id, admin_response):
         db = get_db()
         db.execute(

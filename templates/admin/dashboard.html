@@ -1,6 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Administrator Control Center – EduRecommender{% endblock %}
-{% block page_title %}Administrator Control Center{% endblock %}
+{% block title %}Admin Hub – EduRecommender{% endblock %}
+{% block page_title_block %}
+<h1 style="font-size:1rem;font-weight:700;color:var(--text-primary);letter-spacing:-0.01em;white-space:nowrap;">Administrator Hub</h1>
+{% endblock %}
 
 {% block content %}
 <div class="fade-in">
@@ -126,7 +128,7 @@
                   <span class="badge badge-danger" style="background:rgba(231,76,60,0.1); color:#e74c3c; border:1px solid #e74c3c;">Suspended</span>
                 {% endif %}
               </td>
-              <td class="small-text">{{ user.created_at[:10] if user.created_at else 'N/A' }}</td>
+              <td class="small-text">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at.strftime is defined else (user.created_at|string)[:10] if user.created_at else 'N/A' }}</td>
               <td>
                 <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn btn-outline btn-sm">View</a>
               </td>

@@ -50,10 +50,13 @@ def create_app():
     from backend.recommendations import recs_bp
     from backend.complaints import complaints_bp
 
+    from backend.learning import learning_bp
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(recs_bp)
     app.register_blueprint(complaints_bp)
+    app.register_blueprint(learning_bp)
 
     # Initialise Google OAuth
     init_oauth(app)
@@ -64,9 +67,12 @@ def create_app():
 
     @main_bp.route("/")
     def index():
-        if current_user.is_authenticated:
-            return redirect(url_for("main.dashboard"))
-        return redirect(url_for("auth.login"))
+        return render_template("landing.html")
+
+    @main_bp.route("/architecture")
+    @login_required
+    def architecture():
+        return render_template("architecture.html")
 
     @main_bp.route("/dashboard")
     @login_required
@@ -86,9 +92,25 @@ def create_app():
                FROM recommendations r
                JOIN courses c ON r.course_id = c.id
                WHERE r.user_id = ?
-               ORDER BY r.score DESC LIMIT 5""",
+               ORDER BY r.success_probability DESC, r.score DESC LIMIT 5""",
             (current_user.id,),
         ).fetchall()
+
+        # Auto-generate recommendations if empty but profile is complete
+        if not recent_recs and current_user.interests and current_user.academic_field:
+            try:
+                from engine.hybrid import get_recommendations
+                get_recommendations(current_user.id, top_n=12)
+                recent_recs = db.execute(
+                    """SELECT r.*, c.title, c.category, c.difficulty
+                       FROM recommendations r
+                       JOIN courses c ON r.course_id = c.id
+                       WHERE r.user_id = ?
+                       ORDER BY r.success_probability DESC, r.score DESC LIMIT 5""",
+                    (current_user.id,),
+                ).fetchall()
+            except Exception:
+                pass
 
         return render_template(
             "dashboard.html",
@@ -105,6 +127,58 @@ def create_app():
         for n in user_notifications:
             Notification.mark_as_read(n.id)
         return render_template("notifications.html", notifications=user_notifications)
+
+    @main_bp.route("/api/dashboard")
+    def api_dashboard():
+        from flask import jsonify
+        if not current_user.is_authenticated:
+            return jsonify({"error": "unauthorized"}), 401
+            
+        db = get_db()
+        enrolled = db.execute(
+            """SELECT sc.*, c.title, c.category, c.difficulty, c.description
+               FROM student_courses sc
+               JOIN courses c ON sc.course_id = c.id
+               WHERE sc.user_id = ?
+               ORDER BY sc.enrolled_at DESC""",
+            (current_user.id,),
+        ).fetchall()
+
+        recent_recs = db.execute(
+            """SELECT r.*, c.title, c.category, c.difficulty
+               FROM recommendations r
+               JOIN courses c ON r.course_id = c.id
+               WHERE r.user_id = ?
+               ORDER BY r.success_probability DESC, r.score DESC LIMIT 5""",
+            (current_user.id,),
+        ).fetchall()
+
+        # Auto-generate recommendations if empty but profile is complete
+        if not recent_recs and current_user.interests and current_user.academic_field:
+            try:
+                from engine.hybrid import get_recommendations
+                get_recommendations(current_user.id, top_n=12)
+                recent_recs = db.execute(
+                    """SELECT r.*, c.title, c.category, c.difficulty
+                       FROM recommendations r
+                       JOIN courses c ON r.course_id = c.id
+                       WHERE r.user_id = ?
+                       ORDER BY r.success_probability DESC, r.score DESC LIMIT 5""",
+                    (current_user.id,),
+                ).fetchall()
+            except Exception:
+                pass
+
+        return jsonify({
+            "user": {
+                "name": current_user.name,
+                "email": current_user.email,
+                "gpa": current_user.gpa,
+                "department": current_user.department,
+            },
+            "enrolled": [dict(r) for r in enrolled],
+            "recommendations": [dict(r) for r in recent_recs]
+        })
 
     app.register_blueprint(main_bp)
 

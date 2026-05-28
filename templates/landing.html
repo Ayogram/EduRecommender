@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduRecommender – AI Academic Advisor</title>
+  <meta name="description" content="EduRecommender is a world-class, premium, university-standard AI course recommendation and academic advising platform.">
+  
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --font-headings: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      
+      --bg-dark: #09090b;
+      --bg-card: rgba(18, 18, 24, 0.7);
+      --border: rgba(63, 63, 70, 0.3);
+      --accent: #7c3aed;
+      --accent-glow: rgba(124, 58, 237, 0.15);
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      font-family: var(--font-body);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Glowing Background Mesh ─────────────────────────── */
+    .bg-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(79, 70, 229, 0.06) 0%, transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(9, 9, 11, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-headings);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    .logo svg {
+      width: 26px;
+      height: 26px;
+      stroke: var(--accent);
+    }
+
+    .logo span strong {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-headings);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-outline {
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      background: transparent;
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--text-secondary);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: #8b5cf6;
+      transform: translateY(-1px);
+    }
+
+    /* ── Hero Section ───────────────────────────────────── */
+    .hero {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 90px 24px 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      color: #a78bfa;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-headings);
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 650px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+
+    /* ── Preview Simulator Section ──────────────────────── */
+    .simulator-container {
+      max-width: 1000px;
+      margin: 0 auto 100px;
+      padding: 0 24px;
+    }
+
+    .sim-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(8px);
+    }
+
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    @media (max-width: 768px) {
+      .sim-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+    }
+
+    .sim-form-title {
+      font-family: var(--font-headings);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sim-form-title svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--accent);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .form-select, .form-range {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-select:focus {
+      border-color: var(--accent);
+    }
+
+    /* Interests chips container */
+    .interests-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .interest-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .interest-chip.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* Output Area */
+    .sim-output-container {
+      background: rgba(9, 9, 11, 0.4);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 280px;
+    }
+
+    .sim-empty-state {
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .sim-empty-state i {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+      color: var(--text-muted);
+    }
+
+    .pipeline-status {
+      font-family: monospace;
+      font-size: 0.78rem;
+      color: #a78bfa;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .rec-card-preview {
+      background: rgba(18, 18, 24, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+      animation: fadeInUp 0.4s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .rec-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .rec-card-title {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .rec-card-match {
+      color: #059669;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    .rec-card-reason {
+      color: var(--text-secondary);
+      font-style: italic;
+      font-size: 0.75rem;
+      border-left: 2px solid var(--accent);
+      padding-left: 10px;
+      margin-top: 6px;
+    }
+
+    /* ── Features Grid ──────────────────────────────────── */
+    .features-section {
+      max-width: 1200px;
+      margin: 0 auto 100px;
+      padding: 0 24px;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-title h2 {
+      font-family: var(--font-headings);
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(124, 58, 237, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      background: var(--accent-glow);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: #a78bfa;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-headings);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    /* ── CTA / Footer ───────────────────────────────────── */
+    .cta {
+      text-align: center;
+      background: radial-gradient(circle at center, rgba(124, 58, 237, 0.15) 0%, transparent 60%);
+      padding: 80px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .cta h2 {
+      font-family: var(--font-headings);
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .cta p {
+      color: var(--text-secondary);
+      max-width: 550px;
+      margin: 0 auto 32px;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: rgba(9, 9, 11, 0.8);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Edu<strong>Recommender</strong></span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#simulator">AI Simulator</a>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+        {% else %}
+          <div class="auth-buttons">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Sign In</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">
+      <i class="fa-solid fa-graduation-cap me-1"></i> Research-Grade Academic Advisor
+    </div>
+    <h1>The Intelligent recommendation engine built for universities.</h1>
+    <p>A hybrid recommendation platform combining Content-Based Similarity, Matrix Factorization, and Collaborative Filtering to advise students on optimal course pathways and career alignment.</p>
+    <a href="#simulator" class="btn btn-primary" style="padding: 12px 28px; font-size: 0.9rem;">Test AI Simulator</a>
+  </section>
+
+  <!-- Preview Simulator -->
+  <section class="simulator-container" id="simulator">
+    <div class="sim-card">
+      <div class="sim-grid">
+        
+        <!-- Input Form -->
+        <div>
+          <div class="sim-form-title">
+            <svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Recommendation Input Profile
+          </div>
+          
+          <div class="form-group">
+            <label>Field of Study</label>
+            <select id="sim-dept" class="form-select" onchange="updateSuggestedInterests()">
+              <option value="cs">Computer Science & MIS</option>
+              <option value="law">Law & Jurisprudence</option>
+              <option value="business">Business Administration</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Simulated GPA: <span id="gpa-label" style="color: var(--accent); font-weight:700;">3.8</span></label>
+            <input type="range" id="sim-gpa" class="form-range" min="1.5" max="4.0" step="0.1" value="3.8" oninput="document.getElementById('gpa-label').innerText = this.value">
+          </div>
+
+          <div class="form-group">
+            <label>Academic Interests</label>
+            <div class="interests-grid" id="interests-grid">
+              <!-- Rendered Dynamically -->
+            </div>
+          </div>
+
+          <button onclick="runSimulation()" class="btn btn-primary" style="width: 100%; border-radius:10px; padding:12px;">Run Recommendation Pipeline</button>
+        </div>
+
+        <!-- Output Simulation -->
+        <div>
+          <div class="sim-form-title">
+            <i class="fa-solid fa-server" style="color:var(--accent);"></i>
+            AI Pipeline Engine Execution
+          </div>
+          
+          <div class="sim-output-container" id="sim-output">
+            <div class="sim-empty-state" id="sim-empty">
+              <i class="fa-solid fa-brain"></i>
+              <p style="font-size:0.82rem;">Select your parameters and execute the model to simulate recommendation matrices.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features-section" id="features">
+    <div class="section-title">
+      <h2>Academic Advising Intelligence</h2>
+      <p>Research-grade algorithms built with mathematical integrity to maximize learning outcomes.</p>
+    </div>
+
+    <div class="features-grid">
+      
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-filter"></i></div>
+        <h3>Content-Based TF-IDF</h3>
+        <p>Extracts keyword signatures and vector representations from user interests, matching course descriptions using Cosine Similarity.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-network-wired"></i></div>
+        <h3>Collaborative Filtering</h3>
+        <p>Analyzes historical student performance matrices to find enrollment pathways taken by students with similar academic profiles.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+        <h3>Matrix Factorization</h3>
+        <p>Decomposes sparse user-course interaction grids into latent factor vectors to accurately forecast expected success probability.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Ready to optimize your academic pathway?</h2>
+    <p>Sign up now to explore courses, test modules, and retrieve detailed explanations from our AI Academic Advisor.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="padding: 12px 28px;">Create Free Student Account</a>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2026 EduRecommender. Built for final year university project and research oversight.</p>
+  </footer>
+
+  <script>
+    const interestsMap = {
+      cs: ["Artificial Intelligence", "Web Development", "Data Science", "Cybersecurity", "Database Management", "Networks & Systems"],
+      law: ["Criminal Law", "Constitutional Law", "Human Rights", "Corporate Law", "Intellectual Property", "Judicial Studies"],
+      business: ["Finance", "Marketing Strategy", "Corporate Governance", "Entrepreneurship", "Operations Management", "Accounting"]
+    };
+
+    const coursePool = {
+      cs: [
+        { title: "Natural Language Processing", match: 98, tags: ["AI", "Data Science"], reason: "Matches interest in AI and high-performance GPA vectors." },
+        { title: "Modern Web Applications", match: 94, tags: ["Web Development"], reason: "Direct match with Web Development interest tags." },
+        { title: "Advanced Relational Databases", match: 89, tags: ["Database Management"], reason: "Suited for students focusing on backend infrastructure." }
+      ],
+      law: [
+        { title: "Constitutional Law & Civil Rights", match: 97, tags: ["Constitutional Law"], reason: "Aligned with your focus in civil justice and constitutional pathways." },
+        { title: "Intellectual Property Protection", match: 93, tags: ["Intellectual Property"], reason: "Recommended due to your interest in Corporate Law and IP structures." },
+        { title: "Human Rights Law and Treaties", match: 87, tags: ["Human Rights"], reason: "Direct overlap with international human rights interest tags." }
+      ],
+      business: [
+        { title: "Strategic Corporate Management", match: 96, tags: ["Corporate Governance"], reason: "Recommended based on your interest in entrepreneurship and company oversight." },
+        { title: "Investment Banking & Finance", match: 92, tags: ["Finance"], reason: "Suited for students prioritizing quantitative business models." },
+        { title: "Global Logistics & Operations", match: 88, tags: ["Operations Management"], reason: "Direct match with operations and manufacturing management interest tags." }
+      ]
+    };
+
+    let selectedInterests = [];
+
+    function updateSuggestedInterests() {
+      const dept = document.getElementById("sim-dept").value;
+      const grid = document.getElementById("interests-grid");
+      grid.innerHTML = "";
+      selectedInterests = [];
+      
+      interestsMap[dept].forEach(interest => {
+        const chip = document.createElement("div");
+        chip.className = "interest-chip";
+        chip.innerText = interest;
+        chip.onclick = () => {
+          chip.classList.toggle("active");
+          if (chip.classList.contains("active")) {
+            selectedInterests.push(interest);
+          } else {
+            selectedInterests = selectedInterests.filter(i => i !== interest);
+          }
+        };
+        grid.appendChild(chip);
+      });
+    }
+
+    function runSimulation() {
+      const out = document.getElementById("sim-output");
+      const dept = document.getElementById("sim-dept").value;
+      const gpa = parseFloat(document.getElementById("sim-gpa").value);
+
+      out.innerHTML = `
+        <div class="pipeline-status">
+          > [t=0ms] Fetching academic variables...<br>
+          > [t=120ms] GPA scale factor calculated: ${(gpa / 4.0).toFixed(2)}<br>
+          > [t=300ms] Tokenizing student interest profile: [${selectedInterests.join(', ') || 'General'}]<br>
+          > [t=540ms] Executing TF-IDF Cosine Similarity engine...<br>
+          > [t=780ms] Computing latent factor matrix factorization vectors...<br>
+          > [t=900ms] Blending predictions via Hybrid ensemble matrix...
+        </div>
+      `;
+
+      setTimeout(() => {
+        out.innerHTML = "";
+        const courses = coursePool[dept];
+        courses.forEach((c, index) => {
+          // Adjust match rate slightly based on GPA
+          const adjustedMatch = Math.min(99, Math.round(c.match + (gpa - 3.0) * 4));
+          
+          const card = document.createElement("div");
+          card.className = "rec-card-preview";
+          card.style.animationDelay = `${index * 0.15}s`;
+          card.innerHTML = `
+            <div class="rec-card-header">
+              <span class="rec-card-title">${c.title}</span>
+              <span class="rec-card-match">${adjustedMatch}% AI Match</span>
+            </div>
+            <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Tags: ${c.tags.join(', ')}</div>
+            <div class="rec-card-reason">🧠 Insight: ${c.reason}</div>
+          `;
+          out.appendChild(card);
+        });
+      }, 1200);
+    }
+
+    // Initialize
+    updateSuggestedInterests();
+  </script>
+</body>
+</html>

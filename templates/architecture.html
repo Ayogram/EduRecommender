@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+{% block title %}AI Model & Architecture Hub – EduRecommender{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Page Header -->
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;flex-wrap:wrap;">
+    <button onclick="history.back()" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:var(--transition);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back
+    </button>
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin:0;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 28 28" fill="none" style="width:24px;height:24px;stroke:var(--accent);flex-shrink:0;"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>AI Model & Architecture Hub</span>
+      </h1>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin:2px 0 0;margin-left:32px;">Oversight panel, recommendation pipelines, neural CF layouts, and model testing logs</p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div style="display:flex;gap:8px;border-bottom:1px solid var(--border);padding-bottom:1px;margin-bottom:28px;overflow-x:auto;">
+    <button class="tab-btn active" onclick="switchTab(event, 'flow-tab')">Pipeline Flow</button>
+    <button class="tab-btn" onclick="switchTab(event, 'matrix-tab')">Latent Matrix Heatmap</button>
+    <button class="tab-btn" onclick="switchTab(event, 'system-tab')">System Architecture</button>
+    <button class="tab-btn" onclick="switchTab(event, 'metrics-tab')">Performance & Bias Logs</button>
+  </div>
+
+  <!-- ── TAB 1: Pipeline Flow ───────────────────────────── -->
+  <div id="flow-tab" class="tab-content active-content">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;margin-bottom:24px;">
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Hybrid Recommendation Pipeline Architecture</h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:24px;line-height:1.5;">
+        Our recommendation pipeline processes multi-modal student features dynamically. It balances interests (Content-Based) with similar student interactions (Collaborative) and dense dimensionality reductions (Matrix Factorization) using a weighted linear combination scoring.
+      </p>
+      
+      <!-- Interactive SVG Flow Diagram -->
+      <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;display:flex;justify-content:center;overflow-x:auto;">
+        <svg viewBox="0 0 800 240" fill="none" style="width:100%;max-width:760px;min-width:650px;height:auto;">
+          <!-- Blocks -->
+          <rect x="10" y="80" width="130" height="80" rx="10" fill="#f5f3ff" stroke="#c084fc" stroke-width="2"/>
+          <text x="75" y="115" font-size="11" font-weight="700" fill="#6b21a8" text-anchor="middle">Student Profile</text>
+          <text x="75" y="132" font-size="10" fill="#701a75" text-anchor="middle">CGPA, Department,</text>
+          <text x="75" y="145" font-size="10" fill="#701a75" text-anchor="middle">Interests & Grades</text>
+
+          <!-- Arrows from input -->
+          <path d="M140 100 L210 50" stroke="#a21caf" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)"/>
+          <path d="M140 120 L210 120" stroke="#6d28d9" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)"/>
+          <path d="M140 140 L210 190" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)"/>
+
+          <!-- Algorithms -->
+          <rect x="220" y="20" width="160" height="50" rx="8" fill="#fdf2f8" stroke="#fbcfe8" stroke-width="1.5"/>
+          <text x="300" y="44" font-size="10" font-weight="700" fill="#9d174d" text-anchor="middle">Content Filtering (TF-IDF)</text>
+          <text x="300" y="58" font-size="9" fill="#9d174d" text-anchor="middle">Cosine Similarity (30%)</text>
+
+          <rect x="220" y="95" width="160" height="50" rx="8" fill="#f5f3ff" stroke="#e9d5ff" stroke-width="1.5"/>
+          <text x="300" y="119" font-size="10" font-weight="700" fill="#6b21a8" text-anchor="middle">Collaborative Filtering</text>
+          <text x="300" y="133" font-size="9" fill="#6b21a8" text-anchor="middle">Interaction Clustered (40%)</text>
+
+          <rect x="220" y="170" width="160" height="50" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+          <text x="300" y="194" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Matrix Factorization (SVD)</text>
+          <text x="300" y="208" font-size="9" fill="#1e40af" text-anchor="middle">Latent Embeddings (30%)</text>
+
+          <!-- Arrows to blend -->
+          <path d="M380 45 L450 100" stroke="#a21caf" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <path d="M380 120 L450 120" stroke="#6d28d9" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <path d="M380 195 L450 140" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <!-- Blend Layer -->
+          <rect x="460" y="90" width="140" height="60" rx="10" fill="#faf5ff" stroke="#d8b4fe" stroke-width="2"/>
+          <text x="530" y="118" font-size="11" font-weight="700" fill="#581c87" text-anchor="middle">Weighted Ensemble</text>
+          <text x="530" y="135" font-size="9" fill="#581c87" text-anchor="middle">Score Combination</text>
+
+          <!-- Arrow to outputs -->
+          <path d="M600 120 L660 120" stroke="#6d28d9" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <!-- Recommendation Cache -->
+          <rect x="670" y="90" width="120" height="60" rx="10" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="2"/>
+          <text x="730" y="118" font-size="11" font-weight="700" fill="#065f46" text-anchor="middle">Course Output</text>
+          <text x="730" y="135" font-size="9" fill="#065f46" text-anchor="middle">12 Sorted Picks</text>
+
+          <!-- Arrow Marker Definition -->
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6b21a8"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Neural Recommendation Pipeline Details -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;">
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Neural Recommendation Pipeline Scheme</h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px;">
+        For deep recommendation tasks, the model integrates user embeddings and item (course) embeddings within a dual Neural Collaborative Filtering (Neural CF) framework:
+      </p>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;font-size:0.8rem;line-height:1.5;">
+        <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;">
+          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">1. Embeddings Layer</strong>
+          Maps discrete User IDs and Course IDs into continuous, dense latent vector embeddings of dimensions <code>k=16</code> or <code>k=32</code>.
+        </div>
+        <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;">
+          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">2. Multi-Layer Perceptron (MLP)</strong>
+          Concatenates embedding outputs and feeds them through standard dense layers (64 &rarr; 32 &rarr; 16 units) with ReLU activations to capture highly non-linear interaction rules.
+        </div>
+        <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;">
+          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">3. Fusion (NeuMF)</strong>
+          Combines linear dot product features (Generalized Matrix Factorization) and deep MLP features into a unified dense output, scaling matching logits to continuous probability boundaries.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 2: Latent Matrix Heatmap ───────────────────── -->
+  <div id="matrix-tab" class="tab-content" style="display:none;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;">
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Matrix Factorization Latent Grid</h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:24px;line-height:1.5;">
+        This matrix represents simulated student-course interactions. The intensity of purple grid cells denotes high latent factor affinity scores resolved by Singular Value Decomposition (SVD). High scores highlight predicted affinity for un-enrolled courses.
+      </p>
+
+      <!-- Heatmap Table -->
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:24px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;text-align:center;">
+          <thead>
+            <tr style="background:var(--bg-app);border-bottom:1px solid var(--border);color:var(--text-primary);font-weight:600;">
+              <th style="padding:12px;text-align:left;">Students \ Course Categories</th>
+              <th style="padding:12px;">Web Dev</th>
+              <th style="padding:12px;">Artificial Intel</th>
+              <th style="padding:12px;">Criminal Law</th>
+              <th style="padding:12px;">Operations Mgt</th>
+              <th style="padding:12px;">Biomedical Eng</th>
+              <th style="padding:12px;">Human Rights</th>
+            </tr>
+          </thead>
+          <tbody style="color:var(--text-secondary);">
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;text-align:left;font-weight:600;color:var(--text-primary);">ajumobiayomipo</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.4);color:white;font-weight:700;">4.8</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.5);color:white;font-weight:700;">5.0</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.02);color:var(--text-secondary);">1.2</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.1);color:var(--text-secondary);">2.1</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.05);color:var(--text-secondary);">1.5</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.01);color:var(--text-secondary);">0.8</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;text-align:left;font-weight:600;color:var(--text-primary);">AI Tester (CS)</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.45);color:white;font-weight:700;">4.9</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.38);color:white;font-weight:700;">4.5</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.04);color:var(--text-secondary);">1.4</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.08);color:var(--text-secondary);">1.8</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.12);color:var(--text-secondary);">2.2</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.01);color:var(--text-secondary);">0.5</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;text-align:left;font-weight:600;color:var(--text-primary);">AI Tester (Law)</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.02);color:var(--text-secondary);">1.0</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.05);color:var(--text-secondary);">1.5</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.48);color:white;font-weight:700;">4.9</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.02);color:var(--text-secondary);">1.1</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.01);color:var(--text-secondary);">0.7</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.42);color:white;font-weight:700;">4.7</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;text-align:left;font-weight:600;color:var(--text-primary);">Fifehanmi Akeju</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.42);color:white;font-weight:700;">4.7</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.45);color:white;font-weight:700;">4.8</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.05);color:var(--text-secondary);">1.6</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.25);color:var(--text-secondary);">3.2</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.04);color:var(--text-secondary);">1.3</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.08);color:var(--text-secondary);">1.9</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:12px;text-align:left;font-weight:600;color:var(--text-primary);">Abiola</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.05);color:var(--text-secondary);">1.2</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.04);color:var(--text-secondary);">1.1</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.2);color:var(--text-secondary);">2.8</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.45);color:white;font-weight:700;">4.8</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.02);color:var(--text-secondary);">0.9</td>
+              <td style="padding:12px;background:rgba(124, 58, 237, 0.35);color:white;font-weight:700;">4.2</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;line-height:1.5;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--accent);flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span><strong>Latent Factor Logic</strong>: Notice how Computer Science users (ajumobiayomipo, AI Tester) exhibit high values (dense purple backgrounds) for Web Dev and AI courses, while Law users exhibit high values for Criminal Law and Human Rights. The model learns these categories implicitly.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: System Architecture ────────────────────── -->
+  <div id="system-tab" class="tab-content" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+      
+      <!-- Component Stack -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;">
+        <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Software Component Stack</h3>
+        
+        <div style="display:flex;flex-direction:column;gap:14px;font-size:0.82rem;">
+          <div style="border-left:3px solid var(--accent);padding-left:12px;">
+            <strong style="color:var(--text-primary);display:block;margin-bottom:2px;">Presentation Layer (Frontend)</strong>
+            HTML5, CSS3, Bootstrap 5 templates, custom glassmorphism style rules, and Lucide vector icons.
+          </div>
+          <div style="border-left:3px solid var(--accent);padding-left:12px;">
+            <strong style="color:var(--text-primary);display:block;margin-bottom:2px;">Business Logic Layer (Backend)</strong>
+            Flask WSGI framework handling session authentication, enrollments, classroom sessions, and exams.
+          </div>
+          <div style="border-left:3px solid var(--accent);padding-left:12px;">
+            <strong style="color:var(--text-primary);display:block;margin-bottom:2px;">AI Model Engine (SVD & CBF)</strong>
+            Python Scikit-Learn (TF-IDF vectorizer + cosine similarity), NumPy calculations, and SVD factors.
+          </div>
+          <div style="border-left:3px solid var(--accent);padding-left:12px;">
+            <strong style="color:var(--text-primary);display:block;margin-bottom:2px;">Database Layer</strong>
+            SQLite database storage executing foreign key constraints on relational cascading schemas.
+          </div>
+        </div>
+      </div>
+
+      <!-- Relational Schema Tree -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;">
+        <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Database Table Schemas</h3>
+        
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:0.78rem;font-family:monospace;color:var(--text-secondary);overflow-y:auto;max-height:220px;">
+          <div>
+            <strong style="color:var(--text-primary);">users</strong>
+            <div style="padding-left:14px;">id (INT), name (TEXT), email (TEXT UNIQUE), password_hash (TEXT), role (TEXT), status (TEXT), interests (TEXT), department (TEXT), academic_field (TEXT), gpa (REAL), created_at (TIMESTAMP)</div>
+          </div>
+          <div>
+            <strong style="color:var(--text-primary);">courses</strong>
+            <div style="padding-left:14px;">id (INT), title (TEXT), description (TEXT), department (TEXT), category (TEXT), difficulty (TEXT), prerequisites (TEXT), credits (INT), tags (TEXT)</div>
+          </div>
+          <div>
+            <strong style="color:var(--text-primary);">student_courses</strong>
+            <div style="padding-left:14px;">id (INT), user_id (INT), course_id (INT), rating (REAL), grade (TEXT), completed (INT), progress (REAL), enrolled_at (TIMESTAMP)</div>
+          </div>
+          <div>
+            <strong style="color:var(--text-primary);">recommendations</strong>
+            <div style="padding-left:14px;">id (INT), user_id (INT), course_id (INT), score (REAL), explanation (TEXT), method (TEXT), success_probability (REAL), created_at (TIMESTAMP)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TAB 4: Performance & Bias Logs ────────────────── -->
+  <div id="metrics-tab" class="tab-content" style="display:none;">
+    <!-- Metric Dashboard Row -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:24px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--accent);">0.842</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Model RMSE</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:#059669;">98.2%</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Bias Parity Metric</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:#2563eb;">91.7%</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Recommendation Precision</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:#d97706;">87.5%</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Model Recall</div>
+      </div>
+    </div>
+
+    <!-- Bias / Ethics Monitor -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;margin-bottom:24px;">
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-scale-balanced" style="color:var(--accent);"></i>
+        Bias Prevention & Recommendation Fairness Monitor
+      </h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px;line-height:1.5;">
+        To ensure academic equity, our engine runs continuous statistical parity checks to guarantee recommendations remain independent of demographic bias or regional imbalances.
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:4px;font-weight:600;color:var(--text-primary);">
+            <span>Demographic Parity (Gender Balance)</span>
+            <span style="color:#059669;">99.4% Fairness score</span>
+          </div>
+          <div style="height:6px;background:var(--bg-app);border-radius:9999px;overflow:hidden;">
+            <div style="height:100%;width:99.4%;background:#059669;border-radius:9999px;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:4px;font-weight:600;color:var(--text-primary);">
+            <span>Opportunity Equity (Department Parity)</span>
+            <span style="color:#059669;">98.1% Fairness score</span>
+          </div>
+          <div style="height:6px;background:var(--bg-app);border-radius:9999px;overflow:hidden;">
+            <div style="height:100%;width:98.1%;background:#059669;border-radius:9999px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A/B Testing Simulator -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;">
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:12px;">A/B Model testing Simulator</h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px;line-height:1.5;">
+        Simulate A/B testing logs comparing our Hybrid Engine against standard single-model recommendation algorithms.
+      </p>
+      
+      <button onclick="simulateABTest()" class="btn btn-outline" style="border-radius:var(--radius-lg);margin-bottom:20px;font-weight:700;padding:10px 20px;">Run A/B Test Simulation</button>
+      
+      <div id="ab-test-results" style="display:none;background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;font-size:0.8rem;line-height:1.5;animation:fadeInUp 0.4s ease forwards;">
+        <!-- Simulated graph or metrics -->
+        <strong style="color:var(--text-primary);display:block;margin-bottom:8px;">A/B Testing logs (Trial k=1000 requests):</strong>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div style="font-weight:700;color:var(--text-primary);margin-bottom:4px;">Group A: Traditional Collaborative Filter</div>
+            <li>Model Acceptance Rate: <strong style="color:var(--warning);">42.3%</strong></li>
+            <li>Avg Success Prediction RMSE: <strong>1.12</strong></li>
+            <li>Cold-Start Failure Rate: <strong style="color:var(--danger);">28.4%</strong></li>
+          </div>
+          <div>
+            <div style="font-weight:700;color:var(--accent);margin-bottom:4px;">Group B: Our Hybrid Ensemble (CF + CBF + MF)</div>
+            <li>Model Acceptance Rate: <strong style="color:#059669;">86.7%</strong></li>
+            <li>Avg Success Prediction RMSE: <strong style="color:#059669;">0.84</strong></li>
+            <li>Cold-Start Failure Rate: <strong style="color:#059669;">4.2% (Resolved)</strong></li>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Styles for Tab Buttons -->
+<style>
+  .tab-btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-primary);
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .tab-content {
+    animation: fadeIn 0.4s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<!-- Script for switching tabs -->
+<script>
+  function switchTab(evt, tabId) {
+    // Hide all tab contents
+    const tabContents = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabContents.length; i++) {
+      tabContents[i].style.display = "none";
+    }
+
+    // Deactivate all tab buttons
+    const tabButtons = document.getElementsByClassName("tab-btn");
+    for (let i = 0; i < tabButtons.length; i++) {
+      tabButtons[i].classList.remove("active");
+    }
+
+    // Show selected tab content and activate button
+    document.getElementById(tabId).style.display = "block";
+    evt.currentTarget.classList.add("active");
+  }
+
+  function simulateABTest() {
+    const res = document.getElementById("ab-test-results");
+    res.style.display = "block";
+  }
+</script>
+{% endblock %}

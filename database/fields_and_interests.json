@@ -1,11 +1,54 @@
 {
-  "Law": ["Criminal Law", "Corporate Law", "International Law", "Human Rights", "Constitutional Law", "Environmental Law", "IP Law"],
-  "Medicine": ["Surgery", "Pediatrics", "Pharmacology", "Anatomy", "Neurology", "Psychiatry", "Public Health", "Genetics"],
-  "Engineering": ["Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Aerospace Engineering", "Chemical Engineering", "Robotics"],
-  "Business Administration": ["Management", "Marketing", "Entrepreneurship", "Human Resources", "Supply Chain", "Business Ethics"],
-  "Accounting": ["Financial Accounting", "Audit", "Taxation", "Management Accounting", "Forensic Accounting"],
-  "Arts": ["Fine Arts", "Graphic Design", "History of Art", "Music Theory", "Performing Arts", "Literature"],
-  "Social Sciences": ["Psychology", "Sociology", "Political Science", "Economics", "Anthropology", "International Relations"],
-  "Computer Science": ["Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", "Cloud Computing", "Web Development", "Mobile Dev"],
-  "Others": ["Mathematics", "Physics", "Chemistry", "Biology", "Environmental Science", "Architecture", "Education"]
+  "Law": [
+    "Criminal Law", "Corporate Law", "International Law", "Human Rights", "Constitutional Law", 
+    "Environmental Law", "IP Law", "Family Law", "Labor Law", "Tort Law", "Commercial Law", 
+    "Contract Law", "Legal Writing", "Advocacy", "Maritime Law", "Tax Law", "Media Law", 
+    "Arbitration & Dispute Resolution", "Jurisprudence", "Medical Jurisprudence", "Civil Rights", "Immigration Law"
+  ],
+  "Medicine": [
+    "Surgery", "Pediatrics", "Pharmacology", "Anatomy", "Neurology", "Psychiatry", "Public Health", 
+    "Genetics", "Pathology", "Biochemistry", "Epidemiology", "Microbiology", "Physiology", 
+    "Immunology", "Medical Ethics", "Clinical Research", "Cardiology", "Dermatology", "Radiology", 
+    "Oncology", "Nursing", "Nutrition", "Emergency Medicine"
+  ],
+  "Engineering": [
+    "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Aerospace Engineering", 
+    "Chemical Engineering", "Robotics", "Embedded Systems", "Telecommunications", "Structural Engineering", 
+    "Control Systems", "Material Science", "Renewable Energy", "Fluid Mechanics", "Thermodynamics", 
+    "Nanotechnology", "Industrial Design", "Biomedical Engineering", "Environmental Engineering"
+  ],
+  "Business Administration": [
+    "Management", "Marketing", "Entrepreneurship", "Human Resources", "Supply Chain", "Business Ethics", 
+    "Strategic Planning", "Financial Management", "Organizational Behavior", "Operations Management", 
+    "Business Analytics", "Project Management", "Microeconomics", "Macroeconomics", "E-Commerce", 
+    "International Business", "Corporate Governance", "Leadership", "Brand Management"
+  ],
+  "Accounting": [
+    "Financial Accounting", "Audit", "Taxation", "Management Accounting", "Forensic Accounting", 
+    "Corporate Finance", "Cost Accounting", "Financial Reporting", "Tax Planning", "QuickBooks", 
+    "Excel for Accounting", "Risk Management", "Auditing Standards", "International Accounting", 
+    "Accounting Information Systems"
+  ],
+  "Arts": [
+    "Fine Arts", "Graphic Design", "History of Art", "Music Theory", "Performing Arts", "Literature", 
+    "Visual Communication", "Creative Writing", "Photography", "Cinematography", "Digital Illustration", 
+    "Animation", "Sculpting", "Theatre Arts", "Fashion Design", "Industrial Design", "Interior Design", "Painting"
+  ],
+  "Social Sciences": [
+    "Psychology", "Sociology", "Political Science", "Economics", "Anthropology", "International Relations", 
+    "Criminology", "Media Studies", "Philosophy", "Social Policy", "Gender Studies", "Human Geography", 
+    "Demography", "Behavioral Economics", "Public Policy"
+  ],
+  "Computer Science": [
+    "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", "Cloud Computing", 
+    "Web Development", "Mobile Dev", "Machine Learning", "Database Management", "Networks & Distributed Systems", 
+    "Human-Computer Interaction", "Game Development", "Computer Graphics", "Natural Language Processing", 
+    "DevOps", "Blockchain", "Cryptography", "Algorithms & Data Structures", "UI/UX Design", "Computer Vision", 
+    "Internet of Things", "Embedded Systems", "Compiler Design", "Agile Methodologies", "CompTIA", "Virtual Reality"
+  ],
+  "Others": [
+    "Mathematics", "Physics", "Chemistry", "Biology", "Environmental Science", "Architecture", 
+    "Education", "Statistics", "Calculus", "Linear Algebra", "Organic Chemistry", "Biochemistry", 
+    "Genetics", "Astronomy", "Microbiology", "Ecology", "Research Methodology"
+  ]
 }

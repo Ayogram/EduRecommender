@@ -1,209 +1,258 @@
 {% extends "base.html" %}
 {% block title %}Dashboard – EduRecommender{% endblock %}
-{% block page_title %}Overview{% endblock %}
 
 {% block content %}
 <div class="fade-in">
-  <!-- Greeting Banner -->
-  <div class="card mb-4" style="background:linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border:none; border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 10px 20px rgba(108, 99, 255, 0.2);">
-    <div style="position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.15); border-radius: 50%;"></div>
-    <div class="card-body p-4 p-md-5" style="position: relative; z-index: 1;">
-      <div class="row align-items-center">
-        <div class="col-md-8">
-          <h2 class="display-6 fw-bold mb-2">
-            {% set hour = now.hour if now is defined else 12 %}
-            Good {{ "Morning" if hour < 12 else ("Afternoon" if hour < 17 else "Evening") }}, {{ current_user.name.split()[0] }}!
-            <span class="greeting-icon" style="display:inline-block;margin-left:8px;vertical-align:middle; animation: wave 2s infinite;">👋</span>
-          </h2>
-          <p class="lead mb-4 opacity-90">
-            {% if enrolled_courses|length > 0 %}
-              You're currently taking <strong>{{ enrolled_courses|length }}</strong> courses. 
-              {% if recent_recs|length > 0 %}We've found <strong>{{ recent_recs|length }}</strong> new opportunities for you today!{% endif %}
+
+  <!-- ═══ GREETING ROW ═══════════════════════════════════════════ -->
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; gap:16px;">
+    <div class="dashboard-greeting" style="margin-bottom:0;">
+      <h2>
+        {% set hour = now.hour if now is defined else 12 %}
+        Good {{ "morning" if hour < 12 else ("afternoon" if hour < 17 else "evening") }}, {{ current_user.name.split()[0] }}
+      </h2>
+      <p>
+        {% if enrolled_courses|length > 0 %}
+          You have <strong>{{ enrolled_courses|length }}</strong> enrolled course{{ 's' if enrolled_courses|length != 1 }}.
+          {% if recent_recs|length > 0 %} Your AI found <strong>{{ recent_recs|length }}</strong> perfect matches for you today.{% endif %}
+        {% else %}
+          Ready to start your academic journey? Browse courses to get started.
+        {% endif %}
+      </p>
+    </div>
+    <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-dark" style="flex-shrink:0; margin-top:4px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Browse Courses
+    </a>
+  </div>
+
+  <!-- ═══ TOP ROW – All AI Recommendations ═══════════════════════ -->
+  <div class="dashboard-section-header">
+    <div class="dashboard-section-title">
+      AI Recommendations
+      <span class="dashboard-section-count">{{ recent_recs|length }}</span>
+    </div>
+    <a href="{{ url_for('recommendations.recommend') }}" class="dashboard-section-link">
+      Refresh AI
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+
+  <!-- Horizontal scrollable row of ALL recommendations -->
+  <div style="display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; margin-bottom:32px; scrollbar-width:thin;">
+    {% if recent_recs|length > 0 %}
+      {% for rec in recent_recs %}
+      <div style="flex:0 0 280px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:22px; cursor:pointer; transition:var(--transition); position:relative;" class="hover-lift" onclick="window.location.href='{{ url_for('recommendations.course_details', course_id=rec.course_id) }}'">
+        
+        <!-- Rank badge -->
+        <div style="position:absolute;top:14px;right:14px;background:var(--accent-light);color:var(--accent-text);font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:9999px;">#{{ loop.index }}</div>
+        
+        <div style="font-size:0.78rem;color:var(--text-muted);font-weight:500;margin-bottom:4px;">{{ rec.department or rec.category }}</div>
+        <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:6px;">{{ rec.title }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;">{{ rec.credits }} unit{{ 's' if rec.credits != 1 }} · {{ rec.difficulty|capitalize }}</div>
+
+        <!-- AI Match bar -->
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;">
+          <span>AI Match</span>
+          <span style="color:var(--accent);font-weight:700;">{{ (rec.score * 100)|round|int }}%</span>
+        </div>
+        <div style="height:5px;background:var(--bg-input);border-radius:9999px;overflow:hidden;margin-bottom:14px;">
+          <div style="height:100%;width:{{ (rec.score * 100)|round|int }}%;background:var(--accent);border-radius:9999px;transition:width 0.8s;"></div>
+        </div>
+
+        <!-- Success probability -->
+        {% set s_prob = rec.success_probability if rec.success_probability is defined else rec.score %}
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:0.72rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+            <span style="display:inline-block;width:7px;height:7px;background:{% if s_prob >= 0.75 %}#059669{% elif s_prob >= 0.55 %}#d97706{% else %}#2563eb{% endif %};border-radius:50%;flex-shrink:0;"></span>
+            {{ (s_prob * 100)|round|int }}% success chance
+          </div>
+          <span style="font-size:0.68rem;background:var(--bg-tag);color:var(--text-secondary);padding:2px 8px;border-radius:9999px;font-weight:600;">{{ rec.difficulty|capitalize }}</span>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- "Get More" card -->
+      <div style="flex:0 0 180px;background:var(--bg-input);border:1px dashed var(--border-strong);border-radius:var(--radius-xl);padding:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;cursor:pointer;" onclick="window.location.href='{{ url_for('recommendations.recommend') }}'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;color:var(--text-muted);"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <div style="font-size:0.78rem;color:var(--text-muted);font-weight:600;">Refresh AI Engine</div>
+      </div>
+
+    {% else %}
+      <div style="flex:0 0 100%;background:var(--bg-input);border-radius:var(--radius-xl);padding:40px;text-align:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;margin:0 auto 12px;color:var(--text-muted);"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <div style="font-size:0.9rem;font-weight:600;color:var(--text-secondary);margin-bottom:12px;">No recommendations yet. Let the AI learn about you.</div>
+        <a href="{{ url_for('recommendations.recommend') }}" class="btn btn-primary btn-pill btn-sm">Generate Recommendations</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ═══ BOTTOM ROW – Courses list + Stats panel ═══════════════════ -->
+  <div class="bottom-grid">
+
+    <!-- LEFT: Enrolled Courses -->
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Current Enrolled Courses</div>
+          <div class="panel-subtitle">Your active learning modules</div>
+        </div>
+        <a href="{{ url_for('recommendations.browse_courses') }}" class="panel-action-link">
+          Open Course Board
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+
+      {% if enrolled_courses|length > 0 %}
+        {% set colors = ['#6d28d9','#2563eb','#059669','#d97706','#dc2626','#0891b2'] %}
+        {% set bg_colors = ['#ede9fe','#dbeafe','#d1fae5','#fef3c7','#fee2e2','#cffafe'] %}
+        {% for course in enrolled_courses[:6] %}
+        {% set ci = loop.index0 % 6 %}
+        <a href="{{ url_for('learning.view_lesson', course_id=course.course_id, module_id=course.current_module_id or 1) }}" class="course-row">
+          <div class="course-row-icon" style="background:{{ bg_colors[ci] }};">
+            <svg viewBox="0 0 24 24" fill="none" stroke="{{ colors[ci] }}" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          </div>
+          <div class="course-row-body">
+            <div class="course-row-title">{{ course.title }}</div>
+            <div class="course-row-meta">{{ course.category }} · {{ course.credits or '?' }} units</div>
+          </div>
+          <div class="course-row-right">
+            {% set prog = course.progress|round|int %}
+            {% if course.completed or prog >= 100 %}
+              <span class="status-pill completed">completed</span>
+            {% elif prog > 0 or course.current_module_id is not none or course.current_lesson_id is not none %}
+              <span class="status-pill in-progress">started</span>
             {% else %}
-              Ready to start your academic journey? Let's find your first course.
+              <span class="status-pill not-started">not started</span>
             {% endif %}
-          </p>
-          <div class="d-flex gap-3 flex-wrap">
-            <a href="{{ url_for('recommendations.recommend') }}" class="hero-action-link primary-style">
-              <i class="fas fa-magic"></i> Get Recommendations
-            </a>
-            <a href="{{ url_for('recommendations.browse_courses') }}" class="hero-action-link">
-              <i class="fas fa-search"></i> Browse Courses
-            </a>
+            <div class="course-row-status">Module {{ course.current_module_id or 1 }}</div>
+          </div>
+        </a>
+        {% endfor %}
+
+        {% if enrolled_courses|length > 6 %}
+        <div style="padding:14px 24px;border-top:1px solid var(--border);">
+          <a href="{{ url_for('main.dashboard') }}" style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">
+            View all {{ enrolled_courses|length }} courses →
+          </a>
+        </div>
+        {% endif %}
+
+      {% else %}
+        <div class="empty-state" style="padding:48px 24px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          <h3>No courses enrolled yet</h3>
+          <p>Browse the course catalog and enroll to get started.</p>
+          <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary btn-pill">Browse Catalog</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT: Academic Stats with CGPA eye toggle -->
+    <div class="updates-panel">
+      <div class="updates-header">
+        <div class="updates-title">Academic Overview</div>
+        <div class="live-dot"></div>
+      </div>
+
+      <!-- CGPA with eye toggle (like bank account balance) -->
+      <div class="update-item">
+        <div class="update-avatar" style="background:#6d28d9;">GPA</div>
+        <div class="update-body" style="flex:1;">
+          <div class="update-text" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>
+              <strong id="cgpa-value">{{ "%.2f"|format(current_user.gpa or 0.0) }}</strong>
+              <span id="cgpa-hidden" style="display:none;letter-spacing:0.15em;font-weight:700;">••••</span>
+              &nbsp;CGPA
+            </span>
+            <button id="cgpa-eye-btn" onclick="toggleCGPA()" title="Show/Hide CGPA" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-muted);display:flex;align-items:center;">
+              <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg id="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;display:none;"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <div class="update-subtext">{{ current_user.department or 'General' }} · {{ current_user.academic_field or 'Undeclared' }}</div>
+          <div class="update-time">Academic Standing</div>
+        </div>
+      </div>
+
+      <!-- Enrolled count -->
+      <div class="update-item">
+        <div class="update-avatar" style="background:#2563eb;">ENR</div>
+        <div class="update-body">
+          <div class="update-text"><strong>{{ enrolled_courses|length }}</strong> Enrolled Course{{ 's' if enrolled_courses|length != 1 }}</div>
+          <div class="update-subtext">{{ enrolled_courses|selectattr('completed')|list|length }} completed</div>
+          <div class="update-time">Active this semester</div>
+        </div>
+      </div>
+
+      <!-- AI Suggestions -->
+      <div class="update-item">
+        <div class="update-avatar" style="background:#059669;">AI</div>
+        <div class="update-body">
+          <div class="update-text"><strong>{{ recent_recs|length }}</strong> AI Suggestion{{ 's' if recent_recs|length != 1 }}</div>
+          <div class="update-subtext">Personalised recommendations</div>
+          <div class="update-time">
+            <a href="{{ url_for('recommendations.recommend') }}" style="color:var(--accent);font-weight:600;">View recommendations →</a>
           </div>
         </div>
-        <div class="col-md-4 d-none d-md-block text-center">
-          <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 25px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.3);">
-            <div class="text-white small mb-1 opacity-75">Academic Standing</div>
-            <div class="h2 fw-bold mb-0">{{ "%.2f"|format(current_user.gpa or 0.0) }}</div>
-            <div class="small fw-semibold">Current CGPA</div>
-            <hr class="my-3 opacity-25">
-            <div class="small opacity-90">{{ current_user.department or 'General' }} Student</div>
+      </div>
+
+      <!-- Average rating -->
+      {% set rated_courses = enrolled_courses|selectattr('rating', 'gt', 0)|list %}
+      <div class="update-item">
+        <div class="update-avatar" style="background:#d97706;">★</div>
+        <div class="update-body">
+          <div class="update-text">
+            <strong>
+              {% if rated_courses|length > 0 %}
+                {{ "%.1f"|format(rated_courses|map(attribute='rating')|list|sum / rated_courses|length) }}
+              {% else %}N/A{% endif %}
+            </strong>
+            Avg. Rating
+          </div>
+          <div class="update-subtext">{{ rated_courses|length }} rated</div>
+          <div class="update-time">Personal feedback</div>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="update-item" style="border-bottom:none;">
+        <div class="update-avatar" style="background:#6d28d9;font-size:0.55rem;letter-spacing:-0.02em;">⚙</div>
+        <div class="update-body">
+          <div class="update-text" style="font-weight:600;margin-bottom:6px;">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <a href="{{ url_for('recommendations.recommend') }}" style="color:var(--accent);font-weight:600;font-size:0.78rem;">→ Refresh AI Recommendations</a>
+            <a href="{{ url_for('auth.profile') }}" style="color:var(--text-secondary);font-weight:500;font-size:0.78rem;">→ Update Profile & Interests</a>
+            <a href="{{ url_for('complaints.my_complaints') }}" style="color:var(--text-secondary);font-weight:500;font-size:0.78rem;">→ Help Desk</a>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Stats Row -->
-  <div class="stats-grid mb-4">
-    <div class="stat-card shadow-sm border-0">
-      <div class="stat-value text-primary">{{ enrolled_courses|length }}</div>
-      <div class="stat-label">Enrolled</div>
-    </div>
-    <div class="stat-card shadow-sm border-0">
-      <div class="stat-value text-success">{{ enrolled_courses|selectattr('completed')|list|length }}</div>
-      <div class="stat-label">Completed</div>
-    </div>
-    <div class="stat-card shadow-sm border-0">
-      <div class="stat-value text-warning">{{ recent_recs|length }}</div>
-      <div class="stat-label">AI Suggestions</div>
-    </div>
-    <div class="stat-card shadow-sm border-0">
-      <div class="stat-value text-info">
-        {% set rated_courses = enrolled_courses|selectattr('rating', 'gt', 0)|list %}
-        {% if rated_courses|length > 0 %}
-          {{ "%.1f"|format(rated_courses|map(attribute='rating')|list|sum / rated_courses|length) }}
-        {% else %}0.0{% endif %}
-      </div>
-      <div class="stat-label">Your Avg. Rating</div>
-    </div>
-  </div>
-
-  <div class="row g-4">
-    <!-- Enrolled Courses -->
-    <div class="col-lg-7">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-          <h5 class="mb-0 fw-bold">
-            <i class="fas fa-book-reader text-primary me-2"></i> Current Enrolled Courses
-          </h5>
-          <span class="badge bg-light text-dark">{{ enrolled_courses|length }} Total</span>
-        </div>
-        <div class="card-body p-0">
-          {% if enrolled_courses|length > 0 %}
-            <div class="list-group list-group-flush">
-              {% for course in enrolled_courses[:5] %}
-              <div class="list-group-item p-4 border-0 border-bottom-dashed">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <div>
-                    <h6 class="fw-bold mb-1">{{ course.title }}</h6>
-                    <div class="d-flex gap-2 mb-2">
-                      <span class="badge bg-soft-{{ course.difficulty }}">{{ course.difficulty|capitalize }}</span>
-                      <span class="badge bg-light text-muted">{{ course.category }}</span>
-                    </div>
-                  </div>
-                  <div class="text-end">
-                    {% if course.completed %}
-                      <span class="badge bg-success py-2 px-3 rounded-pill">
-                        <i class="fas fa-check-circle me-1"></i> Completed
-                      </span>
-                    {% else %}
-                      <span class="badge bg-primary py-2 px-3 rounded-pill">
-                        <i class="fas fa-spinner fa-spin me-1"></i> In Progress
-                      </span>
-                    {% endif %}
-                  </div>
-                </div>
-                
-                {% if not course.rating or course.rating == 0 %}
-                <div class="alert alert-warning border-0 p-2 d-flex align-items-center justify-content-between shadow-sm" style="border-radius: 12px; font-size: 0.85rem;">
-                  <span><i class="fas fa-star text-warning me-2"></i> You haven't rated this course yet!</span>
-                  <a href="{{ url_for('recommendations.course_details', course_id=course.id) }}" class="btn btn-warning btn-sm p-1 px-3 fw-bold" style="font-size: 0.75rem;">Rate Now</a>
-                </div>
-                {% endif %}
-
-                <div class="d-flex justify-content-between align-items-center mt-2 small text-muted">
-                  <span>Enrolled on {{ course.enrolled_at.strftime('%b %d, %Y') if course.enrolled_at else 'Recent' }}</span>
-                  <span><i class="fas fa-clock me-1"></i> {{ course.credits }} Credits</span>
-                </div>
-              </div>
-              {% endfor %}
-            </div>
-            {% if enrolled_courses|length > 5 %}
-            <div class="card-footer bg-white border-0 text-center py-3">
-              <a href="#" class="text-decoration-none small fw-bold">View and manage all enrolled courses <i class="fas fa-arrow-right ms-1"></i></a>
-            </div>
-            {% endif %}
-          {% else %}
-            <div class="p-5 text-center">
-              <div class="display-4 text-muted mb-3 opacity-20"><i class="fas fa-graduation-cap"></i></div>
-              <h5 class="text-muted">No courses enrolled yet</h5>
-              <p class="small text-muted mb-4">Start your journey by enrolling in some recommendations!</p>
-              <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary rounded-pill px-4">Browse Catalog</a>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Recommendations -->
-    <div class="col-lg-5">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-          <h5 class="mb-0 fw-bold">
-            <i class="fas fa-star text-warning me-2"></i> AI Top Picks for You
-          </h5>
-          <a href="{{ url_for('recommendations.recommend') }}" class="text-decoration-none small fw-bold">View All</a>
-        </div>
-        <div class="card-body p-4">
-          {% if recent_recs|length > 0 %}
-            <div class="row g-3">
-              {% for rec in recent_recs[:4] %}
-              <div class="col-12">
-                <a href="{{ url_for('recommendations.course_details', course_id=rec.id) }}" class="text-decoration-none">
-                  <div class="p-3 rounded-4 border hover-shadow-sm transition-all rec-item-card" style="background: var(--bg-input); border-left: 4px solid var(--accent) !important;">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                      <h6 class="fw-bold mb-0 text-truncate" style="max-width: 80%; color: var(--text-primary); font-size: 1rem;">{{ rec.title }}</h6>
-                      <span class="badge rounded-pill bg-primary text-white px-2 py-1" style="font-size: 0.7rem;">
-                        {{ (rec.score * 100)|round|int }}% Match
-                      </span>
-                    </div>
-                    <div class="d-flex gap-3 mb-2">
-                      <span class="small text-secondary fw-medium"><i class="fas fa-tag me-1 text-primary"></i> {{ rec.category }}</span>
-                      <span class="small text-secondary fw-medium"><i class="fas fa-chart-line me-1 text-primary"></i> {{ rec.difficulty|capitalize }}</span>
-                    </div>
-                    <div class="rec-reason small py-1 px-2 rounded-2 mt-1" style="background: rgba(108, 99, 255, 0.05); color: var(--text-secondary); border-left: 2px solid var(--accent);">
-                      <i class="fas fa-info-circle me-1" style="font-size: 0.75rem;"></i> 
-                      <em style="font-size: 0.8rem;">{{ rec.explanation or "Curated for your profile" }}</em>
-                    </div>
-                  </div>
-                </a>
-              </div>
-              {% endfor %}
-            </div>
-            <div class="mt-4 p-4 rounded-4 bg-light text-center border-dashed">
-              <h6 class="fw-bold mb-2">Want more specifics?</h6>
-              <p class="small text-muted mb-3">Updating your interests helps our AI refine these suggestions even further.</p>
-              <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Update Interests</a>
-            </div>
-          {% else %}
-            <div class="empty-state p-4 text-center">
-              <div class="mb-3 text-warning opacity-50"><i class="fas fa-brain fa-3x"></i></div>
-              <p class="small text-muted mb-4">We need a bit more info to calculate your perfect matches.</p>
-              <a href="{{ url_for('recommendations.recommend') }}" class="btn btn-primary btn-sm rounded-pill px-4">Calibrate AI</a>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  // Animate stat values
-  document.querySelectorAll('.stat-value').forEach(el => {
-    const target = parseFloat(el.textContent);
-    if (isNaN(target)) return;
-    let current = 0;
-    const step = target / 30;
-    const timer = setInterval(() => {
-      current += step;
-      if (current >= target) { current = target; clearInterval(timer); }
-      el.textContent = Number.isInteger(target) ? Math.round(current) : current.toFixed(1);
-    }, 20);
+  let cgpaVisible = true;
+  function toggleCGPA() {
+    const val = document.getElementById('cgpa-value');
+    const hidden = document.getElementById('cgpa-hidden');
+    const eyeOn = document.getElementById('eye-icon');
+    const eyeOff = document.getElementById('eye-off-icon');
+    cgpaVisible = !cgpaVisible;
+    val.style.display = cgpaVisible ? '' : 'none';
+    hidden.style.display = cgpaVisible ? 'none' : '';
+    eyeOn.style.display = cgpaVisible ? '' : 'none';
+    eyeOff.style.display = cgpaVisible ? 'none' : '';
+  }
+
+  // Animate match bars
+  document.querySelectorAll('[data-width]').forEach(el => {
+    const w = el.getAttribute('data-width');
+    el.style.width = '0%';
+    requestAnimationFrame(() => { setTimeout(() => { el.style.width = w; }, 150); });
   });
 </script>
 {% endblock %}

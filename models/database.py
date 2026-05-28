@@ -47,18 +47,59 @@ CREATE TABLE IF NOT EXISTS student_courses (
     rating      REAL    DEFAULT 0 CHECK(rating >= 0 AND rating <= 5),
     grade       TEXT    DEFAULT 'N/A',
     completed   INTEGER DEFAULT 0,
+    current_module_id INTEGER,
+    current_lesson_id INTEGER,
+    progress    REAL    DEFAULT 0.0,
     enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, course_id)
 );
 
-CREATE TABLE IF NOT EXISTS recommendations (
+CREATE TABLE IF NOT EXISTS course_modules (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id   INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    title       TEXT    NOT NULL,
+    description TEXT,
+    sort_order  INTEGER DEFAULT 0,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS module_lessons (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    module_id   INTEGER NOT NULL REFERENCES course_modules(id) ON DELETE CASCADE,
+    title       TEXT    NOT NULL,
+    content     TEXT,
+    sort_order  INTEGER DEFAULT 0,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS module_exams (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    module_id   INTEGER NOT NULL REFERENCES course_modules(id) ON DELETE CASCADE,
+    questions   TEXT    NOT NULL,  -- JSON string of MCQs
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS exam_results (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    course_id   INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    module_id   INTEGER NOT NULL REFERENCES course_modules(id) ON DELETE CASCADE,
     score       REAL    NOT NULL,
-    explanation TEXT,
-    method      TEXT    CHECK(method IN ('content','collaborative','hybrid')),
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    attempts    INTEGER DEFAULT 1,
+    best_score  REAL    NOT NULL,
+    history     TEXT    DEFAULT '[]', -- JSON string of scores
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, module_id)
+);
+
+CREATE TABLE IF NOT EXISTS recommendations (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    course_id           INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    score               REAL    NOT NULL,
+    success_probability REAL    DEFAULT 0.0,
+    explanation         TEXT,
+    method              TEXT    CHECK(method IN ('content','collaborative','hybrid')),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS complaints (

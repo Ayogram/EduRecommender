@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}Module Exam: {{ module.title }} – EduRecommender{% endblock %}
+{% block page_title %}Knowledge Assessment{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Exit Quiz Button -->
+  <div style="margin-bottom: 20px;">
+    <a href="javascript:void(0);" onclick="if(confirm('Are you sure you want to exit the quiz? Your answers will not be saved.')) { history.back(); }" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:var(--text-secondary);text-decoration:none;transition:var(--transition);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Exit Quiz
+    </a>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white p-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase small mb-1 opacity-75">Module Assessment</h6>
+              <h3 class="fw-bold mb-0">{{ module.title }}</h3>
+            </div>
+            <div class="exam-timer bg-white text-primary rounded-pill px-3 py-1 fw-bold" id="timer-display" style="display: none;">
+              <i class="fas fa-clock me-2"></i> 45:00
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-4 p-md-5">
+          <!-- Pre-Quiz Instructions Landing Page -->
+          <div id="quiz-instructions" class="text-center p-4">
+            <div style="width: 80px; height: 80px; background: rgba(var(--primary-rgb), 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; color: var(--primary);">
+              <!-- Embedded Project Logo (White Checkmark in Blue Circle) -->
+              <svg viewBox="0 0 28 28" fill="none" style="width: 56px; height: 56px; stroke: currentColor;"><circle cx="14" cy="14" r="13" stroke-width="2.5" fill="rgba(var(--primary-rgb), 0.05)"/><path d="M9 14l3 3 7-7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3 class="fw-bold mb-3 text-dark">Ready to Start Module Quiz?</h3>
+            <p class="text-secondary mb-4 mx-auto" style="max-width: 500px; font-size: 0.95rem; line-height: 1.6;">
+              This quiz is designed to test your understanding of the concepts covered in this module. All questions are based on the video lectures watched during the lessons.
+            </p>
+            
+            <div class="card bg-light border-0 rounded-3 text-start p-4 mb-4 mx-auto" style="max-width: 520px; border-left: 4px solid var(--primary) !important;">
+              <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-info-circle text-primary me-2"></i> Assessment Rules & Info</h6>
+              <ul class="mb-0 text-secondary" style="font-size: 0.88rem; padding-left: 1.25rem; line-height: 1.65;">
+                <li class="mb-2"><strong>Total Questions:</strong> {{ questions|length }} multiple-choice questions (MCQs).</li>
+                <li class="mb-2"><strong>Time Limit:</strong> 45 minutes (Strictly enforced countdown).</li>
+                <li class="mb-2"><strong>Coverage:</strong> Derived from the YouTube video lectures watched during this module.</li>
+                <li class="mb-2"><strong>Strict Mode:</strong> Once you start, you cannot pause the timer. Auto-submits on timeout.</li>
+              </ul>
+            </div>
+            
+            <button type="button" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-sm" id="start-quiz-btn" onclick="startQuizNow()" style="font-size: 1.05rem;">
+              Attempt Quiz Now <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+
+          <form action="{{ url_for('learning.submit_exam', module_id=module.id) }}" method="POST" id="exam-form" class="d-none">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            {% for q in questions %}
+            {% set q_idx = loop.index0 %}
+            <div class="question-block mb-5 {% if not loop.first %}d-none{% endif %}" id="q-{{ q_idx }}">
+              <div class="d-flex align-items-center gap-3 mb-4">
+                <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold">Question {{ loop.index }} of {{ questions|length }}</span>
+              </div>
+              <h4 class="fw-bold text-dark mb-4 leading-relaxed">{{ q.question }}</h4>
+              
+              <div class="options-list d-grid gap-3">
+                {% for option in q.options %}
+                <div class="option-item">
+                  <input type="radio" name="q_{{ q_idx }}" value="{{ option }}" id="q{{ q_idx }}o{{ loop.index0 }}">
+                  <label for="q{{ q_idx }}o{{ loop.index0 }}" class="p-3 border rounded-3 w-100 d-flex align-items-center cursor-pointer transition-all">
+                    <span class="option-indicator me-3"></span>
+                    <span class="fw-medium">{{ option }}</span>
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+
+              <!-- Subtle error validation message -->
+              <div class="text-danger small mt-3 d-none" id="error-{{ q_idx }}" style="font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Please choose an option to proceed.
+              </div>
+            </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+              <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" id="prev-btn" style="display:none;" onclick="changeQuestion(-1)">
+                <i class="fas fa-chevron-left me-2"></i> Back
+              </button>
+              
+              <div class="progress flex-grow-1 mx-4" style="height: 6px;">
+                <div class="progress-bar bg-primary" id="exam-progress" style="width: 20%"></div>
+              </div>
+
+              <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" id="next-btn" onclick="changeQuestion(1)">
+                Next <i class="fas fa-chevron-right ms-2"></i>
+              </button>
+              
+              <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm" id="submit-btn" style="display:none;">
+                Submit Exam <i class="fas fa-check-circle ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.option-item input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.option-item label { 
+  background: white;
+  border: 2px solid var(--border) !important;
+  color: var(--text-secondary);
+}
+.option-item label:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong) !important;
+}
+.option-item input:checked + label {
+  background: var(--accent-light);
+  border-color: var(--accent) !important;
+  color: var(--accent-text);
+}
+
+.option-indicator {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+.option-item input:checked + label .option-indicator {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.option-item input:checked + label .option-indicator::after {
+  content: '';
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  display: block;
+}
+</style>
+
+<script>
+let currentQuestionIndex = 0;
+const totalQuestions = {{ questions|length }};
+
+// 45-minute timer logic
+let timeLeft = 45 * 60; // 45 minutes in seconds
+const timerElement = document.getElementById('timer-display');
+let timerInterval = null;
+
+function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    const formattedSeconds = seconds.toString().padStart(2, '0');
+    
+    timerElement.innerHTML = `<i class="fas fa-clock me-2"></i> ${formattedMinutes}:${formattedSeconds}`;
+    
+    if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        alert('Time is up! Submitting your answers automatically.');
+        // Disable warning prompts before submission
+        window.onbeforeunload = null;
+        document.getElementById('exam-form').submit();
+    } else {
+        if (timeLeft < 120) { // Turn red and pulse when under 2 mins
+            timerElement.classList.remove('text-primary');
+            timerElement.classList.add('text-danger');
+            timerElement.style.animation = 'pulse 1s infinite';
+        }
+        timeLeft--;
+    }
+}
+
+function startQuizNow() {
+    // Hide instructions
+    document.getElementById('quiz-instructions').classList.add('d-none');
+    // Show exam form
+    document.getElementById('exam-form').classList.remove('d-none');
+    // Show timer
+    timerElement.style.display = 'inline-block';
+    
+    // Start countdown
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+    
+    // Exit warning
+    window.onbeforeunload = function() {
+        return "Are you sure you want to leave? Your progress will be lost.";
+    };
+}
+
+// Remove exit warning when form is submitted
+document.getElementById('exam-form').addEventListener('submit', function() {
+    window.onbeforeunload = null;
+});
+
+function changeQuestion(step) {
+    // If moving forward, validate that an option is selected
+    if (step > 0) {
+        const checked = document.querySelectorAll(`input[name="q_${currentQuestionIndex}"]:checked`);
+        const errorMsg = document.getElementById(`error-${currentQuestionIndex}`);
+        if (checked.length === 0) {
+            if (errorMsg) {
+                errorMsg.classList.remove('d-none');
+            }
+            return; // Block transitioning
+        } else {
+            if (errorMsg) {
+                errorMsg.classList.add('d-none');
+            }
+        }
+    }
+
+    // Hide current question block
+    document.getElementById(`q-${currentQuestionIndex}`).classList.add('d-none');
+    
+    currentQuestionIndex += step;
+    
+    // Show new question block
+    document.getElementById(`q-${currentQuestionIndex}`).classList.remove('d-none');
+    
+    // Update navigation buttons
+    document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+    
+    if (currentQuestionIndex === totalQuestions - 1) {
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'inline-block';
+    } else {
+        document.getElementById('next-btn').style.display = 'inline-block';
+        document.getElementById('submit-btn').style.display = 'none';
+    }
+    
+    // Update progress bar
+    const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+    document.getElementById('exam-progress').style.width = `${progress}%`;
+}
+
+// Intercept form submission to ensure everything is validated
+document.getElementById('exam-form').addEventListener('submit', function(e) {
+    for (let i = 0; i < totalQuestions; i++) {
+        const checked = document.querySelectorAll(`input[name="q_${i}"]:checked`);
+        if (checked.length === 0) {
+            e.preventDefault(); // Stop submission
+            
+            // Jump to the unanswered question
+            document.getElementById(`q-${currentQuestionIndex}`).classList.add('d-none');
+            currentQuestionIndex = i;
+            document.getElementById(`q-${currentQuestionIndex}`).classList.remove('d-none');
+            
+            // Show the error message for that question
+            const errorMsg = document.getElementById(`error-${currentQuestionIndex}`);
+            if (errorMsg) {
+                errorMsg.classList.remove('d-none');
+            }
+            
+            // Sync buttons & progress
+            document.getElementById('prev-btn').style.display = currentQuestionIndex > 0 ? 'inline-block' : 'none';
+            if (currentQuestionIndex === totalQuestions - 1) {
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('submit-btn').style.display = 'inline-block';
+            } else {
+                document.getElementById('next-btn').style.display = 'inline-block';
+                document.getElementById('submit-btn').style.display = 'none';
+            }
+            const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+            document.getElementById('exam-progress').style.width = `${progress}%`;
+            
+            return;
+        }
+    }
+});
+</script>
+{% endblock %}

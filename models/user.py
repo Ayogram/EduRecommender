@@ -28,8 +28,6 @@ class User(UserMixin):
         self.department = row_dict.get("department")
         self.gpa = row_dict.get("gpa", 0.0)
         self.created_at = row_dict["created_at"]
-        if hasattr(self.created_at, 'strftime'):
-            self.created_at = self.created_at.strftime('%Y-%m-%d %H:%M:%S')
 
     @property
     def is_active(self):

@@ -1,120 +1,220 @@
 {% extends "base.html" %}
-{% block title %}Recommendations – EduRecommender{% endblock %}
-{% block page_title %}AI Recommendations{% endblock %}
+{% block title %}AI Recommendations – EduRecommender{% endblock %}
 
 {% block content %}
 <div class="fade-in">
-  <!-- Evaluation Metrics -->
+
+  <!-- Back Button + Header -->
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;flex-wrap:wrap;">
+    <button onclick="history.back()" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:var(--transition);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back
+    </button>
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin:0;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 28 28" fill="none" style="width:24px;height:24px;stroke:var(--accent);flex-shrink:0;"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>AI Course Recommendations</span>
+      </h1>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin:2px 0 0;margin-left:32px;">Personalised picks based on your academic profile, GPA, and interests</p>
+    </div>
+  </div>
+
+  <!-- AI Engine Stats Bar -->
   {% if metrics %}
-  <div class="metrics-bar">
-    <div class="metric-item">
-      <div class="metric-value">{{ "%.0f"|format(metrics.precision * 100) }}%</div>
-      <div class="metric-label">Precision</div>
+  <div style="display:flex;gap:16px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px;">
+    <div style="flex:0 0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 24px;text-align:center;min-width:110px;">
+      <div style="font-size:1.4rem;font-weight:800;color:var(--accent);">{{ recommendations|length if recommendations is defined else ((high_success|length) + (low_success|length)) }}</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Courses Found</div>
     </div>
-    <div class="metric-item">
-      <div class="metric-value">{{ "%.0f"|format(metrics.recall * 100) }}%</div>
-      <div class="metric-label">Recall</div>
+    <div style="flex:0 0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 24px;text-align:center;min-width:110px;">
+      <div style="font-size:1.4rem;font-weight:800;color:#059669;">{{ "%.0f"|format(metrics.precision * 100) }}%</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Precision</div>
     </div>
-    <div class="metric-item">
-      <div class="metric-value">{{ "%.0f"|format(metrics.f1 * 100) }}%</div>
-      <div class="metric-label">F1 Score</div>
+    <div style="flex:0 0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 24px;text-align:center;min-width:110px;">
+      <div style="font-size:1.4rem;font-weight:800;color:#2563eb;">{{ "%.0f"|format(metrics.recall * 100) }}%</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Recall</div>
     </div>
-    <div class="metric-item">
-      <div class="metric-value">{{ recommendations|length }}</div>
-      <div class="metric-label">Courses Found</div>
+    <div style="flex:0 0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 24px;text-align:center;min-width:110px;">
+      <div style="font-size:1.4rem;font-weight:800;color:#d97706;">{{ "%.0f"|format(metrics.f1 * 100) }}%</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">F1 Score</div>
+    </div>
+  </div>
+
+  <!-- Explaining the Metrics Card -->
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:20px 24px;margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent);flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <h4 style="margin:0;font-size:0.92rem;font-weight:700;color:var(--text-primary);">Understanding Your Recommendation Metrics</h4>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">
+      <div>
+        <strong style="color:var(--text-primary);display:block;margin-bottom:4px;">🎯 Precision</strong>
+        Measures the accuracy of our suggestions. It is the percentage of recommended courses that directly match your department, academic field, or interests.
+      </div>
+      <div>
+        <strong style="color:var(--text-primary);display:block;margin-bottom:4px;">🔍 Recall</strong>
+        Measures the coverage of the engine. It is the percentage of all matching courses in the system that the AI successfully surfaced.
+      </div>
+      <div>
+        <strong style="color:var(--text-primary);display:block;margin-bottom:4px;">⚖️ F1 Score</strong>
+        The overall rating of recommendation performance. It is the harmonic mean of Precision and Recall, representing the balance between accuracy and coverage.
+      </div>
     </div>
   </div>
   {% endif %}
 
-  <!-- Recommendation Cards -->
-  {% if recommendations|length > 0 %}
-  <div class="rec-grid">
-    {% for rec in recommendations %}
-    <div class="rec-card fade-in shadow-sm hover-shadow transition-all" style="animation-delay:{{ loop.index0 * 0.08 }}s; cursor: pointer; border-radius: 20px; border-left: 6px solid var(--accent) !important; background: var(--bg-card); display: flex; flex-direction: column; overflow: hidden;" onclick="window.location.href='{{ url_for('recommendations.course_details', course_id=rec.course_id) }}'">
-      <div class="p-4" style="flex-grow: 1; display: flex; flex-direction: column;">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-          <div class="badge rounded-pill bg-primary text-white px-3 py-1 shadow-sm" style="font-size: 0.8rem; font-weight: 700;">
-            <i class="fas fa-robot me-1"></i> {{ (rec.score * 100)|round|int }}% MATCH
+  <!-- Recommendation Cards – Udemy-inspired vertical list -->
+  {% macro render_rec_card(rec, rank) %}
+    {% set s_prob = rec.success_probability if rec.success_probability is defined else rec.score %}
+    {% set match_pct = (rec.score * 100)|round|int %}
+    {% set success_pct = (s_prob * 100)|round|int %}
+    
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);margin-bottom:20px;overflow:hidden;transition:var(--transition);" class="hover-lift">
+      
+      <!-- Card Top: color stripe based on rank -->
+      <div style="height:5px;background:{% if rank == 1 %}linear-gradient(90deg,#6d28d9,#a78bfa){% elif rank == 2 %}linear-gradient(90deg,#2563eb,#60a5fa){% elif rank == 3 %}linear-gradient(90deg,#059669,#34d399){% else %}linear-gradient(90deg,#d97706,#fbbf24){% endif %};"></div>
+
+      <div style="display:grid;grid-template-columns:1fr auto;gap:24px;padding:24px 28px;align-items:start;flex-wrap:wrap;">
+        
+        <!-- Left: Course Info -->
+        <div>
+          <!-- Rank + Difficulty badges -->
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+            <span style="background:var(--accent-light);color:var(--accent-text);font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:9999px;letter-spacing:0.04em;">
+              #{{ rank }} PICK
+            </span>
+            <span style="background:{% if rec.difficulty == 'beginner' %}#d1fae5;color:#059669{% elif rec.difficulty == 'advanced' %}#fee2e2;color:#dc2626{% else %}#fef3c7;color:#d97706{% endif %};font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:9999px;">
+              {{ rec.difficulty|upper }}
+            </span>
+            <span style="background:var(--bg-tag);color:var(--text-secondary);font-size:0.7rem;font-weight:600;padding:3px 10px;border-radius:9999px;">
+              {{ rec.department or rec.category }}
+            </span>
+            <span style="background:var(--bg-tag);color:var(--text-secondary);font-size:0.7rem;font-weight:600;padding:3px 10px;border-radius:9999px;">
+              {{ rec.credits }} unit{{ 's' if rec.credits != 1 }}
+            </span>
           </div>
-          <span class="badge bg-light text-secondary border px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
-             {{ rec.difficulty|upper }}
-          </span>
-        </div>
 
-        <h3 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 1.4rem; line-height: 1.2;">
-          {{ rec.title }}
-        </h3>
+          <!-- Course Title -->
+          <h2 style="font-size:1.25rem;font-weight:800;color:var(--text-primary);margin:0 0 8px;letter-spacing:-0.02em;line-height:1.3;">
+            <a href="{{ url_for('recommendations.course_details', course_id=rec.course_id) }}" style="color:inherit;text-decoration:none;">
+              {{ rec.title }}
+            </a>
+          </h2>
 
-        <div class="d-flex align-items-center mb-3">
-          <div class="success-prediction me-3">
-            <span class="text-muted extra-small d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;">Success Potential</span>
-            {% if rec.score >= 0.8 %}
-              <span class="fw-bold text-success" style="font-size: 0.9rem;"><i class="fas fa-arrow-trend-up me-1"></i> Very High</span>
-            {% elif rec.score >= 0.6 %}
-              <span class="fw-bold text-info" style="font-size: 0.9rem;"><i class="fas fa-arrow-trend-up me-1"></i> High</span>
-            {% else %}
-              <span class="fw-bold text-primary" style="font-size: 0.9rem;"><i class="fas fa-arrow-trend-up me-1"></i> Moderate</span>
-            {% endif %}
+          <!-- Description -->
+          <p style="font-size:0.88rem;color:var(--text-secondary);margin:0 0 16px;line-height:1.6;">
+            {{ rec.description[:180] }}{% if rec.description|length > 180 %}...{% endif %}
+          </p>
+
+          <!-- Match & Success bars -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;max-width:420px;">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:4px;">
+                <span style="color:var(--text-muted);font-weight:600;">AI Match</span>
+                <span style="color:var(--accent);font-weight:800;">{{ match_pct }}%</span>
+              </div>
+              <div style="height:6px;background:var(--bg-input);border-radius:9999px;overflow:hidden;">
+                <div style="height:100%;width:{{ match_pct }}%;background:var(--accent);border-radius:9999px;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:4px;">
+                <span style="color:var(--text-muted);font-weight:600;">Success Chance</span>
+                <span style="color:{% if success_pct >= 75 %}#059669{% elif success_pct >= 55 %}#d97706{% else %}#2563eb{% endif %};font-weight:800;">{{ success_pct }}%</span>
+              </div>
+              <div style="height:6px;background:var(--bg-input);border-radius:9999px;overflow:hidden;">
+                <div style="height:100%;width:{{ success_pct }}%;background:{% if success_pct >= 75 %}#059669{% elif success_pct >= 55 %}#d97706{% else %}#2563eb{% endif %};border-radius:9999px;"></div>
+              </div>
+            </div>
           </div>
-          <div class="vr mx-2" style="height: 30px; opacity: 0.1;"></div>
-          <div class="difficulty-level ms-2">
-            <span class="text-muted extra-small d-block mb-1" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;">Difficulty</span>
-            <span class="fw-bold text-dark" style="font-size: 0.9rem;">{{ rec.difficulty|capitalize }}</span>
+
+          <!-- AI Explanation -->
+          <div style="background:rgba(109,40,217,0.04);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:14px;">
+            <div style="font-size:0.68rem;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">🧠 AI Insight</div>
+            <div style="font-size:0.83rem;color:var(--text-secondary);font-style:italic;line-height:1.5;">{{ rec.explanation }}</div>
           </div>
-        </div>
 
-        <div class="rec-meta d-flex gap-2 flex-wrap mb-3">
-          <span class="badge bg-soft-primary text-primary px-2 py-1"><i class="fas fa-university me-1"></i> {{ rec.department or rec.category }}</span>
-          <span class="badge bg-light text-muted border px-2 py-1"><i class="fas fa-clock me-1"></i> {{ rec.credits }} Units</span>
-        </div>
-
-        <div class="ai-insight mb-4">
-          <div class="ai-badge mb-2">
-            <i class="fas fa-robot"></i> AI INSIGHT
-          </div>
-          <p class="mb-0">{{ rec.explanation }}</p>
-        </div>
-
-        <p class="text-muted small mb-3">{{ rec.description[:120] }}...</p>
-
-        <div class="rec-tags mt-auto pt-2">
+          <!-- Tags -->
           {% if rec.tags %}
-            {% for tag in (rec.tags if rec.tags is iterable else [])[:3] %}
-              <span class="badge bg-white text-muted border me-1 fw-normal">#{{ tag }}</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            {% for tag in rec.tags[:4] %}
+            <span style="background:var(--bg-input);color:var(--text-muted);font-size:0.72rem;padding:3px 10px;border-radius:9999px;border:1px solid var(--border);">#{{ tag }}</span>
             {% endfor %}
+          </div>
           {% endif %}
         </div>
-      </div>
 
-      <div class="card-footer bg-white border-top-0 p-4 pt-0">
-        <div class="d-grid gap-2">
-            <a href="{{ url_for('recommendations.course_details', course_id=rec.course_id) }}" class="btn btn-primary fw-bold">
-              Research Course <i class="fas fa-arrow-right ms-2"></i>
-            </a>
-            <form method="POST" action="{{ url_for('recommendations.enroll', course_id=rec.course_id) }}" onclick="event.stopPropagation();">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-outline-primary btn-sm w-100">
-                Quick Enroll
-              </button>
-            </form>
-        </div>
-      </div>
+        <!-- Right: CTA Block -->
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:160px;align-items:stretch;">
+          
+          <!-- Success badge -->
+          <div style="text-align:center;padding:14px 16px;background:{% if success_pct >= 75 %}rgba(5,150,105,0.08){% elif success_pct >= 55 %}rgba(217,119,6,0.08){% else %}rgba(37,99,235,0.08){% endif %};border-radius:var(--radius-lg);border:1px solid {% if success_pct >= 75 %}rgba(5,150,105,0.2){% elif success_pct >= 55 %}rgba(217,119,6,0.2){% else %}rgba(37,99,235,0.2){% endif %};">
+            <div style="font-size:1.6rem;font-weight:900;color:{% if success_pct >= 75 %}#059669{% elif success_pct >= 55 %}#d97706{% else %}#2563eb{% endif %};">{{ success_pct }}%</div>
+            <div style="font-size:0.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">
+              {% if success_pct >= 75 %}Very High Success{% elif success_pct >= 55 %}High Success{% else %}Good Match{% endif %}
+            </div>
+          </div>
 
-      <div class="score-bar-container" style="height: 6px;">
-        <div class="score-bar-bg" style="height: 100%; width: 100%; background: #eee;">
-          <div class="score-bar-fill" style="height: 100%; width:{{ rec.score * 100 }}%; background: var(--accent);"></div>
+          <a href="{{ url_for('recommendations.course_details', course_id=rec.course_id) }}" class="btn btn-primary" style="text-align:center;font-weight:700;border-radius:var(--radius-lg);">
+            View Course
+          </a>
+          
+          <form method="POST" action="{{ url_for('recommendations.enroll', course_id=rec.course_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px 16px;font-size:0.82rem;font-weight:700;color:var(--text-secondary);cursor:pointer;transition:var(--transition);">
+              Quick Enroll
+            </button>
+          </form>
         </div>
       </div>
     </div>
-    {% endfor %}
-  </div>
+  {% endmacro %}
+
+  {% if high_success|length > 0 or low_success|length > 0 %}
+    <!-- Section 1: High Success (>= 70%) -->
+    <div style="margin-bottom: 40px;">
+      <h3 style="font-size:1.15rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+        <span style="display:inline-block;width:10px;height:10px;background:#059669;border-radius:50%;flex-shrink:0;"></span> Recommended Courses (70%+ Success Chance)
+        <span style="background:rgba(5,150,105,0.08);color:#059669;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:9999px;letter-spacing:0.02em;">{{ high_success|length }} PICKS</span>
+      </h3>
+      
+      {% if high_success|length > 0 %}
+        {% for rec in high_success %}
+          {{ render_rec_card(rec, loop.index) }}
+        {% endfor %}
+      {% else %}
+        <div style="background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius-xl);padding:32px;text-align:center;color:var(--text-muted);font-size:0.88rem;">
+          No courses found with predicted success chance of 70% or above based on your current academic history and GPA.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Section 2: Other Choices (< 70%) -->
+    <div>
+      <h3 style="font-size:1.15rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+        <span style="display:inline-block;width:10px;height:10px;background:#d97706;border-radius:50%;flex-shrink:0;"></span> Alternative Suggestions (Below 70% Success Chance)
+        <span style="background:rgba(217,119,6,0.08);color:#d97706;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:9999px;letter-spacing:0.02em;">{{ low_success|length }} OPTIONS</span>
+      </h3>
+
+      {% if low_success|length > 0 %}
+        {% for rec in low_success %}
+          {{ render_rec_card(rec, high_success|length + loop.index) }}
+        {% endfor %}
+      {% else %}
+        <div style="background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius-xl);padding:32px;text-align:center;color:var(--text-muted);font-size:0.88rem;">
+          All your recommended courses have a predicted success potential of 70% or higher!
+        </div>
+      {% endif %}
+    </div>
+
   {% else %}
-  <div class="empty-state">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-    <h3>No recommendations available</h3>
-    <p>Enroll in some courses and rate them to get personalised AI recommendations.</p>
-    <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary">Browse Courses</a>
-  </div>
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <h3>No recommendations yet</h3>
+      <p>Complete your profile and enroll in some courses to train the AI.</p>
+      <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary btn-pill">Browse Courses</a>
+    </div>
   {% endif %}
+
 </div>
 {% endblock %}

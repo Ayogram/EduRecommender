@@ -18,3 +18,8 @@ recommender.db
 # OS
 .DS_Store
 Thumbs.db
+
+# Temp / Scratch
+scratch/
+tmp/
+

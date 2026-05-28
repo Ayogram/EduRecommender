@@ -20,19 +20,26 @@ def recommend():
     # Check if user has academic background set (cold-start)
     if not current_user.interests or not current_user.academic_field:
         return redirect(url_for('auth.complete_profile'))
-        categories = Course.get_categories()
-        return render_template(
-            "interests.html",
-            categories=categories,
-            message="Please select your interests to get personalised recommendations.",
-        )
 
-    recommendations = get_recommendations(current_user.id, top_n=10)
-    metrics = evaluate(current_user.id, k=10)
+    recommendations = get_recommendations(current_user.id, top_n=12)
+    metrics = evaluate(current_user.id, k=12)
+
+    # Separate into high success (70% and above) and low success (below 70%)
+    high_success = []
+    low_success = []
+    for r in recommendations:
+        s_prob = r.get("success_probability", r.get("score", 0.0))
+        success_pct = int(round(s_prob * 100))
+        if success_pct >= 70:
+            high_success.append(r)
+        else:
+            low_success.append(r)
 
     return render_template(
         "recommendations.html",
         recommendations=recommendations,
+        high_success=high_success,
+        low_success=low_success,
         metrics=metrics,
     )
 
@@ -133,9 +140,8 @@ def enroll(course_id):
 @recs_bp.route("/rate/<int:course_id>", methods=["POST"])
 @login_required
 def rate_course(course_id):
-    """Rate and update grade for a course the user is enrolled in."""
+    """Rate and update course progress the user is enrolled in."""
     rating = float(request.form.get("rating", 0))
-    grade = request.form.get("grade", "N/A")
     completed = 1 if request.form.get("completed") == "on" else 0
     
     if rating < 0 or rating > 5:
@@ -144,8 +150,8 @@ def rate_course(course_id):
 
     db = get_db()
     db.execute(
-        "UPDATE student_courses SET rating = ?, grade = ?, completed = ? WHERE user_id = ? AND course_id = ?",
-        (rating, grade, completed, current_user.id, course_id),
+        "UPDATE student_courses SET rating = ?, completed = ? WHERE user_id = ? AND course_id = ?",
+        (rating, completed, current_user.id, course_id),
     )
     db.commit()
     flash("Course progress updated!", "success")

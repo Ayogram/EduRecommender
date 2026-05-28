@@ -46,8 +46,11 @@
         <label for="password">Password</label>
         <div class="input-wrapper">
           <i class="fas fa-lock"></i>
-          <input type="password" id="password" name="password" class="form-control"
+          <input type="password" id="password" name="password" class="form-control has-toggle"
                  placeholder="Minimum 8 characters" required minlength="8">
+          <button type="button" class="password-toggle-btn" tabindex="-1" aria-label="Toggle password visibility">
+            <i class="fas fa-eye"></i>
+          </button>
         </div>
       </div>
 
@@ -55,8 +58,11 @@
         <label for="confirm_password">Confirm Password</label>
         <div class="input-wrapper">
           <i class="fas fa-shield-alt"></i>
-          <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control has-toggle"
                  placeholder="Re-enter your password" required>
+          <button type="button" class="password-toggle-btn" tabindex="-1" aria-label="Toggle password visibility">
+            <i class="fas fa-eye"></i>
+          </button>
         </div>
       </div>
 
@@ -171,6 +177,24 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateHidden() {
     hiddenInput.value = customInterests.join(',');
   }
+
+  // Password toggle
+  document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const input = this.parentElement.querySelector('input');
+      const icon = this.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+  });
 });
 </script>
 

@@ -9,17 +9,18 @@ class Recommendation:
         self.user_id = row["user_id"]
         self.course_id = row["course_id"]
         self.score = row["score"]
+        self.success_probability = row.get("success_probability", 0.0)
         self.explanation = row["explanation"]
         self.method = row["method"]
         self.created_at = row["created_at"]
 
     @staticmethod
-    def save(user_id, course_id, score, explanation, method):
+    def save(user_id, course_id, score, explanation, method, success_probability=0.0):
         db = get_db()
         db.execute(
-            """INSERT INTO recommendations (user_id, course_id, score, explanation, method)
-               VALUES (?, ?, ?, ?, ?)""",
-            (user_id, course_id, score, explanation, method),
+            """INSERT INTO recommendations (user_id, course_id, score, explanation, method, success_probability)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (user_id, course_id, score, explanation, method, success_probability),
         )
         db.commit()
 
@@ -31,7 +32,7 @@ class Recommendation:
                FROM recommendations r
                JOIN courses c ON r.course_id = c.id
                WHERE r.user_id = ?
-               ORDER BY r.score DESC
+               ORDER BY r.success_probability DESC, r.score DESC
                LIMIT ?""",
             (user_id, limit),
         ).fetchall()
