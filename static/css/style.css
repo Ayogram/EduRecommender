@@ -1519,3 +1519,8 @@ div.interest-chip {
   .stats-grid { grid-template-columns: 1fr; }
   .interest-grid { flex-wrap: wrap; }
 }
+
+/* Hide theme toggles to enforce light mode only */
+.theme-toggle, .auth-theme-toggle {
+  display: none !important;
+}

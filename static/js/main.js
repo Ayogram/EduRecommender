@@ -8,15 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── Theme Toggle ──────────────────────────────────────────── */
 function initTheme() {
-  const saved = localStorage.getItem('edu-theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
+  document.documentElement.setAttribute('data-theme', 'light');
+  localStorage.setItem('edu-theme', 'light');
 
   document.querySelectorAll('.theme-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('edu-theme', next);
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('edu-theme', 'light');
     });
   });
 }

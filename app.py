@@ -65,6 +65,15 @@ def create_app():
     from flask import Blueprint
     main_bp = Blueprint("main", __name__)
 
+    @main_bp.route("/favicon.ico")
+    def favicon():
+        from flask import send_from_directory
+        return send_from_directory(
+            os.path.join(app.root_path, "static"),
+            "favicon.svg",
+            mimetype="image/svg+xml",
+        )
+
     @main_bp.route("/")
     def index():
         return render_template("landing.html")

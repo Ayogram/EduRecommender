@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EduRecommender – AI Academic Advisor</title>
   <meta name="description" content="EduRecommender is a world-class, premium, university-standard AI course recommendation and academic advising platform.">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   
   <!-- Typography & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,14 +18,14 @@
       --font-headings: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       
-      --bg-dark: #09090b;
-      --bg-card: rgba(18, 18, 24, 0.7);
-      --border: rgba(63, 63, 70, 0.3);
+      --bg-dark: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
       --accent: #7c3aed;
-      --accent-glow: rgba(124, 58, 237, 0.15);
-      --text-primary: #f4f4f5;
-      --text-secondary: #a1a1aa;
-      --text-muted: #71717a;
+      --accent-glow: rgba(124, 58, 237, 0.08);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
     }
 
     * {
@@ -49,10 +50,10 @@
       width: 100%;
       height: 100%;
       background-image: 
-        radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(79, 70, 229, 0.06) 0%, transparent 50%),
-        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+        radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(79, 70, 229, 0.04) 0%, transparent 50%),
+        linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
       background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
       z-index: -1;
       pointer-events: none;
@@ -62,7 +63,7 @@
     header {
       position: sticky;
       top: 0;
-      background: rgba(9, 9, 11, 0.75);
+      background: rgba(248, 250, 252, 0.8);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
@@ -145,7 +146,7 @@
     }
 
     .btn-outline:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(15, 23, 42, 0.05);
       border-color: var(--text-secondary);
     }
 
@@ -176,7 +177,7 @@
       gap: 6px;
       background: var(--accent-glow);
       border: 1px solid rgba(124, 58, 237, 0.3);
-      color: #a78bfa;
+      color: var(--accent);
       font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
@@ -193,7 +194,7 @@
       letter-spacing: -0.03em;
       line-height: 1.15;
       margin-bottom: 24px;
-      background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%);
+      background: linear-gradient(135deg, #0f172a 30%, #7c3aed 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -218,7 +219,7 @@
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 32px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
       backdrop-filter: blur(8px);
     }
 
@@ -269,7 +270,7 @@
 
     .form-select, .form-range {
       width: 100%;
-      background: rgba(255, 255, 255, 0.03);
+      background: #ffffff;
       border: 1px solid var(--border);
       color: var(--text-primary);
       padding: 10px 14px;
@@ -277,6 +278,16 @@
       font-size: 0.85rem;
       outline: none;
       transition: border-color 0.2s;
+    }
+
+    .form-select {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+
+    .form-select option {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
     }
 
     .form-select:focus {
@@ -291,7 +302,7 @@
     }
 
     .interest-chip {
-      background: rgba(255, 255, 255, 0.04);
+      background: #f1f5f9;
       border: 1px solid var(--border);
       border-radius: 9999px;
       padding: 6px 14px;
@@ -304,14 +315,14 @@
     }
 
     .interest-chip.active {
-      background: var(--accent-glow);
+      background: var(--accent);
       border-color: var(--accent);
       color: white;
     }
 
     /* Output Area */
     .sim-output-container {
-      background: rgba(9, 9, 11, 0.4);
+      background: #f8fafc;
       border: 1px dashed var(--border);
       border-radius: 12px;
       padding: 24px;
@@ -335,13 +346,13 @@
     .pipeline-status {
       font-family: monospace;
       font-size: 0.78rem;
-      color: #a78bfa;
+      color: var(--accent);
       margin-bottom: 16px;
       line-height: 1.5;
     }
 
     .rec-card-preview {
-      background: rgba(18, 18, 24, 0.9);
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 16px;
@@ -350,6 +361,7 @@
       animation: fadeInUp 0.4s ease forwards;
       opacity: 0;
       transform: translateY(10px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
     }
 
     .rec-card-header {
@@ -433,7 +445,7 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 20px;
-      color: #a78bfa;
+      color: var(--accent);
     }
 
     .feature-card h3 {
@@ -452,7 +464,7 @@
     /* ── CTA / Footer ───────────────────────────────────── */
     .cta {
       text-align: center;
-      background: radial-gradient(circle at center, rgba(124, 58, 237, 0.15) 0%, transparent 60%);
+      background: radial-gradient(circle at center, rgba(124, 58, 237, 0.08) 0%, transparent 60%);
       padding: 80px 24px;
       border-top: 1px solid var(--border);
     }
@@ -476,7 +488,7 @@
       text-align: center;
       font-size: 0.78rem;
       color: var(--text-muted);
-      background: rgba(9, 9, 11, 0.8);
+      background: #f8fafc;
     }
 
     /* Animations */
@@ -539,15 +551,21 @@
           <div class="form-group">
             <label>Field of Study</label>
             <select id="sim-dept" class="form-select" onchange="updateSuggestedInterests()">
-              <option value="cs">Computer Science & MIS</option>
-              <option value="law">Law & Jurisprudence</option>
-              <option value="business">Business Administration</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Law">Law</option>
+              <option value="Medicine">Medicine</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Business Administration">Business Administration</option>
+              <option value="Accounting">Accounting</option>
+              <option value="Arts">Arts</option>
+              <option value="Social Sciences">Social Sciences</option>
+              <option value="Others">Others</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label>Simulated GPA: <span id="gpa-label" style="color: var(--accent); font-weight:700;">3.8</span></label>
-            <input type="range" id="sim-gpa" class="form-range" min="1.5" max="4.0" step="0.1" value="3.8" oninput="document.getElementById('gpa-label').innerText = this.value">
+            <label>Simulated GPA: <span id="gpa-label" style="color: var(--accent); font-weight:700;">4.0</span></label>
+            <input type="range" id="sim-gpa" class="form-range" min="0.0" max="5.0" step="0.1" value="4.0" oninput="document.getElementById('gpa-label').innerText = this.value">
           </div>
 
           <div class="form-group">
@@ -623,26 +641,99 @@
 
   <script>
     const interestsMap = {
-      cs: ["Artificial Intelligence", "Web Development", "Data Science", "Cybersecurity", "Database Management", "Networks & Systems"],
-      law: ["Criminal Law", "Constitutional Law", "Human Rights", "Corporate Law", "Intellectual Property", "Judicial Studies"],
-      business: ["Finance", "Marketing Strategy", "Corporate Governance", "Entrepreneurship", "Operations Management", "Accounting"]
+      "Law": [
+        "Criminal Law", "Corporate Law", "International Law", "Human Rights", 
+        "Constitutional Law", "IP Law", "Civil Rights", "Legal Writing", 
+        "Advocacy", "Arbitration & Dispute Resolution"
+      ],
+      "Medicine": [
+        "Surgery", "Pediatrics", "Pharmacology", "Anatomy", 
+        "Neurology", "Psychiatry", "Public Health", "Genetics", 
+        "Medical Ethics", "Clinical Research"
+      ],
+      "Engineering": [
+        "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Aerospace Engineering", 
+        "Chemical Engineering", "Robotics", "Embedded Systems", "Renewable Energy"
+      ],
+      "Business Administration": [
+        "Management", "Marketing", "Entrepreneurship", "Human Resources", 
+        "Supply Chain", "Business Ethics", "Strategic Planning", "Financial Management", 
+        "Corporate Governance", "Operations Management"
+      ],
+      "Accounting": [
+        "Financial Accounting", "Audit", "Taxation", "Management Accounting", 
+        "Forensic Accounting", "Corporate Finance", "Financial Reporting", "Risk Management"
+      ],
+      "Arts": [
+        "Fine Arts", "Graphic Design", "History of Art", "Music Theory", 
+        "Visual Communication", "Creative Writing", "Photography", "Digital Illustration", 
+        "Animation"
+      ],
+      "Social Sciences": [
+        "Psychology", "Sociology", "Political Science", "Economics", 
+        "Anthropology", "International Relations", "Criminology", "Media Studies"
+      ],
+      "Computer Science": [
+        "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", 
+        "Cloud Computing", "Web Development", "Machine Learning", "Database Management", 
+        "Networks & Distributed Systems", "Algorithms & Data Structures"
+      ],
+      "Others": [
+        "Mathematics", "Physics", "Chemistry", "Biology", 
+        "Environmental Science", "Architecture", "Education", "Statistics", 
+        "Research Methodology"
+      ]
     };
 
     const coursePool = {
-      cs: [
-        { title: "Natural Language Processing", match: 98, tags: ["AI", "Data Science"], reason: "Matches interest in AI and high-performance GPA vectors." },
-        { title: "Modern Web Applications", match: 94, tags: ["Web Development"], reason: "Direct match with Web Development interest tags." },
-        { title: "Advanced Relational Databases", match: 89, tags: ["Database Management"], reason: "Suited for students focusing on backend infrastructure." }
+      "Computer Science": [
+        { title: "Introduction to Python", tags: ["python", "coding", "basics"], reason: "Provides foundational programming concepts for beginners." },
+        { title: "Data Structures & Algorithms", tags: ["algorithms", "data structures", "performance"], reason: "Essential for constructing efficient software engineering models." },
+        { title: "Artificial Intelligence", tags: ["ai", "machine learning", "neural networks"], reason: "Suited for students interested in neural computing and intelligent systems." },
+        { title: "Web Development Boot Camp", tags: ["web", "html", "css", "javascript"], reason: "Perfect for learning full-stack user interface and application design." },
+        { title: "Cybersecurity Fundamentals", tags: ["security", "networking", "hacking"], reason: "Teaches network security auditing and defensive programming." },
+        { title: "Research Methodology", tags: ["research", "methodology", "writing", "data analysis"], reason: "Fosters academic investigation, proposal writing, and data analysis." },
+        { title: "Final Year Research Project", tags: ["research", "dissertation", "project", "thesis"], reason: "Cap-stone course to apply your theoretical concepts in a research thesis." }
       ],
-      law: [
-        { title: "Constitutional Law & Civil Rights", match: 97, tags: ["Constitutional Law"], reason: "Aligned with your focus in civil justice and constitutional pathways." },
-        { title: "Intellectual Property Protection", match: 93, tags: ["Intellectual Property"], reason: "Recommended due to your interest in Corporate Law and IP structures." },
-        { title: "Human Rights Law and Treaties", match: 87, tags: ["Human Rights"], reason: "Direct overlap with international human rights interest tags." }
+      "Law": [
+        { title: "Criminal Law 101", tags: ["law", "justice", "court"], reason: "Introduces criminal justice, case analysis, and court procedures." },
+        { title: "Corporate Law", tags: ["business", "contracts", "law"], reason: "Teaches commercial structures, transactional law, and legal compliance." },
+        { title: "International Human Rights", tags: ["human rights", "un", "law"], reason: "Covers global human rights treaties and international enforcement." },
+        { title: "Intellectual Property Law", tags: ["copyright", "patents", "law"], reason: "Fosters knowledge on copyright, patent, and trademark protection." }
       ],
-      business: [
-        { title: "Strategic Corporate Management", match: 96, tags: ["Corporate Governance"], reason: "Recommended based on your interest in entrepreneurship and company oversight." },
-        { title: "Investment Banking & Finance", match: 92, tags: ["Finance"], reason: "Suited for students prioritizing quantitative business models." },
-        { title: "Global Logistics & Operations", match: 88, tags: ["Operations Management"], reason: "Direct match with operations and manufacturing management interest tags." }
+      "Medicine": [
+        { title: "Human Anatomy", tags: ["anatomy", "biology", "body"], reason: "Fundamental clinical study of the systems of the human body." },
+        { title: "General Surgery", tags: ["surgery", "medical", "hospital"], reason: "Advanced practice in surgical procedures and operating theatre basics." },
+        { title: "Pharmacology", tags: ["drugs", "medicine", "biology"], reason: "Focuses on drug interactions, biochemistry, and therapeutic actions." },
+        { title: "Public Health Global Trends", tags: ["health", "policy", "global"], reason: "Examines worldwide health policy, disease prevention, and statistics." }
+      ],
+      "Engineering": [
+        { title: "Mechanical Engineering Principles", tags: ["physics", "machines", "engineering"], reason: "Covers mechanics, thermodynamics, and statics calculations." },
+        { title: "Robotics & Automation", tags: ["robotics", "ai", "hardware"], reason: "Teaches micro-controller programming and robotic system design." },
+        { title: "Electrical Circuits", tags: ["electricity", "circuits", "engineering"], reason: "Essential core course on AC/DC circuit analysis and electrical networks." }
+      ],
+      "Business Administration": [
+        { title: "Principles of Management", tags: ["management", "business", "leadership"], reason: "Lays foundations for corporate management and executive strategy." },
+        { title: "Management Information", tags: ["management", "information systems", "business", "technology"], reason: "Details how corporate organizations implement MIS to support decision-making." },
+        { title: "Strategic Marketing", tags: ["marketing", "strategy", "branding"], reason: "Focuses on branding, market entry, and advertising strategy." },
+        { title: "Business Ethics", tags: ["ethics", "philosophy", "business"], reason: "Examines moral obligations, social responsibility, and corporate ethics." }
+      ],
+      "Accounting": [
+        { title: "Financial Accounting", tags: ["finance", "numbers", "accounting"], reason: "Lays standard methods for recording transactions and preparing statements." },
+        { title: "Forensic Accounting", tags: ["fraud", "investigation", "accounting"], reason: "Focuses on auditing standards, asset tracking, and fraud investigation." }
+      ],
+      "Social Sciences": [
+        { title: "Introduction to Psychology", tags: ["mind", "behavior", "psychology"], reason: "Surveys behavioral analysis, mental health, and cognitive processes." },
+        { title: "International Relations", tags: ["politics", "global", "diplomacy"], reason: "Examines diplomatic dynamics, global conflicts, and foreign policy." },
+        { title: "Microeconomics", tags: ["economy", "money", "markets"], reason: "Teaches market equilibrium, firm decisions, and consumer demand." }
+      ],
+      "Arts": [
+        { title: "Graphic Design Basics", tags: ["design", "art", "creative"], reason: "Develops typographic layout and digital illustration workflows." },
+        { title: "History of Modern Art", tags: ["art", "history", "culture"], reason: "Surveys artistic movements from the 19th century to the present." }
+      ],
+      "Others": [
+        { title: "Introduction to Architecture", tags: ["design", "building", "architecture"], reason: "Teaches architectural design theory, spatial planning, and drafting." },
+        { title: "Applied Mathematics", tags: ["math", "science", "logic"], reason: "Details numerical methods used in mathematical physics models." }
       ]
     };
 
@@ -677,8 +768,8 @@
 
       out.innerHTML = `
         <div class="pipeline-status">
-          > [t=0ms] Fetching academic variables...<br>
-          > [t=120ms] GPA scale factor calculated: ${(gpa / 4.0).toFixed(2)}<br>
+          > [t=0ms] Fetching academic variables from local profile...<br>
+          > [t=120ms] GPA scale factor calculated: ${(gpa / 5.0).toFixed(2)} (Scale 5.0)<br>
           > [t=300ms] Tokenizing student interest profile: [${selectedInterests.join(', ') || 'General'}]<br>
           > [t=540ms] Executing TF-IDF Cosine Similarity engine...<br>
           > [t=780ms] Computing latent factor matrix factorization vectors...<br>
@@ -688,20 +779,35 @@
 
       setTimeout(() => {
         out.innerHTML = "";
-        const courses = coursePool[dept];
+        const courses = coursePool[dept] || [];
+        if (courses.length === 0) {
+          out.innerHTML = `<div class="sim-empty-state"><p style="font-size:0.82rem;">No simulated courses available for this department.</p></div>`;
+          return;
+        }
+
         courses.forEach((c, index) => {
-          // Adjust match rate slightly based on GPA
-          const adjustedMatch = Math.min(99, Math.round(c.match + (gpa - 3.0) * 4));
+          // Adjust match rate based on GPA and interest tags matching
+          let interestMatchCount = 0;
+          c.tags.forEach(tag => {
+            if (selectedInterests.some(sel => sel.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(sel.toLowerCase()))) {
+              interestMatchCount++;
+            }
+          });
+
+          // Baseline match based on GPA, plus boost for interest matching
+          const gpaFactor = (gpa / 5.0);
+          let matchPercent = Math.round(65 + (gpaFactor * 25) + (interestMatchCount * 4));
+          matchPercent = Math.min(99, Math.max(45, matchPercent));
           
           const card = document.createElement("div");
           card.className = "rec-card-preview";
-          card.style.animationDelay = `${index * 0.15}s`;
+          card.style.animationDelay = `${index * 0.12}s`;
           card.innerHTML = `
             <div class="rec-card-header">
               <span class="rec-card-title">${c.title}</span>
-              <span class="rec-card-match">${adjustedMatch}% AI Match</span>
+              <span class="rec-card-match" style="color: ${matchPercent >= 80 ? '#059669' : '#d97706'}">${matchPercent}% AI Match</span>
             </div>
-            <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Tags: ${c.tags.join(', ')}</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px;">Tags: ${c.tags.map(t => '#' + t).join(' ')}</div>
             <div class="rec-card-reason">🧠 Insight: ${c.reason}</div>
           `;
           out.appendChild(card);
