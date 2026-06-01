@@ -624,7 +624,7 @@ def get_sub_interests(field):
     try:
         with open(fields_file, "r") as f:
             fields_map = json.load(f)
-        return {"sub_interests": fields_map.get(field, [])}
+        return {"sub_interests": fields_map.get(field, []), "requested_field": field, "keys": list(fields_map.keys())}
     except Exception as e:
         import traceback
         return {"sub_interests": [], "error": str(e), "traceback": traceback.format_exc(), "path": fields_file}
