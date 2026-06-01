@@ -5,9 +5,15 @@ EduRecommender – Flask Application Factory
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Load Environment Variables from .env
 load_dotenv()
+
+# Enable insecure transport for local development (when not hosted on Vercel)
+if not (os.environ.get('VERCEL') or os.environ.get('NOW_REGION')):
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
 from flask_login import LoginManager, current_user, login_required
 from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
@@ -24,6 +30,9 @@ def create_app():
         template_folder="templates",
     )
     app.config.from_object(Config)
+
+    # Support proxy headers (like X-Forwarded-Proto) under Vercel
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # ── CSRF Protection ─────────────────────────────────────────
     csrf = CSRFProtect(app)
