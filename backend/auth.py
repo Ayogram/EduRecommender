@@ -355,7 +355,13 @@ def google_login():
         redirect_uri = override_uri
     else:
         redirect_uri = url_for("auth.google_callback", _external=True)
-    return oauth.google.authorize_redirect(redirect_uri)
+    
+    response = oauth.google.authorize_redirect(redirect_uri)
+    # Prevent Vercel from caching the 302 redirect, which would swallow the Set-Cookie header
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @auth_bp.route("/login/google/callback")
