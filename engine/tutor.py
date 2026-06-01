@@ -893,6 +893,15 @@ Prepare your final thesis/project application by applying all concepts learned a
             ]
         }
 
+        # Import dynamic tutor extensions
+        try:
+            from engine.tutor_data import NEW_CURRICULUM, NEW_CONCEPTS
+            self.curriculum_data.update(NEW_CURRICULUM)
+            for k, v in NEW_CONCEPTS.items():
+                self.CONCEPTS_BANK[k] = v
+        except Exception as e:
+            print(f"Error loading dynamic tutor extensions: {e}")
+
     # Predefined academic concepts for generating 30 distinct questions per module quiz
     CONCEPTS_BANK = {
         "programming": {
@@ -1323,22 +1332,48 @@ Prepare your final thesis/project application by applying all concepts learned a
 
     def _determine_category(self, course_title, category_hint):
         """Map course metadata to a specific curriculum keys."""
+        import re
         text = f"{course_title} {category_hint or ''}".lower()
+        words = re.findall(r'[a-z0-9]+', text)
         
-        if any(keyword in text for keyword in ["structure", "algorithm", "dsa"]):
+        def has_match(keywords):
+            for kw in keywords:
+                if " " in kw:
+                    if kw in text:
+                        return True
+                else:
+                    if any(w.startswith(kw) for w in words):
+                        return True
+            return False
+
+        if has_match(["structure", "algorithm", "dsa"]):
             return "dsa"
-        elif any(keyword in text for keyword in ["python", "program", "code", "coding", "java", "script"]):
+        elif has_match(["python", "program", "code", "coding", "java", "script"]):
             return "programming"
-        elif any(keyword in text for keyword in ["management information", "mis", "information systems"]):
-            return "mis"
-        elif any(keyword in text for keyword in ["ethic", "business", "management", "market", "corporate"]):
-            return "business"
-        elif any(keyword in text for keyword in ["anatomy", "surgery", "pharmacology", "medicine", "health", "biological"]):
+        elif has_match(["physic", "thermodynamics", "optics", "quantum", "laser", "electromagnetism", "fluid"]):
+            return "physics"
+        elif has_match(["math", "calculus", "algebra", "numerical", "optimization", "probability", "statistics", "equations"]):
+            return "math"
+        elif has_match(["psycholog", "cognitive", "clinical", "behavior", "neuropsychology"]):
+            return "psychology"
+        elif has_match(["anatomy", "surgery", "pharmacology", "medicine", "health", "biological"]):
             return "medicine"
-        elif any(keyword in text for keyword in ["law", "rights", "legal", "court"]):
+        elif has_match(["law", "rights", "legal", "court"]):
             return "law"
-        elif any(keyword in text for keyword in ["research", "methodology", "thesis", "dissertation"]):
+        elif has_match(["research", "methodology", "thesis", "dissertation"]):
             return "research"
+        elif has_match(["management information", "mis", "information systems"]) or ("mis" in words):
+            return "mis"
+        elif has_match(["fintech", "blockchain", "crypto", "bitcoin", "finance", "accounting", "audit", "tax", "econom"]):
+            return "finance"
+        elif has_match(["sociolog", "politic", "media", "social", "criminolog", "public policy", "relations"]):
+            return "social_sciences"
+        elif has_match(["mechanic", "circuit", "engineering", "petroleum", "reservoir", "drill", "power", "embedded", "vlsi", "device", "cad", "material"]):
+            return "engineering"
+        elif has_match(["ethic", "business", "management", "market", "corporate"]):
+            return "business"
+        elif has_match(["art", "design", "graphic", "illustration", "animat", "paint", "music", "writing"]):
+            return "arts"
         
         return "default"
 

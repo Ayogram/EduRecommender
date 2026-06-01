@@ -121,10 +121,22 @@ def create_app():
             except Exception:
                 pass
 
+        # Get all exam results for the user, joining with course title and module details
+        exam_results = db.execute(
+            """SELECT er.*, cm.title AS module_title, c.title AS course_title
+               FROM exam_results er
+               JOIN course_modules cm ON er.module_id = cm.id
+               JOIN courses c ON cm.course_id = c.id
+               WHERE er.user_id = ?
+               ORDER BY er.updated_at DESC""",
+            (current_user.id,),
+        ).fetchall()
+
         return render_template(
             "dashboard.html",
             enrolled_courses=enrolled,
             recent_recs=recent_recs,
+            exam_results=exam_results,
         )
 
     @main_bp.route("/notifications")

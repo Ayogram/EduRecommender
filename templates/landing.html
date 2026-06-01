@@ -498,6 +498,23 @@
         transform: translateY(0);
       }
     }
+    .spinner-ring {
+      border: 4px solid var(--accent-glow);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      width: 75px;
+      height: 75px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.85; }
+      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -837,16 +854,35 @@
       const dept = document.getElementById("sim-dept").value;
       const gpa = parseFloat(document.getElementById("sim-gpa").value);
 
+      // Render the loader structure
       out.innerHTML = `
-        <div class="pipeline-status">
-          > [t=0ms] Fetching academic variables from local profile...<br>
-          > [t=120ms] GPA scale factor calculated: ${(gpa / 5.0).toFixed(2)} (Scale 5.0)<br>
-          > [t=300ms] Tokenizing student interest profile: [${selectedInterests.join(', ') || 'General'}]<br>
-          > [t=540ms] Executing TF-IDF Cosine Similarity engine...<br>
-          > [t=780ms] Computing latent factor matrix factorization vectors...<br>
-          > [t=900ms] Blending predictions via Hybrid ensemble matrix...
+        <div id="sim-loader" style="text-align: center; padding: 40px 20px; animation: fadeInUp 0.4s ease forwards;">
+          <div style="position: relative; display: inline-block; margin-bottom: 24px;">
+            <div class="spinner-ring"></div>
+            <i class="fa-solid fa-brain" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.2rem; color: var(--accent); animation: pulse 1.5s ease-in-out infinite;"></i>
+          </div>
+          <h3 id="sim-loader-title" style="font-family: var(--font-headings); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary);">Executing AI Model</h3>
+          <p id="sim-loader-text" style="font-size: 0.8rem; color: var(--text-secondary); min-height: 20px; font-weight: 500;">Connecting to recommendation pipeline...</p>
         </div>
       `;
+
+      // Cycle through detailed status messages
+      const statusUpdates = [
+        { time: 300, text: "Tokenizing student interest profile..." },
+        { time: 700, text: "Computing TF-IDF cosine similarity..." },
+        { time: 1100, text: "Calculating matrix factorization vectors..." },
+        { time: 1500, text: "Blending predictions via Hybrid ensemble matrix..." },
+        { time: 1800, text: "Ready!" }
+      ];
+
+      statusUpdates.forEach(update => {
+        setTimeout(() => {
+          const textEl = document.getElementById("sim-loader-text");
+          if (textEl) {
+            textEl.innerText = update.text;
+          }
+        }, update.time);
+      });
 
       setTimeout(() => {
         out.innerHTML = "";
@@ -881,7 +917,7 @@
           `;
           out.appendChild(card);
         });
-      }, 1200);
+      }, 1900);
     }
 
     // Initialize

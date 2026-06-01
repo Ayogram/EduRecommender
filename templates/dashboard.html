@@ -90,62 +90,107 @@
   <!-- ═══ BOTTOM ROW – Courses list + Stats panel ═══════════════════ -->
   <div class="bottom-grid">
 
-    <!-- LEFT: Enrolled Courses -->
-    <div class="panel">
-      <div class="panel-header">
-        <div>
-          <div class="panel-title">Current Enrolled Courses</div>
-          <div class="panel-subtitle">Your active learning modules</div>
-        </div>
-        <a href="{{ url_for('recommendations.browse_courses') }}" class="panel-action-link">
-          Open Course Board
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-      </div>
-
-      {% if enrolled_courses|length > 0 %}
-        {% set colors = ['#6d28d9','#2563eb','#059669','#d97706','#dc2626','#0891b2'] %}
-        {% set bg_colors = ['#ede9fe','#dbeafe','#d1fae5','#fef3c7','#fee2e2','#cffafe'] %}
-        {% for course in enrolled_courses[:6] %}
-        {% set ci = loop.index0 % 6 %}
-        <a href="{{ url_for('learning.view_lesson', course_id=course.course_id, module_id=course.current_module_id or 1) }}" class="course-row">
-          <div class="course-row-icon" style="background:{{ bg_colors[ci] }};">
-            <svg viewBox="0 0 24 24" fill="none" stroke="{{ colors[ci] }}" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <!-- LEFT COLUMN CONTAINER -->
+    <div style="display:flex; flex-direction:column; gap:20px; min-width:0; width:100%;">
+      
+      <!-- LEFT: Enrolled Courses -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Current Enrolled Courses</div>
+            <div class="panel-subtitle">Your active learning modules</div>
           </div>
-          <div class="course-row-body">
-            <div class="course-row-title">{{ course.title }}</div>
-            <div class="course-row-meta">{{ course.category }} · {{ course.credits or '?' }} units</div>
-          </div>
-          <div class="course-row-right">
-            {% set prog = course.progress|round|int %}
-            {% if course.completed or prog >= 100 %}
-              <span class="status-pill completed">completed</span>
-            {% elif prog > 0 or course.current_module_id is not none or course.current_lesson_id is not none %}
-              <span class="status-pill in-progress">started</span>
-            {% else %}
-              <span class="status-pill not-started">not started</span>
-            {% endif %}
-            <div class="course-row-status">Module {{ course.current_module_id or 1 }}</div>
-          </div>
-        </a>
-        {% endfor %}
-
-        {% if enrolled_courses|length > 6 %}
-        <div style="padding:14px 24px;border-top:1px solid var(--border);">
-          <a href="{{ url_for('main.dashboard') }}" style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">
-            View all {{ enrolled_courses|length }} courses →
+          <a href="{{ url_for('recommendations.browse_courses') }}" class="panel-action-link">
+            Open Course Board
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
         </div>
-        {% endif %}
 
-      {% else %}
-        <div class="empty-state" style="padding:48px 24px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-          <h3>No courses enrolled yet</h3>
-          <p>Browse the course catalog and enroll to get started.</p>
-          <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary btn-pill">Browse Catalog</a>
+        {% if enrolled_courses|length > 0 %}
+          {% set colors = ['#6d28d9','#2563eb','#059669','#d97706','#dc2626','#0891b2'] %}
+          {% set bg_colors = ['#ede9fe','#dbeafe','#d1fae5','#fef3c7','#fee2e2','#cffafe'] %}
+          {% for course in enrolled_courses[:6] %}
+          {% set ci = loop.index0 % 6 %}
+          <a href="{{ url_for('learning.view_lesson', course_id=course.course_id, module_id=course.current_module_id or 1) }}" class="course-row">
+            <div class="course-row-icon" style="background:{{ bg_colors[ci] }};">
+              <svg viewBox="0 0 24 24" fill="none" stroke="{{ colors[ci] }}" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            </div>
+            <div class="course-row-body">
+              <div class="course-row-title">{{ course.title }}</div>
+              <div class="course-row-meta">{{ course.category }} · {{ course.credits or '?' }} units</div>
+            </div>
+            <div class="course-row-right">
+              {% set prog = course.progress|round|int %}
+              {% if course.completed or prog >= 100 %}
+                <span class="status-pill completed">completed · Grade: {{ course.grade }}</span>
+              {% elif prog > 0 or course.current_module_id is not none or course.current_lesson_id is not none %}
+                <span class="status-pill in-progress">started</span>
+              {% else %}
+                <span class="status-pill not-started">not started</span>
+              {% endif %}
+              <div class="course-row-status">Module {{ course.current_module_id or 1 }}</div>
+            </div>
+          </a>
+          {% endfor %}
+
+          {% if enrolled_courses|length > 6 %}
+          <div style="padding:14px 24px;border-top:1px solid var(--border);">
+            <a href="{{ url_for('main.dashboard') }}" style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">
+              View all {{ enrolled_courses|length }} courses →
+            </a>
+          </div>
+          {% endif %}
+
+        {% else %}
+          <div class="empty-state" style="padding:48px 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            <h3>No courses enrolled yet</h3>
+            <p>Browse the course catalog and enroll to get started.</p>
+            <a href="{{ url_for('recommendations.browse_courses') }}" class="btn btn-primary btn-pill">Browse Catalog</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- LEFT: Saved Grades & Exam Scores -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Academic Record & Assessment History</div>
+            <div class="panel-subtitle">Saved test scores, attempts, and module certifications</div>
+          </div>
         </div>
-      {% endif %}
+
+        {% if exam_results|length > 0 %}
+          {% for res in exam_results %}
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:1px solid var(--border); transition:var(--transition);" class="hover-lift">
+            <div style="min-width:0; flex:1; padding-right:12px;">
+              <div style="font-size:0.875rem; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px;">{{ res.course_title }}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:500;">Module: {{ res.module_title }}</div>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:20px; flex-shrink:0;">
+              <div style="text-align:right;">
+                <div style="font-size:0.68rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:2px;">Attempts</div>
+                <span class="status-pill not-started" style="font-size:0.72rem; padding:2px 8px; font-weight:700;">{{ res.attempts }}</span>
+              </div>
+              <div style="text-align:right; min-width:80px;">
+                <div style="font-size:0.68rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-bottom:2px;">Best Score</div>
+                <span class="status-pill {% if res.best_score >= 70 %}completed{% elif res.best_score >= 50 %}in-progress{% else %}not-started{% endif %}" style="font-size:0.75rem; font-weight:700; padding:3px 9px;">
+                  {{ res.best_score|round|int }}%
+                </span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state" style="padding:40px 24px; text-align:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px; height:36px; color:var(--text-muted); margin:0 auto 12px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <h3 style="font-size:0.9rem; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">No exam records found</h3>
+            <p style="font-size:0.78rem; color:var(--text-muted); max-width:280px; margin:0 auto;">Take module exams inside the classroom to verify your course grades and track test percentages.</p>
+          </div>
+        {% endif %}
+      </div>
+
     </div>
 
     <!-- RIGHT: Academic Stats with CGPA eye toggle -->
