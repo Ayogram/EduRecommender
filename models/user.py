@@ -116,7 +116,8 @@ class User(UserMixin):
 
     @staticmethod
     def create(name, email, password_hash=None, google_id=None,
-               profile_picture=None, role=None, interests=None, academic_field=None, is_verified=0):
+               profile_picture=None, role=None, interests=None, academic_field=None,
+               department=None, gpa=0.0, is_verified=0):
         db = get_db()
         
         # Determine role if not specified
@@ -130,8 +131,8 @@ class User(UserMixin):
 
         db.execute(
             """INSERT INTO users
-               (name, email, password_hash, google_id, profile_picture, role, interests, academic_field, is_verified)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (name, email, password_hash, google_id, profile_picture, role, interests, academic_field, department, gpa, is_verified)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 name,
                 email,
@@ -141,6 +142,8 @@ class User(UserMixin):
                 role,
                 json.dumps(interests or []),
                 academic_field,
+                department,
+                gpa or 0.0,
                 is_verified
             ),
         )
