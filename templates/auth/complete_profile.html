@@ -3,10 +3,8 @@
 {% block page_title %}Onboarding{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-11 col-xl-10">
-      <div class="card border-0 shadow-lg rounded-4 overflow-hidden fade-in">
+<div class="container-fluid px-0 py-0">
+  <div class="card border-0 shadow-none rounded-0 min-vh-100 fade-in">
         <!-- Top Column: Header -->
         <div class="card-header bg-primary text-white p-5 text-center position-relative overflow-hidden" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;">
           <!-- Background subtle pattern/gradient -->
@@ -93,8 +91,6 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -296,6 +292,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+.page-content {
+  padding: 0 !important;
+}
 .interest-pill { background: white; border-color: #dee2e6 !important; }
 .interest-pill:hover { border-color: var(--primary) !important; color: var(--primary); }
 .interest-pill.active { background: var(--primary); color: white; border-color: var(--primary) !important; }

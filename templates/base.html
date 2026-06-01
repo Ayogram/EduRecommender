@@ -77,7 +77,7 @@
 
         {% else %}
           <!-- ── Student Navigation ────────────── -->
-          <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+          <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' or request.blueprint == 'learning' %}active{% endif %}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             My Courses
           </a>
@@ -93,7 +93,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
             AI Intelligence Hub
           </a>
-          <a href="{{ url_for('recommendations.browse_courses') }}" class="{% if request.endpoint == 'recommendations.browse_courses' %}active{% endif %}">
+          <a href="{{ url_for('recommendations.browse_courses') }}" class="{% if request.endpoint == 'recommendations.browse_courses' or request.endpoint == 'recommendations.course_details' %}active{% endif %}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
             Browse All
           </a>
@@ -104,7 +104,7 @@
               <span class="sidebar-badge">{{ unread_notification_count if unread_notification_count < 2 else '2+' }}</span>
             {% endif %}
           </a>
-          <a href="{{ url_for('complaints.my_complaints') }}" class="{% if request.endpoint in ['complaints.my_complaints'] %}active{% endif %}">
+          <a href="{{ url_for('complaints.my_complaints') }}" class="{% if request.blueprint == 'complaints' %}active{% endif %}">
              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
              Help Desk
           </a>
@@ -120,7 +120,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        <a href="{{ url_for('auth.profile') }}" class="sidebar-user-section" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; transition: background 0.15s;">
+        <a href="{{ url_for('auth.profile') }}" class="sidebar-user-section {% if request.endpoint == 'auth.profile' %}active{% endif %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; transition: background 0.15s; {% if request.endpoint == 'auth.profile' %}background: var(--bg-hover); border: 1px solid var(--accent);{% endif %}">
           <div class="sidebar-user-avatar">
             <img src="{{ current_user.profile_picture or url_for('static', filename='img/default_avatar.png') }}" alt="User">
           </div>
@@ -128,7 +128,7 @@
             <div class="sidebar-user-name">{{ current_user.name }}</div>
             <div class="sidebar-user-role">{{ current_user.role|capitalize }}</div>
           </div>
-          <i data-lucide="settings" style="width:14px;height:14px;color:var(--text-muted);flex-shrink:0;"></i>
+          <i data-lucide="settings" style="width:14px;height:14px;{% if request.endpoint == 'auth.profile' %}color:var(--accent);{% else %}color:var(--text-muted);{% endif %}flex-shrink:0;"></i>
         </a>
       </div>
     </aside>

@@ -19,7 +19,7 @@ class Config:
         DATABASE_PATH = os.path.join(BASE_DIR, "database", "edurecommender.db")
 
     # ── Session ─────────────────────────────────────────────────
-    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=20)
     SESSION_COOKIE_HTTPONLY = True
     
     # Detect Vercel environment

@@ -19,6 +19,27 @@ from models.database import get_db
 auth_bp = Blueprint("auth", __name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+def save_user_to_session(user):
+    """Save user attributes to the secure session cookie so they can be restored if the ephemeral DB is wiped."""
+    session['user_email'] = user.email
+    session['user_name'] = user.name
+    session['user_google_id'] = user.google_id
+    session['user_profile_picture'] = user.profile_picture
+    session['user_role'] = user.role
+    session['user_academic_field'] = user.academic_field
+    session['user_department'] = user.department
+    session['user_gpa'] = user.gpa
+    session['user_interests'] = user.interests
+    
+    # Save enrolled course IDs
+    try:
+        from models.database import get_db
+        db = get_db()
+        enrolled_db = db.execute("SELECT course_id FROM student_courses WHERE user_id = ?", (user.id,)).fetchall()
+        session['enrolled_courses'] = [r['course_id'] for r in enrolled_db]
+    except Exception:
+        session['enrolled_courses'] = []
+
 # Google OAuth will be initialised when the blueprint is registered
 oauth = OAuth()
 
@@ -328,6 +349,7 @@ def login():
 
         login_user(user, remember=True)
         session.permanent = True
+        save_user_to_session(user)
         flash(f"Welcome back, {user.name}!", "success")
         next_page = request.args.get("next")
         return redirect(next_page or url_for("main.dashboard"))
@@ -398,6 +420,8 @@ def google_callback():
                 flash("Your account has been suspended.", "error")
                 return redirect(url_for("auth.login"))
             login_user(user, remember=True)
+            session.permanent = True
+            save_user_to_session(user)
             # If returning user lacks academic field, prompt completion
             if not user.academic_field:
                 return redirect(url_for("auth.complete_profile"))
@@ -407,10 +431,13 @@ def google_callback():
                 profile_picture=picture, is_verified=1 # Google users are verified
             )
             login_user(user, remember=True)
+            session.permanent = True
+            save_user_to_session(user)
             # New Google users MUST complete profile
             return redirect(url_for("auth.complete_profile"))
 
         session.permanent = True
+        save_user_to_session(user)
         flash(f"Welcome, {user.name}!", "success")
         return redirect(url_for("main.dashboard"))
 
@@ -606,6 +633,10 @@ def profile():
             flash("Profile and password updated successfully!", "success")
         else:
             flash("Profile updated successfully!", "success")
+        # Update user session variables
+        user = User.get_by_id(current_user.id)
+        if user:
+            save_user_to_session(user)
             
         return redirect(url_for('auth.profile'))
     
@@ -620,11 +651,13 @@ def profile():
 
 @auth_bp.route("/api/sub-interests/<field>")
 def get_sub_interests(field):
+    import urllib.parse
+    field_decoded = urllib.parse.unquote(field)
     fields_file = os.path.join(BASE_DIR, "database", "fields_and_interests.json")
     try:
         with open(fields_file, "r") as f:
             fields_map = json.load(f)
-        return {"sub_interests": fields_map.get(field, []), "requested_field": field, "keys": list(fields_map.keys())}
+        return {"sub_interests": fields_map.get(field_decoded, [])}
     except Exception as e:
         import traceback
         return {"sub_interests": [], "error": str(e), "traceback": traceback.format_exc(), "path": fields_file}
@@ -660,6 +693,11 @@ def complete_profile():
             (academic_field, department, gpa, json.dumps(all_interests), current_user.id)
         )
         db.commit()
+        
+        # Save updated user to session
+        user = User.get_by_id(current_user.id)
+        if user:
+            save_user_to_session(user)
         
         flash("Profile completed! Welcome to EduRecommender.", "success")
         return redirect(url_for("main.dashboard"))

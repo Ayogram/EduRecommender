@@ -133,6 +133,11 @@ def enroll(course_id):
         )
         db.commit()
         
+        # Sync session's enrolled_courses
+        from flask import session
+        enrolled_db = db.execute("SELECT course_id FROM student_courses WHERE user_id = ?", (current_user.id,)).fetchall()
+        session['enrolled_courses'] = [r['course_id'] for r in enrolled_db]
+        
         flash("Enrolled successfully!", "success")
     return redirect(url_for("recommendations.course_details", course_id=course_id))
 
