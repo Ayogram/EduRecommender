@@ -8,7 +8,9 @@ class Config:
     """Application configuration."""
 
     # ── Secret Key ──────────────────────────────────────────────
-    SECRET_KEY = os.environ.get("SECRET_KEY", os.urandom(32).hex())
+    # Using a static fallback prevents Vercel serverless functions from invalidating 
+    # sessions on every restart if the environment variable is missing.
+    SECRET_KEY = os.environ.get("SECRET_KEY", "edu-recommender-stable-secret-key-12345")
 
     # ── Database ────────────────────────────────────────────────
     if os.environ.get('VERCEL') or os.environ.get('NOW_REGION'):
@@ -20,6 +22,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
+    # Ensure secure cookies in production (Vercel) to prevent them being dropped during OAuth redirects
+    SESSION_COOKIE_SECURE = bool(os.environ.get('VERCEL') or os.environ.get('NOW_REGION'))
 
     # ── CSRF ────────────────────────────────────────────────────
     WTF_CSRF_ENABLED = True
