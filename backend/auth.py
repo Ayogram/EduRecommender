@@ -418,8 +418,9 @@ def google_callback():
 
     except Exception as e:
         import traceback
+        error_details = f"{str(e)} (State in URL: {request.args.get('state')} | Session keys: {list(session.keys())})"
         current_app.logger.error(f"Google OAuth error: {e}\n{traceback.format_exc()}")
-        flash("Google login failed. Please try again.", "error")
+        flash(f"Google login failed: {error_details}", "error")
         return redirect(url_for("auth.login"))
 
 
