@@ -17,6 +17,7 @@ from models.user import User
 from models.database import get_db
 
 auth_bp = Blueprint("auth", __name__)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Google OAuth will be initialised when the blueprint is registered
 oauth = OAuth()
@@ -170,7 +171,7 @@ def register():
         return redirect(url_for("main.dashboard"))
 
     # Load field mappings for the template
-    fields_file = os.path.join(current_app.root_path, "database", "fields_and_interests.json")
+    fields_file = os.path.join(BASE_DIR, "database", "fields_and_interests.json")
     with open(fields_file, "r") as f:
         fields_map = json.load(f)
 
@@ -609,7 +610,7 @@ def profile():
         return redirect(url_for('auth.profile'))
     
     # Load field mappings for the template
-    fields_file = os.path.join(current_app.root_path, "database", "fields_and_interests.json")
+    fields_file = os.path.join(BASE_DIR, "database", "fields_and_interests.json")
     with open(fields_file, "r") as f:
         fields_map = json.load(f)
         
@@ -619,13 +620,14 @@ def profile():
 
 @auth_bp.route("/api/sub-interests/<field>")
 def get_sub_interests(field):
-    fields_file = os.path.join(current_app.root_path, "database", "fields_and_interests.json")
+    fields_file = os.path.join(BASE_DIR, "database", "fields_and_interests.json")
     try:
         with open(fields_file, "r") as f:
             fields_map = json.load(f)
         return {"sub_interests": fields_map.get(field, [])}
-    except Exception:
-        return {"sub_interests": []}
+    except Exception as e:
+        import traceback
+        return {"sub_interests": [], "error": str(e), "traceback": traceback.format_exc(), "path": fields_file}
 
 @auth_bp.route("/complete-profile", methods=["GET", "POST"])
 @login_required
@@ -662,7 +664,7 @@ def complete_profile():
         flash("Profile completed! Welcome to EduRecommender.", "success")
         return redirect(url_for("main.dashboard"))
 
-    fields_file = os.path.join(current_app.root_path, "database", "fields_and_interests.json")
+    fields_file = os.path.join(BASE_DIR, "database", "fields_and_interests.json")
     with open(fields_file, "r") as f:
         fields_map = json.load(f)
         

@@ -90,11 +90,14 @@
               <!-- Hidden input to store selected interests as comma separated string -->
               <input type="hidden" name="interests" id="interests-input">
 
-              <div class="form-group mb-4">
+              <div class="form-group mb-4 position-relative">
                 <label class="form-label fw-bold small text-uppercase text-muted">Search or Add Specific Interests</label>
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-primary"></i></span>
-                  <input type="text" id="custom-interest-input" class="form-control bg-light border-start-0" placeholder="Type an interest and press Enter...">
+                  <input type="text" id="custom-interest-input" class="form-control bg-light border-start-0" placeholder="Type an interest and press Enter..." autocomplete="off">
+                </div>
+                <!-- Autocomplete suggestions dropdown -->
+                <div id="autocomplete-suggestions" class="list-group position-absolute w-100 mt-1 shadow rounded-3 border overflow-hidden d-none" style="z-index: 1050; max-height: 200px; overflow-y: auto;">
                 </div>
                 <div id="selected-chips-container" class="mt-3 d-flex flex-wrap gap-2">
                   <!-- Selected items show here -->
@@ -124,6 +127,20 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let selectedInterests = [];
 
+  // Compile all unique interests from the fields_map passed from Python
+  const allInterests = [];
+  {% for field, interests in fields_map.items() %}
+    {% for interest in interests %}
+      if (!allInterests.includes("{{ interest }}")) {
+        allInterests.push("{{ interest }}");
+      }
+    {% endfor %}
+  {% endfor %}
+
+  const suggestionBox = document.getElementById('autocomplete-suggestions');
+  let activeSuggestionIndex = -1;
+  let filteredSuggestions = [];
+
   fieldSelect.addEventListener('change', async function() {
     const field = this.value;
     fieldDisplay.textContent = field;
@@ -135,7 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const data = await resp.json();
       subGrid.innerHTML = '';
       
-      data.sub_interests.forEach(interest => {
+      const subInterests = data.sub_interests || [];
+      if (subInterests.length === 0) {
+        subGrid.innerHTML = '<span class="text-muted small p-2">Could not load department suggestions. Search below to add your interests manually.</span>';
+        return;
+      }
+      
+      subInterests.forEach(interest => {
         const chip = document.createElement('div');
         chip.className = 'interest-pill px-3 py-2 rounded-pill border cursor-pointer transition-all small fw-medium';
         chip.textContent = interest;
@@ -149,16 +172,97 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Autocomplete suggestions dynamic display
+  customInput.addEventListener('input', function() {
+    const query = this.value.trim().toLowerCase();
+    suggestionBox.innerHTML = '';
+    activeSuggestionIndex = -1;
+    
+    if (!query) {
+      suggestionBox.classList.add('d-none');
+      return;
+    }
+
+    filteredSuggestions = allInterests.filter(interest => 
+      interest.toLowerCase().includes(query) && !selectedInterests.includes(interest)
+    ).slice(0, 8); // Top 8 suggestions
+
+    if (filteredSuggestions.length === 0) {
+      suggestionBox.classList.add('d-none');
+      return;
+    }
+
+    suggestionBox.classList.remove('d-none');
+    filteredSuggestions.forEach((interest, index) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'list-group-item list-group-item-action border-0 px-3 py-2 text-start small d-flex align-items-center justify-content-between';
+      item.innerHTML = `<span>${interest}</span> <span class="badge bg-light text-muted fw-normal">Add</span>`;
+      
+      item.onclick = function() {
+        addInterest(interest);
+        customInput.value = '';
+        suggestionBox.classList.add('d-none');
+        customInput.focus();
+      };
+      
+      suggestionBox.appendChild(item);
+    });
+  });
+
+  // Key navigation for search suggestions
   customInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
+    const items = suggestionBox.querySelectorAll('.list-group-item');
+    
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const val = this.value.trim();
-      if (val && !selectedInterests.includes(val)) {
-        addInterest(val);
-        this.value = '';
+      if (items.length === 0) return;
+      activeSuggestionIndex = (activeSuggestionIndex + 1) % items.length;
+      updateActiveSuggestion(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      activeSuggestionIndex = (activeSuggestionIndex - 1 + items.length) % items.length;
+      updateActiveSuggestion(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeSuggestionIndex >= 0 && activeSuggestionIndex < items.length) {
+        items[activeSuggestionIndex].click();
+      } else {
+        const val = this.value.trim();
+        if (val && !selectedInterests.includes(val)) {
+          addInterest(val);
+          this.value = '';
+          suggestionBox.classList.add('d-none');
+        }
       }
+    } else if (e.key === 'Escape') {
+      suggestionBox.classList.add('d-none');
+      activeSuggestionIndex = -1;
     }
   });
+
+  // Hide suggestions dropdown if clicked outside
+  document.addEventListener('click', function(e) {
+    if (!customInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+      suggestionBox.classList.add('d-none');
+    }
+  });
+
+  function updateActiveSuggestion(items) {
+    items.forEach((item, index) => {
+      if (index === activeSuggestionIndex) {
+        item.classList.add('active');
+        item.classList.add('bg-primary');
+        item.classList.add('text-white');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('active');
+        item.classList.remove('bg-primary');
+        item.classList.remove('text-white');
+      }
+    });
+  }
 
   function toggleInterest(val, element) {
     if (selectedInterests.includes(val)) {
@@ -216,5 +320,20 @@ document.addEventListener('DOMContentLoaded', function() {
 .interest-pill.active { background: var(--primary); color: white; border-color: var(--primary) !important; }
 .cursor-pointer { cursor: pointer; }
 .bg-soft-primary { background: rgba(var(--primary-rgb), 0.1); }
+#autocomplete-suggestions {
+  background: white;
+  border-color: #dee2e6;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+#autocomplete-suggestions .list-group-item:hover {
+  background: #f8f9fa;
+  cursor: pointer;
+}
+#autocomplete-suggestions .list-group-item.active {
+  background: var(--primary) !important;
+  color: white !important;
+}
 </style>
 {% endblock %}
