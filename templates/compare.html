@@ -1,0 +1,646 @@
+{% extends "base.html" %}
+{% block title %}AI Course Advisor & Predictor – EduRecommender{% endblock %}
+
+{% block head %}
+<style>
+  /* Premium Comparison Dashboard Styles */
+  .advisor-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 992px) {
+    .advisor-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .autocomplete-wrapper {
+    position: relative;
+  }
+  
+  .autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    z-index: 1000;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .suggestion-item {
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 1px solid var(--border);
+  }
+  .suggestion-item:last-child {
+    border-bottom: none;
+  }
+  .suggestion-item:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .badge-difficulty {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  
+  .diff-beginner { background: #d1fae5; color: #059669; }
+  .diff-intermediate { background: #fef3c7; color: #d97706; }
+  .diff-advanced { background: #fee2e2; color: #dc2626; }
+
+  /* SVG Success Gauge styles */
+  .gauge-svg {
+    width: 100px;
+    height: 100px;
+    transform: rotate(-90deg);
+  }
+  .gauge-bg {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 8px;
+  }
+  .gauge-fill {
+    fill: none;
+    stroke-width: 8px;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.8s ease-in-out;
+  }
+
+  /* Advisor Chat UI */
+  .advisor-chat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    margin-top: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chat-log {
+    height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-input);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chat-msg {
+    margin-bottom: 12px;
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .chat-msg.student {
+    background: var(--accent);
+    color: #fff;
+    margin-left: auto;
+    border-bottom-right-radius: 2px;
+  }
+
+  .chat-msg.ai {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    margin-right: auto;
+    border-bottom-left-radius: 2px;
+  }
+
+  .sim-grade-row {
+    display: grid;
+    grid-template-columns: 1fr 80px auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;flex-wrap:wrap;">
+    <button onclick="history.back()" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:var(--transition);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back
+    </button>
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin:0;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" style="width:24px;height:24px;flex-shrink:0;"><path d="M16 18L22 12L16 6"/><path d="M8 6L2 12L8 18"/><path d="M12 2v20"/></svg>
+        <span>AI Course Advisor & Performance Predictor</span>
+      </h1>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin:2px 0 0;margin-left:38px;">Compare elective subjects, simulate your academic grades, and predict your performance</p>
+    </div>
+  </div>
+
+  <div class="advisor-container">
+    
+    <!-- LEFT: Simulator Inputs -->
+    <div class="panel" style="position: sticky; top: 20px;">
+      <div class="panel-header">
+        <div class="panel-title">Simulation Profile</div>
+        <div class="panel-subtitle">Configure parameters & select target courses</div>
+      </div>
+      
+      <form action="{{ url_for('recommendations.compare_courses') }}" method="POST" id="sim-form" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
+        
+        <!-- Toggle: 2 vs 3 Courses -->
+        <div>
+          <label class="form-label small fw-bold text-muted text-uppercase mb-2">Compare Size</label>
+          <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="compare_count" id="btn-compare-2" value="2" {% if form_vals.compare_count == '2' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary py-2 text-xs" style="font-size:0.75rem;font-weight:600;" for="btn-compare-2">2 Courses</label>
+            
+            <input type="radio" class="btn-check" name="compare_count" id="btn-compare-3" value="3" {% if form_vals.compare_count == '3' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary py-2 text-xs" style="font-size:0.75rem;font-weight:600;" for="btn-compare-3">3 Courses</label>
+          </div>
+        </div>
+
+        <!-- Course A -->
+        <div class="autocomplete-wrapper">
+          <label class="form-label small fw-bold">Course A</label>
+          <input type="text" name="course_a" id="course_a_input" class="form-control bg-light border-0" placeholder="Type to search Course A..." value="{{ form_vals.course_a }}" required autocomplete="off">
+          <div class="autocomplete-suggestions" id="course_a_sug"></div>
+        </div>
+
+        <!-- Course B -->
+        <div class="autocomplete-wrapper">
+          <label class="form-label small fw-bold">Course B</label>
+          <input type="text" name="course_b" id="course_b_input" class="form-control bg-light border-0" placeholder="Type to search Course B..." value="{{ form_vals.course_b }}" required autocomplete="off">
+          <div class="autocomplete-suggestions" id="course_b_sug"></div>
+        </div>
+
+        <!-- Course C (Optional) -->
+        <div class="autocomplete-wrapper" id="course_c_wrapper" style="{% if form_vals.compare_count == '2' %}display:none;{% endif %}">
+          <label class="form-label small fw-bold">Course C</label>
+          <input type="text" name="course_c" id="course_c_input" class="form-control bg-light border-0" placeholder="Type to search Course C..." value="{{ form_vals.course_c }}" autocomplete="off">
+          <div class="autocomplete-suggestions" id="course_c_sug"></div>
+        </div>
+
+        <hr style="border-top:1px solid var(--border); margin:4px 0;">
+
+        <!-- GPA Slider -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label class="form-label small fw-bold">Simulated CGPA</label>
+            <span id="gpa-val" style="font-size:0.82rem; font-weight:700; color:var(--accent);">{{ form_vals.sim_gpa }}</span>
+          </div>
+          <input type="range" name="sim_gpa" min="0.0" max="5.0" step="0.05" class="form-range" value="{{ form_vals.sim_gpa }}" id="gpa-slider">
+        </div>
+
+        <!-- Department -->
+        <div>
+          <label class="form-label small fw-bold">Simulated Department</label>
+          <input type="text" name="sim_dept" class="form-control bg-light border-0" placeholder="e.g. Computer Science" value="{{ form_vals.sim_dept }}">
+        </div>
+
+        <!-- Academic Field -->
+        <div>
+          <label class="form-label small fw-bold">Simulated Academic Field</label>
+          <input type="text" name="sim_field" class="form-control bg-light border-0" placeholder="e.g. programming" value="{{ form_vals.sim_field }}">
+        </div>
+
+        <!-- Interests -->
+        <div>
+          <label class="form-label small fw-bold">Simulated Interests</label>
+          <input type="text" name="sim_interests" class="form-control bg-light border-0" placeholder="Topics (comma separated)" value="{{ form_vals.sim_interests }}">
+          <div class="form-text" style="font-size:0.65rem; color:var(--text-muted);">Separate topics with commas (e.g. Security, Python, Trading)</div>
+        </div>
+
+        <!-- Simulated Grades Grid -->
+        <div>
+          <label class="form-label small fw-bold mb-1">Simulated Past Grades</label>
+          <div id="sim-grades-container">
+            {% if form_vals.sim_past_grades %}
+              {% for course_name, grade in form_vals.sim_past_grades.items() %}
+              <div class="sim-grade-row">
+                <div class="autocomplete-wrapper">
+                  <input type="text" name="sim_past_course[]" class="form-control bg-light border-0 py-1 text-xs" style="font-size:0.75rem;" placeholder="Course..." value="{{ course_name }}" autocomplete="off" required>
+                  <div class="autocomplete-suggestions"></div>
+                </div>
+                <select name="sim_past_grade[]" class="form-select bg-light border-0 py-1 text-xs" style="font-size:0.75rem;">
+                  <option value="A" {% if grade == 'A' %}selected{% endif %}>A</option>
+                  <option value="B" {% if grade == 'B' %}selected{% endif %}>B</option>
+                  <option value="C" {% if grade == 'C' %}selected{% endif %}>C</option>
+                  <option value="D" {% if grade == 'D' %}selected{% endif %}>D</option>
+                  <option value="E" {% if grade == 'E' %}selected{% endif %}>E</option>
+                  <option value="F" {% if grade == 'F' %}selected{% endif %}>F</option>
+                </select>
+                <button type="button" class="btn btn-outline-danger py-1 px-2 border-0" onclick="this.closest('.sim-grade-row').remove();">
+                  <i class="fas fa-trash-alt" style="font-size:0.75rem;"></i>
+                </button>
+              </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <button type="button" class="btn btn-outline-secondary w-100 py-1 border-dashed mt-2" style="font-size:0.72rem; font-weight:600;" onclick="addGradeRow();">
+            + Add Completed Subject
+          </button>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold mt-2" style="font-size:0.875rem;">
+          Predict & Compare Performance
+        </button>
+      </form>
+    </div>
+
+    <!-- RIGHT: Results & Chat -->
+    <div>
+      {% if comparison_calculated %}
+        
+        <!-- BEST RECOMMENDATION CARD -->
+        {% if best_choice %}
+        <div style="background:linear-gradient(135deg, #ede9fe, #fff); border:1.5px solid var(--accent); border-radius:var(--radius-xl); padding:24px; margin-bottom:28px; display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:center;" class="fade-in">
+          <div style="background:var(--accent); color:#fff; width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+            <i class="fa-solid fa-trophy" style="font-size:1.4rem;"></i>
+          </div>
+          <div>
+            <div style="font-size:0.7rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:0.06em;">AI Recommended Best Option</div>
+            <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:2px 0 6px;">{{ best_choice.title }} ({{ best_choice.success_percentage }}% Match)</h2>
+            <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.45; margin:0;">
+              <strong>Comparative Verdict:</strong> {{ best_choice.advice }} 
+              We predict you will achieve your highest academic results in this course compared to the other options based on your department, CGPA, and completed course grades.
+            </p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- side-by-side columns -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
+          
+          <!-- Column A -->
+          {% if course_a_data %}
+            {{ render_course_col(course_a_data, 'A') }}
+          {% endif %}
+
+          <!-- Column B -->
+          {% if course_b_data %}
+            {{ render_course_col(course_b_data, 'B') }}
+          {% endif %}
+
+          <!-- Column C -->
+          {% if form_vals.compare_count == '3' and course_c_data %}
+            {{ render_course_col(course_c_data, 'C') }}
+          {% endif %}
+
+        </div>
+
+        <!-- interactive advisor chat -->
+        <div class="advisor-chat">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <svg viewBox="0 0 28 28" fill="none" style="width:24px;height:24px;stroke:var(--accent);"><circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="2.5"/><path d="M9 14l3 3 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div>
+              <h3 style="font-size:1.0rem; font-weight:800; margin:0; color:var(--text-primary);">Ask the AI Course Advisor</h3>
+              <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Get details on credit units, syllabus comparison, and custom careers</p>
+            </div>
+          </div>
+
+          <div class="chat-log" id="advisor-chat-log">
+            <div class="chat-msg ai">
+              Hello! I am your AI Course Advisor. I have loaded your simulated profile and the course syllabus for the compared courses. Ask me anything about them, e.g.:
+              <br><br>
+              <ul>
+                <li><em>"Compare the programming workloads of these courses."</em></li>
+                <li><em>"Which course fits a career in Quantitative Finance?"</em></li>
+                <li><em>"Does C++ require any advanced mathematics?"</em></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <input type="text" id="advisor-query" class="form-control bg-light border-0" placeholder="Type a comparative question here..." onkeypress="handleKeyPress(event);">
+            <button class="btn btn-primary px-4 fw-bold" type="button" onclick="askAdvisor();" id="advisor-btn">Send</button>
+          </div>
+        </div>
+
+      {% else %}
+        <!-- EMPTY STATE -->
+        <div class="empty-state" style="padding:80px 24px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); text-align:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px; height:48px; color:var(--text-muted); margin:0 auto 16px;"><path d="M16 18L22 12L16 6"/><path d="M8 6L2 12L8 18"/><path d="M12 2v20"/></svg>
+          <h3 style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin-bottom:6px;">Performance Predictor Ready</h3>
+          <p style="font-size:0.82rem; color:var(--text-muted); max-width:420px; margin:0 auto 14px;">Select two or three courses in the simulator panel and click "Predict & Compare" to see your predicted success probability side-by-side.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</div>
+
+<!-- MACRO: Course Column -->
+{% macro render_course_col(c, label) %}
+<div class="panel" style="background:var(--bg-card); transition:var(--transition);" class="hover-lift">
+  <div class="panel-header" style="background:#f8fafc; border-bottom:1px solid var(--border); padding:16px 20px;">
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+      <div>
+        <div style="font-size:0.68rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:0.04em;">Course {{ label }}</div>
+        <div class="panel-title" style="font-size:1.0rem; font-weight:800; line-height:1.2; margin-top:2px;">{{ c.title }}</div>
+      </div>
+      <span class="badge-difficulty diff-{{ c.difficulty }}">{{ c.difficulty }}</span>
+    </div>
+  </div>
+
+  <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+    
+    <!-- SVG Score Gauge -->
+    <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+      <div style="position:relative;">
+        <svg class="gauge-svg">
+          <circle class="gauge-bg" cx="50" cy="50" r="42"></circle>
+          <circle class="gauge-fill" cx="50" cy="50" r="42" 
+                  stroke="{{ c.verdict_color }}"
+                  stroke-dasharray="{{ (c.success_probability * 264)|round|int }} 264"></circle>
+        </svg>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:1.15rem; font-weight:850; color:var(--text-primary);">{{ c.success_percentage }}%</div>
+      </div>
+      <div>
+        <span class="status-pill" style="background:{{ c.verdict_color }}22; color:{{ c.verdict_color }}; font-weight:800; font-size:0.75rem; padding:4px 10px;">{{ c.verdict }}</span>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:500; margin-top:6px;">{{ c.credits }} credits · {{ c.department }}</div>
+      </div>
+    </div>
+
+    <!-- Peer performance stats -->
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Class Statistics</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; background:var(--bg-input); padding:10px 14px; border-radius:var(--radius-md);">
+        <div>
+          <div style="font-size:0.68rem; color:var(--text-muted); font-weight:500;">Peer Rating</div>
+          <div style="font-size:0.875rem; font-weight:750; color:var(--text-primary); margin-top:2px;">{{ c.avg_peer_rating }}/5.0</div>
+        </div>
+        <div>
+          <div style="font-size:0.68rem; color:var(--text-muted); font-weight:500;">Passing Rate</div>
+          <div style="font-size:0.875rem; font-weight:750; color:var(--text-primary); margin-top:2px;">{{ (c.peer_success_rate * 100)|round|int }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prereq -->
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Prerequisites</div>
+      <p style="font-size:0.78rem; color:var(--text-primary); margin:0;">{{ c.prerequisites }}</p>
+    </div>
+
+    <!-- Strengths (Positives) -->
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Match Strengths</div>
+      <ul style="padding-left:14px; font-size:0.78rem; color:var(--text-secondary); margin:0; list-style-type:none;">
+        {% for r in c.reasons_positive %}
+          <li style="margin-bottom:6px; position:relative; padding-left:16px;">
+            <i class="fa-solid fa-circle-check" style="color:#059669; position:absolute; left:-2px; top:3px; font-size:0.72rem;"></i>
+            {{ r }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Risks (Negatives) -->
+    {% if c.reasons_negative %}
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Risk Factors</div>
+      <ul style="padding-left:14px; font-size:0.78rem; color:var(--text-secondary); margin:0; list-style-type:none;">
+        {% for r in c.reasons_negative %}
+          <li style="margin-bottom:6px; position:relative; padding-left:16px;">
+            <i class="fa-solid fa-circle-exclamation" style="color:#dc2626; position:absolute; left:-2px; top:3px; font-size:0.72rem;"></i>
+            {{ r }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endmacro %}
+
+<!-- JAVASCRIPT & AJAX ADVISOR LOGIC -->
+<script>
+  // Dynamic 2 vs 3 columns toggle
+  const radio2 = document.getElementById('btn-compare-2');
+  const radio3 = document.getElementById('btn-compare-3');
+  const courseCWrapper = document.getElementById('course_c_wrapper');
+  
+  if (radio2 && radio3 && courseCWrapper) {
+    radio2.addEventListener('change', () => {
+      courseCWrapper.style.display = 'none';
+      document.getElementById('course_c_input').removeAttribute('required');
+    });
+    radio3.addEventListener('change', () => {
+      courseCWrapper.style.display = 'block';
+      document.getElementById('course_c_input').setAttribute('required', 'required');
+    });
+  }
+
+  // GPA Slider label
+  const slider = document.getElementById('gpa-slider');
+  const gpaVal = document.getElementById('gpa-val');
+  if (slider && gpaVal) {
+    slider.addEventListener('input', function() {
+      gpaVal.innerText = parseFloat(this.value).toFixed(2);
+    });
+  }
+
+  // Add Grades Row dynamically
+  function addGradeRow(courseName = '', grade = 'A') {
+    const container = document.getElementById('sim-grades-container');
+    const row = document.createElement('div');
+    row.className = 'sim-grade-row';
+    row.innerHTML = `
+      <div class="autocomplete-wrapper">
+        <input type="text" name="sim_past_course[]" class="form-control bg-light border-0 py-1 text-xs" style="font-size:0.75rem;" placeholder="Course..." value="${courseName}" autocomplete="off" required>
+        <div class="autocomplete-suggestions"></div>
+      </div>
+      <select name="sim_past_grade[]" class="form-select bg-light border-0 py-1 text-xs" style="font-size:0.75rem;">
+        <option value="A" ${grade === 'A' ? 'selected' : ''}>A</option>
+        <option value="B" ${grade === 'B' ? 'selected' : ''}>B</option>
+        <option value="C" ${grade === 'C' ? 'selected' : ''}>C</option>
+        <option value="D" ${grade === 'D' ? 'selected' : ''}>D</option>
+        <option value="E" ${grade === 'E' ? 'selected' : ''}>E</option>
+        <option value="F" ${grade === 'F' ? 'selected' : ''}>F</option>
+      </select>
+      <button type="button" class="btn btn-outline-danger py-1 px-2 border-0" onclick="this.closest('.sim-grade-row').remove();">
+        <i class="fas fa-trash-alt" style="font-size:0.75rem;"></i>
+      </button>
+    `;
+    container.appendChild(row);
+    initAutocomplete(row.querySelector('input'));
+  }
+
+  // Autocomplete Autocomplete setup
+  function initAutocomplete(inputElement) {
+    if (!inputElement) return;
+    const wrapper = inputElement.closest('.autocomplete-wrapper');
+    const suggestionsBox = wrapper.querySelector('.autocomplete-suggestions');
+
+    let debounceTimeout;
+
+    inputElement.addEventListener('input', function() {
+      clearTimeout(debounceTimeout);
+      const val = this.value.trim();
+      if (!val) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      debounceTimeout = setTimeout(async () => {
+        try {
+          const resp = await fetch(`/api/courses/autocomplete?q=${encodeURIComponent(val)}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.length > 0) {
+              suggestionsBox.innerHTML = '';
+              data.forEach(item => {
+                const sItem = document.createElement('div');
+                sItem.className = 'suggestion-item';
+                sItem.innerText = item.title;
+                sItem.onclick = () => {
+                  inputElement.value = item.title;
+                  suggestionsBox.style.display = 'none';
+                };
+                suggestionsBox.appendChild(sItem);
+              });
+              suggestionsBox.style.display = 'block';
+            } else {
+              suggestionsBox.style.display = 'none';
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }, 200);
+    });
+
+    // Close recommendations list on document click
+    document.addEventListener('click', (e) => {
+      if (e.target !== inputElement && e.target !== suggestionsBox) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+  }
+
+  // Initialize Autocomplete elements on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    initAutocomplete(document.getElementById('course_a_input'));
+    initAutocomplete(document.getElementById('course_b_input'));
+    initAutocomplete(document.getElementById('course_c_input'));
+    
+    // Initialize past grade rows autocomplete if they exist
+    document.querySelectorAll('#sim-grades-container input[name="sim_past_course[]"]').forEach(el => {
+      initAutocomplete(el);
+    });
+  });
+
+  // AJAX Advisor Chat
+  async function askAdvisor() {
+    const input = document.getElementById('advisor-query');
+    const query = input.value.trim();
+    if (!query) return;
+
+    // Append student message
+    const log = document.getElementById('advisor-chat-log');
+    const studentMsg = document.createElement('div');
+    studentMsg.className = 'chat-msg student';
+    studentMsg.innerText = query;
+    log.appendChild(studentMsg);
+
+    // Typing indicator
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'chat-msg ai';
+    aiMsg.innerText = 'Analyzing simulated parameters and course syllabi...';
+    log.appendChild(aiMsg);
+    log.scrollTop = log.scrollHeight;
+
+    input.value = '';
+    
+    // Disable advisor button while waiting
+    const btn = document.getElementById('advisor-btn');
+    btn.disabled = true;
+
+    // Gather parameters
+    const courseA = "{{ form_vals.course_a }}";
+    const courseB = "{{ form_vals.course_b }}";
+    const courseC = "{{ form_vals.course_c }}";
+    const simGpa = "{{ form_vals.sim_gpa }}";
+    const simDept = "{{ form_vals.sim_dept }}";
+    const simField = "{{ form_vals.sim_field }}";
+    const simInterests = "{{ form_vals.sim_interests }}";
+    
+    // Gather simulated past grades dict
+    const simPastGrades = {};
+    {% if form_vals.sim_past_grades %}
+      {% for c, g in form_vals.sim_past_grades.items() %}
+        simPastGrades["{{ c }}"] = "{{ g }}";
+      {% endfor %}
+    {% endif %}
+
+    try {
+      const resp = await fetch('/recommend/ask-advisor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: query,
+          course_a: courseA,
+          course_b: courseB,
+          course_c: courseC,
+          sim_gpa: simGpa,
+          sim_dept: simDept,
+          sim_field: simField,
+          sim_interests: simInterests,
+          sim_past_grades: simPastGrades
+        })
+      });
+
+      if (resp.ok) {
+        const resData = await resp.json();
+        // Simple markdown bullet list rendering
+        let text = resData.response || '';
+        // Replace bullet points with HTML lists for readability
+        text = text.replace(/^\s*[\*\-]\s+(.+)$/gm, '<li>$1</li>');
+        text = text.replace(/(<li>.+<\/li>)/s, '<ul>$1</ul>');
+        // Replace bold **text** with <strong>text</strong>
+        text = text.replace(/\*\/(.*?)\*\//g, '<strong>$1</strong>');
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Replace double newlines with paragraphs
+        text = text.split('\n\n').map(p => `<p>${p}</p>`).join('');
+        
+        aiMsg.innerHTML = text;
+      } else {
+        aiMsg.innerText = 'Google advisor gateway timed out. Please verify your connection and try again.';
+      }
+    } catch (e) {
+      console.error(e);
+      aiMsg.innerText = 'Advisor offline. Please make sure the Flask application is running.';
+    }
+
+    btn.disabled = false;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === 'Enter') {
+      askAdvisor();
+    }
+  }
+</script>
+{% endblock %}

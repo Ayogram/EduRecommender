@@ -3,7 +3,7 @@ Recommendations blueprint – generate and display AI recommendations.
 """
 
 import json
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from engine.hybrid import get_recommendations, evaluate
 from models.user import User
@@ -156,3 +156,260 @@ def rate_course(course_id):
     db.commit()
     flash("Course progress updated!", "success")
     return redirect(url_for("recommendations.course_details", course_id=course_id))
+
+
+# ── AI Course Advisor & Comparator Routes ───────────────────────────────────
+
+@recs_bp.route("/api/courses/autocomplete")
+@login_required
+def autocomplete_courses():
+    q = request.args.get("q", "").strip()
+    if not q or len(q) < 1:
+        return jsonify([])
+    db = get_db()
+    # Search for matching courses
+    rows = db.execute(
+        "SELECT id, title, department FROM courses WHERE title LIKE ? LIMIT 10",
+        (f"%{q}%",)
+    ).fetchall()
+    results = [{"id": r["id"], "title": r["title"], "department": r["department"]} for r in rows]
+    return jsonify(results)
+
+
+@recs_bp.route("/compare", methods=["GET", "POST"])
+@login_required
+def compare_courses():
+    from engine.hybrid import predict_performance_detailed
+    db = get_db()
+    
+    # Fetch all course titles for backup dropdown/fallback list
+    all_courses = db.execute("SELECT id, title, department FROM courses ORDER BY title ASC").fetchall()
+    
+    # Set up defaults
+    gpa = current_user.gpa or 0.0
+    dept = current_user.department or ""
+    field = current_user.academic_field or ""
+    
+    # User's interests
+    try:
+        interests = json.loads(current_user.interests) if current_user.interests else []
+    except Exception:
+        interests = []
+        
+    # User's completed courses for mock past grades
+    completed_courses = db.execute(
+        """SELECT sc.course_id, c.title, sc.grade
+           FROM student_courses sc JOIN courses c ON sc.course_id = c.id
+           WHERE sc.user_id = ? AND sc.grade != 'N/A'""",
+        (current_user.id,)
+    ).fetchall()
+    
+    # Convert database completed courses to a dict structure for simulation parameter pre-population
+    prepopulated_past_grades = {c["title"]: c["grade"] for c in completed_courses}
+    
+    comparison_calculated = False
+    course_a_data = None
+    course_b_data = None
+    course_c_data = None
+    best_choice = None
+    
+    # Keep form values persistent
+    form_vals = {
+        "sim_gpa": gpa,
+        "sim_dept": dept,
+        "sim_field": field,
+        "sim_interests": ", ".join(interests),
+        "sim_past_grades": prepopulated_past_grades,
+        "course_a": "",
+        "course_b": "",
+        "course_c": "",
+        "compare_count": "2"
+    }
+    
+    if request.method == "POST":
+        comparison_calculated = True
+        compare_count = request.form.get("compare_count", "2")
+        course_a_input = request.form.get("course_a", "").strip()
+        course_b_input = request.form.get("course_b", "").strip()
+        course_c_input = request.form.get("course_c", "").strip()
+        
+        sim_gpa = request.form.get("sim_gpa", "")
+        sim_dept = request.form.get("sim_dept", "").strip()
+        sim_field = request.form.get("sim_field", "").strip()
+        sim_interests_str = request.form.get("sim_interests", "").strip()
+        
+        # Parse simulated past grades from form
+        sim_past_courses = request.form.getlist("sim_past_course[]")
+        sim_past_grades_list = request.form.getlist("sim_past_grade[]")
+        
+        sim_past_grades_dict = {}
+        for title, grade in zip(sim_past_courses, sim_past_grades_list):
+            title = title.strip()
+            grade = grade.strip().upper()
+            if title and grade in ("A", "B", "C", "D", "E", "F"):
+                sim_past_grades_dict[title] = grade
+                
+        sim_interests_list = [i.strip() for i in sim_interests_str.split(",") if i.strip()]
+        
+        # Run predictions
+        if course_a_input:
+            course_a_data = predict_performance_detailed(
+                current_user.id, course_a_input,
+                sim_gpa=sim_gpa or None,
+                sim_dept=sim_dept or None,
+                sim_field=sim_field or None,
+                sim_interests=sim_interests_list or None,
+                sim_past_grades=sim_past_grades_dict or None
+            )
+            
+        if course_b_input:
+            course_b_data = predict_performance_detailed(
+                current_user.id, course_b_input,
+                sim_gpa=sim_gpa or None,
+                sim_dept=sim_dept or None,
+                sim_field=sim_field or None,
+                sim_interests=sim_interests_list or None,
+                sim_past_grades=sim_past_grades_dict or None
+            )
+            
+        if compare_count == "3" and course_c_input:
+            course_c_data = predict_performance_detailed(
+                current_user.id, course_c_input,
+                sim_gpa=sim_gpa or None,
+                sim_dept=sim_dept or None,
+                sim_field=sim_field or None,
+                sim_interests=sim_interests_list or None,
+                sim_past_grades=sim_past_grades_dict or None
+            )
+            
+        # Determine Best Choice
+        options = [course_a_data, course_b_data]
+        if course_c_data:
+            options.append(course_c_data)
+            
+        options = [o for o in options if o is not None]
+        if options:
+            best_choice = max(options, key=lambda x: x["success_probability"])
+            
+        # Save parameters back to form_vals to keep them persistent
+        form_vals = {
+            "sim_gpa": sim_gpa,
+            "sim_dept": sim_dept,
+            "sim_field": sim_field,
+            "sim_interests": sim_interests_str,
+            "sim_past_grades": sim_past_grades_dict,
+            "course_a": course_a_input,
+            "course_b": course_b_input,
+            "course_c": course_c_input,
+            "compare_count": compare_count
+        }
+        
+    return render_template(
+        "compare.html",
+        all_courses=all_courses,
+        form_vals=form_vals,
+        comparison_calculated=comparison_calculated,
+        course_a_data=course_a_data,
+        course_b_data=course_b_data,
+        course_c_data=course_c_data,
+        best_choice=best_choice
+    )
+
+
+@recs_bp.route("/recommend/ask-advisor", methods=["POST"])
+@login_required
+def ask_advisor():
+    import os
+    import requests
+    
+    data = request.get_json() or {}
+    query = data.get("query", "").strip()
+    course_a = data.get("course_a", "")
+    course_b = data.get("course_b", "")
+    course_c = data.get("course_c", "")
+    
+    sim_gpa = data.get("sim_gpa", "")
+    sim_dept = data.get("sim_dept", "")
+    sim_field = data.get("sim_field", "")
+    sim_interests = data.get("sim_interests", "")
+    sim_past_grades = data.get("sim_past_grades", {})
+    
+    if not query:
+        return jsonify({"error": "Empty question."}), 400
+        
+    # Construct profile string
+    past_grades_str = ", ".join(f"{t}: {g}" for t, g in sim_past_grades.items()) if sim_past_grades else "None"
+    
+    api_key = os.environ.get("GEMINI_API_KEY")
+    
+    system_instruction = (
+        "You are a premium AI Course Advisor at EduRecommender. "
+        "Your goal is to help the student decide between these courses, analyzing their simulated profile "
+        "and matching it to each course's requirements, difficulty, and syllabus. "
+        "Explain which course aligns best and compare/contrast them objectively. "
+        "Do not just say which is harder; detail where the student will succeed best and why. "
+        "Be professional, direct, and encouraging. Format your response beautifully with bold text and clean bullet points. "
+        "Keep it within 3 short paragraphs."
+    )
+    
+    if api_key:
+        try:
+            prompt = (
+                f"{system_instruction}\n\n"
+                f"STUDENT PROFILE:\n"
+                f"- GPA: {sim_gpa}\n"
+                f"- Department: {sim_dept}\n"
+                f"- Academic Field: {sim_field}\n"
+                f"- Interests: {sim_interests}\n"
+                f"- Past Grades: {past_grades_str}\n\n"
+                f"COMPARED COURSES:\n"
+                f"- Course A: {course_a}\n"
+                f"- Course B: {course_b}\n"
+            )
+            if course_c:
+                prompt += f"- Course C: {course_c}\n"
+                
+            prompt += f"\nSTUDENT QUESTION: {query}\n"
+            
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt}
+                        ]
+                    }
+                ]
+            }
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            if response.status_code == 200:
+                res_data = response.json()
+                candidates = res_data.get("candidates", [])
+                if candidates:
+                    content_parts = candidates[0].get("content", {}).get("parts", [])
+                    if content_parts:
+                        reply = content_parts[0].get("text", "")
+                        return jsonify({"response": reply})
+        except Exception as e:
+            print(f"Error calling Gemini in advisor: {e}")
+            
+    # Smart offline fallback
+    # Build local response using course descriptions and matching words
+    reply = (
+        f"**Local AI Advisor Analysis & Recommendation:**\n\n"
+        f"Comparing these options based on your parameters:\n"
+        f"- **{course_a}** and **{course_b}**"
+    )
+    if course_c:
+        reply += f" and **{course_c}**"
+        
+    reply += (
+        f"\n\nBased on your simulated GPA of **{sim_gpa}** and interest in **{sim_interests}**:\n"
+        f"1. Make sure you meet any target prerequisites outlined in the course catalog.\n"
+        f"2. Your department match boosts academic confidence in subjects aligned with **{sim_dept}**.\n"
+        f"3. Focus on courses with beginner/intermediate difficulties if you are looking to build a foundation before moving to advanced topics.\n\n"
+        f"*Tip: Configure your `GEMINI_API_KEY` in the `.env` file to enable real-time interactive questions with your AI Advisor!*"
+    )
+    return jsonify({"response": reply})

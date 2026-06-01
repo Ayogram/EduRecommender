@@ -350,14 +350,22 @@ def logout():
 
 @auth_bp.route("/login/google")
 def google_login():
-    redirect_uri = url_for("auth.google_callback", _external=True)
+    override_uri = current_app.config.get("GOOGLE_OVERRIDE_REDIRECT_URI")
+    if override_uri:
+        redirect_uri = override_uri
+    else:
+        redirect_uri = url_for("auth.google_callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
 
 @auth_bp.route("/login/google/callback")
 def google_callback():
     try:
-        token = oauth.google.authorize_access_token()
+        override_uri = current_app.config.get("GOOGLE_OVERRIDE_REDIRECT_URI")
+        if override_uri:
+            token = oauth.google.authorize_access_token(redirect_uri=override_uri)
+        else:
+            token = oauth.google.authorize_access_token()
         user_info = token.get("userinfo")
         if not user_info:
             user_info = oauth.google.userinfo()
