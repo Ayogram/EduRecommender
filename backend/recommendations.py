@@ -296,6 +296,48 @@ def compare_courses():
         if options:
             best_choice = max(options, key=lambda x: x["success_probability"])
             
+        # ── Parse uploaded result file with Gemini Vision ──────────
+        result_ai_analysis = None
+        result_file = request.files.get('result_file')
+        if result_file and result_file.filename:
+            import os, base64, requests as req_lib
+            api_key = os.environ.get('GEMINI_API_KEY')
+            if api_key:
+                try:
+                    file_bytes = result_file.read()
+                    mime_type = result_file.content_type or 'image/jpeg'
+                    b64_data = base64.b64encode(file_bytes).decode('utf-8')
+                    
+                    vision_prompt = (
+                        "You are an academic result analyser. "
+                        "The student has uploaded their result sheet / transcript screenshot. "
+                        "Please: "
+                        "1. List the subjects/courses you can see and their grades (e.g. Mathematics: A, Physics: B). "
+                        "2. Identify strong subjects (A or B grades) and weak subjects (D, E, F). "
+                        "3. Based on the results, write 2-3 sentences explaining which academic areas this student is best suited for. "
+                        "Be concise, professional, and encouraging. Format with clear bullet points."
+                    )
+                    
+                    vision_payload = {
+                        "contents": [{
+                            "parts": [
+                                {"text": vision_prompt},
+                                {"inline_data": {"mime_type": mime_type, "data": b64_data}}
+                            ]
+                        }]
+                    }
+                    vision_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+                    vision_resp = req_lib.post(vision_url, json=vision_payload, timeout=15)
+                    if vision_resp.status_code == 200:
+                        candidates = vision_resp.json().get('candidates', [])
+                        if candidates:
+                            parts = candidates[0].get('content', {}).get('parts', [])
+                            if parts:
+                                result_ai_analysis = parts[0].get('text', '')
+                except Exception as ex:
+                    current_app.logger.error(f"Gemini Vision error: {ex}")
+                    result_ai_analysis = None
+
         # Save parameters back to form_vals to keep them persistent
         form_vals = {
             "sim_gpa": sim_gpa,
@@ -306,7 +348,8 @@ def compare_courses():
             "course_a": course_a_input,
             "course_b": course_b_input,
             "course_c": course_c_input,
-            "compare_count": compare_count
+            "compare_count": compare_count,
+            "result_ai_analysis": result_ai_analysis
         }
         
     return render_template(

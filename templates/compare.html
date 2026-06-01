@@ -164,7 +164,8 @@
         <div class="panel-subtitle">Configure parameters & select target courses</div>
       </div>
       
-      <form action="{{ url_for('recommendations.compare_courses') }}" method="POST" id="sim-form" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
+      <form action="{{ url_for('recommendations.compare_courses') }}" method="POST" id="sim-form" enctype="multipart/form-data" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <!-- Toggle: 2 vs 3 Courses -->
         <div>
@@ -260,8 +261,42 @@
           </button>
         </div>
 
+        <!-- Result Sheet Upload -->
+        <div>
+          <label class="form-label small fw-bold mb-1">
+            <i class="fa-solid fa-file-arrow-up me-1" style="color:var(--accent);"></i>
+            Upload Result Sheet / Screenshot <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
+          </label>
+          <div id="result-upload-zone"
+               style="border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px 14px; text-align:center; cursor:pointer; transition:var(--transition); background:var(--bg-input);"
+               onclick="document.getElementById('result_file').click();"
+               ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';"
+               ondragleave="this.style.borderColor='var(--border)';"
+               ondrop="handleResultDrop(event);">
+            <i class="fa-solid fa-image" style="font-size:1.4rem; color:var(--text-muted); display:block; margin-bottom:6px;"></i>
+            <span id="upload-label" style="font-size:0.71rem; color:var(--text-muted); font-weight:500;">
+              Drop result sheet / screenshot here, or click to browse
+            </span>
+            <input type="file" id="result_file" name="result_file"
+                   accept="image/*,.pdf"
+                   style="display:none;"
+                   onchange="previewResultFile(this);">
+          </div>
+          <div id="result-preview" style="display:none; margin-top:8px; position:relative;">
+            <img id="result-preview-img" src="" alt="Preview" style="width:100%; max-height:130px; object-fit:contain; border-radius:var(--radius-md); border:1px solid var(--border); background:#f8f8f8; padding:4px;">
+            <div id="result-preview-name" style="font-size:0.68rem; color:var(--text-muted); margin-top:4px; text-align:center;"></div>
+            <button type="button" onclick="clearResultFile();"
+                    style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.55); border:none; color:#fff; border-radius:50%; width:20px; height:20px; font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div style="font-size:0.62rem; color:var(--text-muted); margin-top:5px;">
+            The AI will analyse your grades from this file and explain <em>why</em> each course suits your academic performance.
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold mt-2" style="font-size:0.875rem;">
-          Predict & Compare Performance
+          Predict &amp; Compare Performance
         </button>
       </form>
     </div>
@@ -283,6 +318,23 @@
               <strong>Comparative Verdict:</strong> {{ best_choice.advice }} 
               We predict you will achieve your highest academic results in this course compared to the other options based on your department, CGPA, and completed course grades.
             </p>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if form_vals.result_ai_analysis %}
+        <div style="background:linear-gradient(135deg,#f0fdf4,#fff); border:1.5px solid #4ade80; border-radius:var(--radius-xl); padding:22px 24px; margin-bottom:28px;" class="fade-in">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="background:#22c55e; color:#fff; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <i class="fa-solid fa-file-chart-column" style="font-size:1rem;"></i>
+            </div>
+            <div>
+              <div style="font-size:0.7rem; font-weight:800; color:#15803d; text-transform:uppercase; letter-spacing:0.06em;">AI Result Analysis</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); font-weight:500;">Your uploaded transcript was scanned and analysed by Gemini AI</div>
+            </div>
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.65;">
+            {{ form_vals.result_ai_analysis | replace('\n\n', '<br><br>') | replace('\n', '<br>') | replace('**', '') | safe }}
           </div>
         </div>
         {% endif %}
@@ -459,6 +511,51 @@
     slider.addEventListener('input', function() {
       gpaVal.innerText = parseFloat(this.value).toFixed(2);
     });
+  }
+
+  // ── Result File Upload Helpers ──────────────────────────────
+  function previewResultFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const preview = document.getElementById('result-preview');
+    const img     = document.getElementById('result-preview-img');
+    const name    = document.getElementById('result-preview-name');
+    const zone    = document.getElementById('result-upload-zone');
+    const label   = document.getElementById('upload-label');
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
+      reader.readAsDataURL(file);
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+    }
+    name.textContent = file.name;
+    preview.style.display = 'block';
+    zone.style.borderColor = 'var(--accent)';
+    label.textContent = 'File selected \u2713 ' + file.name;
+  }
+
+  function handleResultDrop(event) {
+    event.preventDefault();
+    document.getElementById('result-upload-zone').style.borderColor = 'var(--border)';
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+    const input = document.getElementById('result_file');
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    previewResultFile(input);
+  }
+
+  function clearResultFile() {
+    const input = document.getElementById('result_file');
+    input.value = '';
+    document.getElementById('result-preview').style.display = 'none';
+    document.getElementById('result-preview-img').src = '';
+    document.getElementById('result-preview-name').textContent = '';
+    document.getElementById('result-upload-zone').style.borderColor = 'var(--border)';
+    document.getElementById('upload-label').textContent = 'Drop result sheet / screenshot here, or click to browse';
   }
 
   // Add Grades Row dynamically

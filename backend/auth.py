@@ -443,9 +443,19 @@ def google_callback():
 
     except Exception as e:
         import traceback
-        error_details = f"{str(e)} (State in URL: {request.args.get('state')} | Session keys: {list(session.keys())})"
         current_app.logger.error(f"Google OAuth error: {e}\n{traceback.format_exc()}")
-        flash(f"Google login failed: {error_details}", "error")
+        err_str = str(e).lower()
+        if "mismatch" in err_str or "redirect_uri" in err_str:
+            friendly = "There was a redirect configuration issue. Please try again or contact support."
+        elif "token" in err_str or "csrf" in err_str or "state" in err_str:
+            friendly = "Your session expired during sign-in. Please try signing in with Google again."
+        elif "scope" in err_str or "permission" in err_str:
+            friendly = "Google denied the required permissions. Please allow access and try again."
+        elif "network" in err_str or "timeout" in err_str or "connection" in err_str:
+            friendly = "Could not reach Google\u2019s servers. Check your internet connection and retry."
+        else:
+            friendly = "Google sign-in could not be completed. Please try again in a moment."
+        flash(friendly, "error")
         return redirect(url_for("auth.login"))
 
 
