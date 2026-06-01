@@ -367,11 +367,8 @@ def google_login():
 @auth_bp.route("/login/google/callback")
 def google_callback():
     try:
-        override_uri = current_app.config.get("GOOGLE_OVERRIDE_REDIRECT_URI")
-        if override_uri:
-            token = oauth.google.authorize_access_token(redirect_uri=override_uri)
-        else:
-            token = oauth.google.authorize_access_token()
+        # Authlib automatically retrieves the redirect_uri stored in the session state
+        token = oauth.google.authorize_access_token()
         user_info = token.get("userinfo")
         if not user_info:
             user_info = oauth.google.userinfo()
