@@ -21,10 +21,11 @@ class Config:
     # ── Session ─────────────────────────────────────────────────
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
     SESSION_COOKIE_HTTPONLY = True
-    # SameSite=None is required for cross-origin OAuth redirects on some browsers/Vercel
-    SESSION_COOKIE_SAMESITE = "None"
-    # Ensure secure cookies in production (Vercel) to prevent them being dropped during OAuth redirects
-    SESSION_COOKIE_SECURE = True
+    
+    # Detect Vercel environment
+    IS_VERCEL = bool(os.environ.get('VERCEL') or os.environ.get('NOW_REGION'))
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = IS_VERCEL
 
     # ── CSRF ────────────────────────────────────────────────────
     WTF_CSRF_ENABLED = True

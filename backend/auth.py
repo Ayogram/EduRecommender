@@ -422,6 +422,84 @@ def google_callback():
         flash("Google login failed. Please try again.", "error")
         return redirect(url_for("auth.login"))
 
+
+# ── Google OAuth Debugging ──────────────────────────────────────────────────
+
+@auth_bp.route("/login/google/debug-state")
+def google_debug_state():
+    client_id = current_app.config.get("GOOGLE_CLIENT_ID", "")
+    client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET", "")
+    override_uri = current_app.config.get("GOOGLE_OVERRIDE_REDIRECT_URI", "")
+    secret_key = current_app.config.get("SECRET_KEY", "")
+    
+    masked_client_id = client_id[:10] + "..." + client_id[-10:] if len(client_id) > 20 else "empty/short"
+    masked_client_secret = client_secret[:4] + "..." + client_secret[-4:] if len(client_secret) > 8 else "empty/short"
+    masked_secret_key = secret_key[:4] + "..." + secret_key[-4:] if len(secret_key) > 8 else "empty/short"
+    
+    cookies_list = list(request.cookies.keys())
+    
+    debug_info = {
+        "env_check": {
+            "GOOGLE_CLIENT_ID": masked_client_id,
+            "GOOGLE_CLIENT_ID_length": len(client_id),
+            "GOOGLE_CLIENT_SECRET": masked_client_secret,
+            "GOOGLE_CLIENT_SECRET_length": len(client_secret),
+            "GOOGLE_OVERRIDE_REDIRECT_URI": override_uri,
+            "SECRET_KEY": masked_secret_key,
+            "SECRET_KEY_length": len(secret_key),
+        },
+        "flask_config": {
+            "SESSION_COOKIE_NAME": current_app.config.get("SESSION_COOKIE_NAME"),
+            "SESSION_COOKIE_SAMESITE": current_app.config.get("SESSION_COOKIE_SAMESITE"),
+            "SESSION_COOKIE_SECURE": current_app.config.get("SESSION_COOKIE_SECURE"),
+            "SESSION_COOKIE_HTTPONLY": current_app.config.get("SESSION_COOKIE_HTTPONLY"),
+            "SESSION_COOKIE_DOMAIN": current_app.config.get("SESSION_COOKIE_DOMAIN"),
+            "PERMANENT_SESSION_LIFETIME": str(current_app.config.get("PERMANENT_SESSION_LIFETIME")),
+            "ENV": "Vercel" if (os.environ.get("VERCEL") or os.environ.get("NOW_REGION")) else "Local",
+        },
+        "request_info": {
+            "is_secure": request.is_secure,
+            "url": request.url,
+            "scheme": request.scheme,
+            "host": request.host,
+            "cookies": cookies_list,
+            "headers": {
+                "X-Forwarded-Proto": request.headers.get("X-Forwarded-Proto"),
+                "X-Forwarded-Host": request.headers.get("X-Forwarded-Host"),
+                "X-Forwarded-For": request.headers.get("X-Forwarded-For"),
+                "User-Agent": request.headers.get("User-Agent"),
+            }
+        },
+        "session_keys": list(session.keys()),
+        "session_content_masked": {k: "set" for k in session.keys()}
+    }
+    return jsonify(debug_info)
+
+
+@auth_bp.route("/login/google/test-session-set")
+def test_session_set():
+    session["test_state"] = "12345-secure-test-value"
+    session.modified = True
+    response = redirect(url_for("auth.test_session_get"))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
+@auth_bp.route("/login/google/test-session-get")
+def test_session_get():
+    val = session.get("test_state")
+    return jsonify({
+        "status": "success" if val == "12345-secure-test-value" else "failed",
+        "value": val,
+        "session_keys": list(session.keys()),
+        "cookies": list(request.cookies.keys()),
+        "request_is_secure": request.is_secure,
+        "scheme": request.scheme
+    })
+
+
 # ── Password Recovery & Profile ──────────────────────────────────────────
 
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
