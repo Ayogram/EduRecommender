@@ -649,6 +649,9 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     # 5. Academic History & Department matching
     dept_boost = 0.0
     field_boost = 0.0
+    # Initialize reasons lists here so all blocks below can safely append to them
+    reasons_pos = []
+    reasons_neg = []
     
     c_dept_clean = course_dept.lower().strip() if course_dept else ""
     c_cat_clean = course_cat.lower().strip() if course_cat else ""
@@ -692,12 +695,7 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
 
     # is_field_match is True when at least dept or field boost was earned
     is_field_match = (dept_boost > 0 or field_boost > 0)
-    # Also add match strength bullets to reasons_pos here (done after penalty block)
-    if is_field_match:
-        if dept_boost > 0:
-            reasons_pos.append(f"Matching core department: {course_dept} (+12% match boost).")
-        if field_boost > 0:
-            reasons_pos.append(f"Matching academic field / interest: {user_field} (+22% match boost).")
+    # (reasons_pos entries for field match are added below after success_prob is computed)
 
     
     # 6. Past Student Performance (Own Grades on related subjects)
@@ -772,17 +770,22 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     success_prob = min(0.98, max(0.15, success_prob))
     
     # Compile explanations and reasons
-    reasons_pos = []
-    reasons_neg = []
+    # (lists were initialized before boost calculations above)
     
     if cbf_score > 0.4:
         reasons_pos.append(f"Strong interest correlation ({int(cbf_score*100)}% tag alignment).")
     elif cbf_score < 0.15:
         reasons_neg.append("Low correlation with your listed interests.")
-        
-    if field_mismatch_penalty < 0:
+
+    # Field match / mismatch reasons
+    if is_field_match:
+        if dept_boost > 0:
+            reasons_pos.append(f"Matching core department: {course_dept} (+12% match boost).")
+        if field_boost > 0:
+            reasons_pos.append(f"Matching academic field / interest: {user_field} (+22% match boost).")
+    elif field_mismatch_penalty < 0:
         reasons_neg.append(f"Offered by {course_dept} department — significantly outside your primary field ({user_field or user_dept}). This course covers concepts not typically covered in your programme.")
-    elif not is_field_match:
+    else:
         reasons_neg.append(f"Offered by {course_dept} department (outside your primary field).")
 
     reasons_pos.append(f"Academic standing (GPA {gpa:.2f}) provides +{int(gpa_boost*100)}% potential.")
