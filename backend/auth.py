@@ -422,9 +422,6 @@ def google_callback():
             login_user(user, remember=True)
             session.permanent = True
             save_user_to_session(user)
-            # If returning user lacks academic field, prompt completion
-            if not user.academic_field:
-                return redirect(url_for("auth.complete_profile"))
         else:
             user = User.create(
                 name=name, email=email, google_id=google_id,

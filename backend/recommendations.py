@@ -17,10 +17,6 @@ recs_bp = Blueprint("recommendations", __name__)
 @login_required
 def recommend():
     """Generate and display recommendations for the current user."""
-    # Check if user has academic background set (cold-start)
-    if not current_user.academic_field:
-        return redirect(url_for('auth.complete_profile'))
-
     recommendations = get_recommendations(current_user.id, top_n=12)
     
     # Parse JSON explanations
