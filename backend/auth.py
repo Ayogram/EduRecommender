@@ -23,6 +23,7 @@ def save_user_to_session(user):
     """Save user attributes to the secure session cookie so they can be restored if the ephemeral DB is wiped."""
     session['user_email'] = user.email
     session['user_name'] = user.name
+    session['user_nickname'] = getattr(user, 'nickname', None)
     session['user_google_id'] = user.google_id
     session['user_profile_picture'] = user.profile_picture
     session['user_role'] = user.role
@@ -651,9 +652,10 @@ def profile():
             flash("Profile and password updated successfully!", "success")
         else:
             flash("Profile updated successfully!", "success")
-        # Update user session variables
+        # Update user session variables and refresh Flask-Login's current_user
         user = User.get_by_id(current_user.id)
         if user:
+            login_user(user, remember=True)
             save_user_to_session(user)
             
         return redirect(url_for('auth.profile'))
@@ -712,9 +714,10 @@ def complete_profile():
         )
         db.commit()
         
-        # Save updated user to session
+        # Refresh Flask-Login's current_user and sync session
         user = User.get_by_id(current_user.id)
         if user:
+            login_user(user, remember=True)
             save_user_to_session(user)
         
         flash("Profile completed! Welcome to EduRecommender.", "success")
