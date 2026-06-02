@@ -462,21 +462,23 @@ def analyze_result():
         vision_payload = {"contents": [{"parts": []}]}
         
         if mime_type == "application/pdf":
-            # Extract text from PDF using pypdf
-            import io
-            import pypdf
-            pdf_reader = pypdf.PdfReader(io.BytesIO(file_bytes))
-            pdf_text = ""
-            for page in pdf_reader.pages:
-                pdf_text += page.extract_text() + "\n"
-                
-            vision_prompt += f"\n\nHere is the extracted text from the PDF transcript:\n{pdf_text}"
-            vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
+            # Convert first page of PDF to image using PyMuPDF for highest accuracy
+            import fitz
+            doc = fitz.open(stream=file_bytes, filetype="pdf")
+            if len(doc) > 0:
+                page = doc[0]
+                # Render at 2x resolution (144 DPI) for clear text
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                img_bytes = pix.tobytes("jpeg")
+                b64_data = base64.b64encode(img_bytes).decode("utf-8")
+                mime_type = "image/jpeg"
+            else:
+                return jsonify({"error": "The uploaded PDF has no pages."}), 400
         else:
-            # Handle as image
             b64_data = base64.b64encode(file_bytes).decode("utf-8")
-            vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
-            vision_payload["contents"][0]["parts"].append({"inline_data": {"mime_type": mime_type, "data": b64_data}})
+            
+        vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
+        vision_payload["contents"][0]["parts"].append({"inline_data": {"mime_type": mime_type, "data": b64_data}})
 
         vision_url = (
             "https://generativelanguage.googleapis.com/v1beta/"
