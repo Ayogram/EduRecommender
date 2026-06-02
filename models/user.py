@@ -31,6 +31,7 @@ class User(UserMixin):
             self.past_grades = json.loads(row_dict.get("past_grades", "{}")) if row_dict.get("past_grades") else {}
         except Exception:
             self.past_grades = {}
+        self.profile_completed = int(row_dict.get("profile_completed") or 0)
         self.created_at = row_dict["created_at"]
 
     @property
@@ -177,11 +178,22 @@ class User(UserMixin):
     @staticmethod
     def update_profile(user_id, name, nickname, academic_field, interests, **kwargs):
         db = get_db()
-        db.execute(
-            """UPDATE users SET name = ?, nickname = ?, academic_field = ?, interests = ?, department = ?, gpa = ?
-               WHERE id = ?""",
-            (name, nickname, academic_field, json.dumps(interests), kwargs.get('department'), kwargs.get('gpa'), user_id)
-        )
+        department = kwargs.get('department')
+        gpa = kwargs.get('gpa')
+        # If both key fields are filled in, mark the profile as completed permanently
+        mark_completed = 1 if (academic_field and department) else None
+        if mark_completed:
+            db.execute(
+                """UPDATE users SET name = ?, nickname = ?, academic_field = ?, interests = ?, department = ?, gpa = ?, profile_completed = 1
+                   WHERE id = ?""",
+                (name, nickname, academic_field, json.dumps(interests), department, gpa, user_id)
+            )
+        else:
+            db.execute(
+                """UPDATE users SET name = ?, nickname = ?, academic_field = ?, interests = ?, department = ?, gpa = ?
+                   WHERE id = ?""",
+                (name, nickname, academic_field, json.dumps(interests), department, gpa, user_id)
+            )
         db.commit()
 
     @staticmethod

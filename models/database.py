@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
     department      TEXT,
     gpa             REAL    DEFAULT 0.0,
     past_grades     TEXT    DEFAULT '{}',
+    profile_completed INTEGER DEFAULT 0,
     is_verified     INTEGER NOT NULL DEFAULT 0,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

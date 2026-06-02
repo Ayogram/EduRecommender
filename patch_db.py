@@ -31,7 +31,8 @@ def patch_db(db_path=None):
         ("nickname", "TEXT"),
         ("department", "TEXT"),
         ("gpa", "REAL DEFAULT 0.0"),
-        ("past_grades", "TEXT DEFAULT '{}'")
+        ("past_grades", "TEXT DEFAULT '{}'"),
+        ("profile_completed", "INTEGER DEFAULT 0")
     ]
     for col, dtype in user_patches:
         if not column_exists("users", col):
@@ -70,6 +71,21 @@ def patch_db(db_path=None):
     if not column_exists("recommendations", "success_probability"):
         print("Adding column success_probability to recommendations...")
         cursor.execute("ALTER TABLE recommendations ADD COLUMN success_probability REAL DEFAULT 0.0")
+
+    # 6. Backfill profile_completed for existing users who already filled in their profile
+    #    This ensures no returning user is incorrectly sent back to onboarding
+    if column_exists("users", "profile_completed"):
+        print("Backfilling profile_completed for existing users with academic_field + department set...")
+        cursor.execute("""
+            UPDATE users
+            SET profile_completed = 1
+            WHERE profile_completed = 0
+              AND academic_field IS NOT NULL AND academic_field != ''
+              AND department IS NOT NULL AND department != ''
+        """)
+        updated = cursor.rowcount
+        if updated:
+            print(f"  Backfilled {updated} user(s).")
 
     conn.commit()
     conn.close()

@@ -93,11 +93,14 @@ def create_app():
             # Re-fetch user to get the full object with generated ID
             user = User.get_by_email(session.get('user_email'))
             
-            # Restore GPA
+            # Restore GPA and profile_completed flag
             if user:
                 from models.database import get_db
                 db = get_db()
-                db.execute("UPDATE users SET gpa = ? WHERE id = ?", (session.get('user_gpa', 0.0), user.id))
+                db.execute(
+                    "UPDATE users SET gpa = ?, profile_completed = ? WHERE id = ?",
+                    (session.get('user_gpa', 0.0), session.get('user_profile_completed', 0), user.id)
+                )
                 db.commit()
                 # Re-fetch again
                 user = User.get_by_id(user.id)

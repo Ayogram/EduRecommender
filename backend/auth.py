@@ -30,6 +30,7 @@ def save_user_to_session(user):
     session['user_department'] = user.department
     session['user_gpa'] = user.gpa
     session['user_interests'] = user.interests
+    session['user_profile_completed'] = getattr(user, 'profile_completed', 0)
     
     # Save enrolled course IDs
     try:
@@ -352,8 +353,8 @@ def login():
         save_user_to_session(user)
         flash(f"Welcome back, {user.name}!", "success")
         
-        # Onboarding redirect: if profile lacks department or academic field, complete profile first
-        if not user.department or not user.academic_field:
+        # Onboarding redirect: only send to complete_profile if never completed before
+        if not getattr(user, 'profile_completed', 0):
             return redirect(url_for("auth.complete_profile"))
 
         next_page = request.args.get("next")
@@ -442,8 +443,8 @@ def google_callback():
         save_user_to_session(user)
         flash(f"Welcome, {user.name}!", "success")
         
-        # Onboarding redirect: if profile lacks department or academic field, complete profile first
-        if not user.department or not user.academic_field:
+        # Onboarding redirect: only send to complete_profile if never completed before
+        if not getattr(user, 'profile_completed', 0):
             return redirect(url_for("auth.complete_profile"))
 
         return redirect(url_for("main.dashboard"))
@@ -706,7 +707,7 @@ def complete_profile():
 
         db = get_db()
         db.execute(
-            "UPDATE users SET academic_field = ?, department = ?, gpa = ?, interests = ? WHERE id = ?",
+            "UPDATE users SET academic_field = ?, department = ?, gpa = ?, interests = ?, profile_completed = 1 WHERE id = ?",
             (academic_field, department, gpa, json.dumps(all_interests), current_user.id)
         )
         db.commit()
