@@ -506,6 +506,7 @@ def ask_advisor():
     
     data = request.get_json() or {}
     query = data.get("query", "").strip()
+    history = data.get("history", [])
     course_a = data.get("course_a", "")
     course_b = data.get("course_b", "")
     course_c = data.get("course_c", "")
@@ -516,7 +517,7 @@ def ask_advisor():
     sim_interests = data.get("sim_interests", "")
     sim_past_grades = data.get("sim_past_grades", {})
     
-    if not query:
+    if not query and not history:
         return jsonify({"error": "Empty question."}), 400
         
     # Construct profile string
@@ -526,17 +527,16 @@ def ask_advisor():
     
     system_instruction = (
         "You are a premium AI Course Advisor at EduRecommender. "
-        "Your goal is to help the student decide between these courses, analyzing their simulated profile "
-        "and matching it to each course's requirements, difficulty, and syllabus. "
-        "Explain which course aligns best and compare/contrast them objectively. "
-        "Do not just say which is harder; detail where the student will succeed best and why. "
+        "The student is deciding between the provided courses. Use their simulated profile to offer tailored advice. "
+        "If this is the first message, analyze which course aligns best. If this is a follow-up question, answer it directly and conversationally. "
         "Be professional, direct, and encouraging. Format your response beautifully with bold text and clean bullet points. "
-        "Keep it within 3 short paragraphs."
+        "Keep your responses concise."
     )
     
     if api_key:
         try:
-            prompt = (
+            # Base context to inject into the FIRST message
+            base_context = (
                 f"{system_instruction}\n\n"
                 f"STUDENT PROFILE:\n"
                 f"- GPA: {sim_gpa}\n"
@@ -549,20 +549,32 @@ def ask_advisor():
                 f"- Course B: {course_b}\n"
             )
             if course_c:
-                prompt += f"- Course C: {course_c}\n"
+                base_context += f"- Course C: {course_c}\n"
                 
-            prompt += f"\nSTUDENT QUESTION: {query}\n"
+            contents = []
+            if not history:
+                # Fallback if history missing
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": f"{base_context}\nSTUDENT QUESTION: {query}"}]
+                })
+            else:
+                for i, msg in enumerate(history):
+                    role = "user" if msg.get("role") == "user" else "model"
+                    text = msg.get("text", "")
+                    
+                    if i == 0 and role == "user":
+                        text = f"{base_context}\nSTUDENT QUESTION: {text}"
+                        
+                    contents.append({
+                        "role": role,
+                        "parts": [{"text": text}]
+                    })
             
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
             headers = {"Content-Type": "application/json"}
             payload = {
-                "contents": [
-                    {
-                        "parts": [
-                            {"text": prompt}
-                        ]
-                    }
-                ]
+                "contents": contents
             }
             
             response = requests.post(url, json=payload, headers=headers, timeout=25)

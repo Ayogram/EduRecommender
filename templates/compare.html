@@ -218,6 +218,55 @@
       </ul>
     </div>
     {% endif %}
+    {% if c.advice %}
+    {% set adv = c.advice|tojson|safe %}
+    <div style="margin-top:4px;">
+      <button type="button"
+        onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('.chev').style.transform = this.nextElementSibling.style.display === 'none' ? 'rotate(0deg)' : 'rotate(180deg)';"
+        style="width:100%; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(90deg,var(--accent)11,transparent); border:1px solid var(--accent)44; border-radius:10px; padding:10px 14px; cursor:pointer; font-size:0.78rem; font-weight:700; color:var(--accent); transition:all .2s;">
+        <span style="display:flex;align-items:center;gap:7px;"><i class="fa-solid fa-brain" style="font-size:0.85rem;"></i> AI Deep Analysis</span>
+        <i class="fa-solid fa-chevron-down chev" style="font-size:0.7rem; transition:transform .3s;"></i>
+      </button>
+      <div style="display:none; margin-top:10px; border:1px solid var(--border); border-radius:12px; overflow:hidden;" class="ai-analysis-card">
+        {%- set advice_data = c.advice | fromjson_safe -%}
+        {% if advice_data %}
+
+          {# Section helper macro #}
+          {% macro section(icon, color, title, text) %}
+          <div style="padding:14px 16px; border-bottom:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:{{ color }}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="{{ icon }}" style="font-size:0.75rem;color:{{ color }};"></i>
+              </div>
+              <div style="font-size:0.72rem;font-weight:800;color:{{ color }};text-transform:uppercase;letter-spacing:.05em;">{{ title }}</div>
+            </div>
+            <p style="font-size:0.79rem;color:var(--text-secondary);line-height:1.65;margin:0;">{{ text }}</p>
+          </div>
+          {% endmacro %}
+
+          {{ section('fa-solid fa-chart-line', '#2563eb', 'Academic Performance Analysis', advice_data.academic_performance) }}
+          {{ section('fa-solid fa-fire-flame-curved', '#7c3aed', 'Interest Alignment', advice_data.interest_alignment) }}
+          {{ section('fa-solid fa-lightbulb', '#d97706', 'Problem-Solving Potential', advice_data.problem_solving) }}
+          {{ section('fa-solid fa-briefcase', '#0891b2', 'Career Alignment', advice_data.career_alignment) }}
+          {{ section('fa-solid fa-rocket', '#059669', 'Future Growth Potential', advice_data.future_growth) }}
+
+          {# AI Verdict footer #}
+          <div style="padding:14px 16px; background:{% if advice_data.is_good_match %}linear-gradient(135deg,#f0fdf4,#ecfdf5){% elif advice_data.is_mismatch %}linear-gradient(135deg,#fef2f2,#fff7ed){% else %}linear-gradient(135deg,#fffbeb,#fefce8){% endif %};">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="width:28px;height:28px;border-radius:8px;background:{% if advice_data.is_good_match %}#05996918{% elif advice_data.is_mismatch %}#dc262618{% else %}#d9780618{% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fa-solid fa-robot" style="font-size:0.75rem;color:{% if advice_data.is_good_match %}#059669{% elif advice_data.is_mismatch %}#dc2626{% else %}#d97706{% endif %};"></i>
+              </div>
+              <div style="font-size:0.72rem;font-weight:800;color:{% if advice_data.is_good_match %}#059669{% elif advice_data.is_mismatch %}#dc2626{% else %}#d97706{% endif %};text-transform:uppercase;letter-spacing:.05em;">AI Verdict</div>
+            </div>
+            <p style="font-size:0.79rem;color:var(--text-secondary);line-height:1.65;margin:0;">{{ advice_data.verdict }}</p>
+          </div>
+
+        {% else %}
+          <div style="padding:14px 16px; font-size:0.79rem; color:var(--text-muted);">{{ c.advice }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
 
   </div>
 </div>
@@ -411,10 +460,17 @@
           <div>
             <div style="font-size:0.7rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:0.06em;">AI Recommended Best Option</div>
             <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:2px 0 6px;">{{ best_choice.title }} ({{ best_choice.success_percentage }}% Match)</h2>
+            {%- set adv = best_choice.advice | fromjson_safe -%}
+            {% if adv %}
+            <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.55; margin:0;">
+              {{ adv.verdict }}
+            </p>
+            {% else %}
             <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.45; margin:0;">
-              <strong>Comparative Verdict:</strong> {{ best_choice.advice }} 
+              <strong>Comparative Verdict:</strong> {{ best_choice.advice }}
               We predict you will achieve your highest academic results in this course compared to the other options based on your department, CGPA, and completed course grades.
             </p>
+            {% endif %}
           </div>
         </div>
         {% endif %}
@@ -811,10 +867,15 @@
   });
 
   // AJAX Advisor Chat
+  let chatHistory = [];
+  
   async function askAdvisor() {
     const input = document.getElementById('advisor-query');
     const query = input.value.trim();
     if (!query) return;
+
+    // Append to local history
+    chatHistory.push({role: "user", text: query});
 
     // Append student message
     const log = document.getElementById('advisor-chat-log');
@@ -862,6 +923,7 @@
         },
         body: JSON.stringify({
           query: query,
+          history: chatHistory,
           course_a: courseA,
           course_b: courseB,
           course_c: courseC,
@@ -887,8 +949,13 @@
         text = text.split('\n\n').map(p => `<p>${p}</p>`).join('');
         
         aiMsg.innerHTML = text;
+        
+        // Append AI response to local history
+        chatHistory.push({role: "model", text: resData.response});
       } else {
         aiMsg.innerText = 'Google advisor gateway timed out. Please verify your connection and try again.';
+        // Remove the failed user message from history
+        chatHistory.pop();
       }
     } catch (e) {
       console.error(e);

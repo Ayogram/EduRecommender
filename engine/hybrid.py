@@ -808,54 +808,170 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     if not reasons_pos:
         reasons_pos.append("General elective matching basic parameters.")
 
-    # ── Rich human-language advice paragraph (10 lines) ─────────────────────
+    # ── Rich structured analysis (displayed as named sections) ─────────────
     field_label = user_field or user_dept or "your field"
     match_pct = int(round(success_prob * 100))
+    gpa_comment = "outstanding" if gpa >= 4.0 else ("strong" if gpa >= 3.5 else ("solid" if gpa >= 3.0 else "developing"))
     
+    # Build past grades context
+    grade_subjects_good = [(t, g) for t, g in matching_past_courses if g in ('A', 'B')]
+    grade_subjects_bad  = [(t, g) for t, g in matching_past_courses if g == 'F']
+    interests_str = ', '.join(user_interests[:4]) if user_interests else field_label
+
     if dept_boost > 0 or field_boost > 0:
-        # GOOD MATCH — explain clearly WHY
-        grade_context = ""
-        if matching_past_courses:
-            best = [(t, g) for t, g in matching_past_courses if g in ('A', 'B')]
-            if best:
-                grade_context = f" Your track record in related subjects like '{best[0][0]}' (Grade {best[0][1]}) shows you already have the foundation this course builds on."
-        gpa_comment = "outstanding" if gpa >= 4.0 else ("strong" if gpa >= 3.5 else ("solid" if gpa >= 3.0 else "developing"))
-        advice = (
-            f"Based on your {gpa_comment} GPA of {gpa:.2f} and your background in {field_label}, here is why you are well-positioned for {course_title}:\n\n"
-            f"**1. Field Alignment:** This course is taught under the {course_dept} department, which directly matches your academic programme. "
-            f"You will already be familiar with much of the vocabulary, thinking patterns, and problem-solving approaches the course uses.\n"
-            f"**2. GPA Strength:** A GPA of {gpa:.2f} puts you in the top tier of students likely to perform well — you clearly have the discipline and academic endurance this course requires.\n"
-            f"**3. Relevance to Your Goals:** The topics covered — {', '.join(course_tags[:4]) if course_tags else course_cat} — sit squarely within the skill set you are building as a {field_label} student.\n"
-            f"**4. Difficulty Level:** This is a {course_difficulty}-level course, which is appropriately matched to your current standing.{grade_context}\n"
-            f"**5. Prerequisite Readiness:** You already meet the academic requirements ({course_row['prerequisites'] or 'None'}), so you can step in confidently from day one.\n"
-            f"**6. Career Payoff:** Completing this course strengthens your profile for roles that demand {course_cat} expertise — a direct complement to where your degree is taking you.\n"
-            f"**7. Bottom Line:** At {match_pct}% compatibility, this is one of the strongest matches available for your profile. Commit fully and you are very likely to excel."
+        # ── GOOD MATCH ──────────────────────────────────────────────────────
+        acad_perf = (
+            f"Your GPA of {gpa:.2f} places you in the {gpa_comment} academic tier, "
+            f"which is a strong predictor of success in {course_dept} courses. "
         )
+        if grade_subjects_good:
+            acad_perf += (
+                f"Your past grades in {', '.join(t for t,g in grade_subjects_good[:2])} "
+                f"demonstrate you already have the technical foundation this course builds on. "
+            )
+        acad_perf += (
+            f"Students with a {gpa_comment} GPA in {field_label} programmes consistently outperform "
+            f"peers in courses that align with their department, which is exactly the case here."
+        )
+
+        interest_align = (
+            f"Your profile lists {field_label} as your primary academic field, and this course is offered by the {course_dept} department — a direct match. "
+            f"Your stated interests ({interests_str}) correlate strongly with the topics covered in this course "
+            f"({', '.join(course_tags[:4]) if course_tags else course_cat}). "
+            f"When interest and department align, students report higher engagement, better retention, and significantly improved final grades."
+        )
+
+        problem_solving = (
+            f"A {course_difficulty}-level course in {course_dept} requires the kind of structured, analytical thinking "
+            f"your academic background in {field_label} has already been developing. "
+            f"Your performance pattern indicates strong logical reasoning ability — "
+            f"a core skill tested in {course_cat} topics. "
+            f"Students from your department who take this course consistently perform above the class average."
+        )
+
+        career_align = (
+            f"Completing {course_title} strengthens your profile for careers that demand {course_cat} expertise — "
+            f"a direct complement to where your {field_label} degree is taking you. "
+            f"The course's {course_difficulty} classification means it provides real, career-ready skills rather than purely theoretical content. "
+            f"Based on your interests in {interests_str}, you are building exactly the skill set employers in this domain look for."
+        )
+
+        future_growth = (
+            f"Based on your GPA of {gpa:.2f}, your department match ({course_dept}), and your stated interests, "
+            f"{course_title} offers the strongest balance between your current academic capability and long-term professional growth. "
+            f"This course does not just tick academic boxes — it directly compounds your existing strengths and accelerates your progression within {field_label}."
+        )
+
+        verdict_text = (
+            f"{course_title} is not recommended solely because it matches your department. "
+            f"It is recommended because your academic performance ({gpa_comment} GPA of {gpa:.2f}), your department alignment ({course_dept}), "
+            f"your stated interests ({interests_str}), and the course content all converge on the same conclusion: "
+            f"this is the course where you have the highest probability of performing at your best. "
+            f"At {match_pct}% compatibility, this is an outstanding match for your profile."
+        )
+
     elif field_mismatch_penalty < 0:
-        # BAD MATCH — explain honestly and clearly
-        advice = (
-            f"Here is an honest assessment of why {course_title} is not a strong fit for your profile as a {field_label} student:\n\n"
-            f"**1. Field Gap:** This course belongs to the {course_dept} department, which operates on a completely different knowledge base from {field_label}. "
-            f"The concepts, terminology, and thinking patterns are largely unfamiliar to someone from your programme.\n"
-            f"**2. No Curriculum Overlap:** Your current courses and academic interests ({', '.join(user_interests[:3]) if user_interests else field_label}) do not share meaningful content with what {course_title} covers.\n"
-            f"**3. Effort vs. Reward:** While your GPA of {gpa:.2f} shows academic discipline, performing well in an entirely unrelated field requires significantly more effort with less foundation to build on.\n"
-            f"**4. Risk Factor:** Students who take courses far outside their department typically score 15-25% lower than those within their field, even with high GPAs.\n"
-            f"**5. Difficulty Level:** This is a {course_difficulty}-level course — stepping into an unfamiliar discipline at this level increases the challenge further.\n"
-            f"**6. Recommendation:** Unless this course is a compulsory elective requirement, your time is better spent deepening your {field_label} expertise with courses that compound your existing strengths.\n"
-            f"**7. Bottom Line:** At {match_pct}% compatibility, this course sits outside your academic comfort zone. Consider it only if it is mandatory or if you have a specific personal interest in {course_dept}."
+        # ── BAD MATCH ────────────────────────────────────────────────────────
+        acad_perf = (
+            f"While your GPA of {gpa:.2f} is {gpa_comment} and reflects strong academic discipline, "
+            f"GPA alone does not guarantee success in a completely unrelated discipline. "
+            f"Your academic strengths have been built within {field_label} — the concepts, reasoning patterns, "
+            f"and problem-solving approaches valued in {course_dept} are largely different from what your programme develops."
         )
+
+        interest_align = (
+            f"Your primary academic field is {field_label}, and your stated interests ({interests_str}) "
+            f"show no significant overlap with the content covered in {course_title} (offered by {course_dept}). "
+            f"When a student's interests and department diverge from a course, the likelihood of sustained "
+            f"motivation and high performance drops significantly — even for students with strong GPAs."
+        )
+
+        problem_solving = (
+            f"{course_title} requires a specific type of thinking and domain knowledge that is typically developed "
+            f"through years of study within {course_dept}. "
+            f"As a {field_label} student, you would be entering this course without the foundational mental models "
+            f"that students from {course_dept} bring. This creates a significant learning curve regardless of your general intelligence."
+        )
+
+        career_align = (
+            f"From a career perspective, {course_title} ({course_dept}) does not align with the career paths your "
+            f"{field_label} degree is preparing you for. "
+            f"Investing time in this course risks pulling focus away from building the specialised skill set "
+            f"that will differentiate you in {field_label}-related roles."
+        )
+
+        future_growth = (
+            f"Your strongest long-term growth comes from deepening your expertise in {field_label}, "
+            f"not from branching into unrelated disciplines. "
+            f"Unless {course_title} is a mandatory university elective requirement, "
+            f"selecting a course that aligns with your department will give you a significantly higher return "
+            f"on your academic effort and time."
+        )
+
+        verdict_text = (
+            f"{course_title} scores {match_pct}% compatibility with your profile — not because of a data error, "
+            f"but because your department ({field_label}), interests ({interests_str}), and academic strengths "
+            f"all point away from {course_dept}. "
+            f"Your GPA gives you enough discipline to pass, but performing at your best and finding genuine value "
+            f"in this course is unlikely given the field mismatch. Consider it only if it is a mandatory elective."
+        )
+
     else:
-        # MODERATE MATCH
-        advice = (
-            f"Here is a balanced assessment of {course_title} for your profile:\n\n"
-            f"**1. Partial Fit:** This course is not from your primary department ({field_label}), but there is some overlap in skills or interests that makes it manageable.\n"
-            f"**2. GPA Cushion:** Your GPA of {gpa:.2f} gives you an academic buffer — you have the study habits and discipline to navigate unfamiliar material.\n"
-            f"**3. Interest Match:** Some of your listed interests ({', '.join(user_interests[:2]) if user_interests else 'your topics'}) partially connect with what this course covers.\n"
-            f"**4. Extra Effort Required:** Expect to invest more self-study time compared to courses within your core programme.\n"
-            f"**5. Difficulty Level:** As a {course_difficulty} course, the workload is {'manageable with preparation' if course_difficulty != 'advanced' else 'demanding — especially outside your primary field'}.\n"
-            f"**6. Prerequisite Check:** Ensure you are comfortable with: {course_row['prerequisites'] or 'no specific prerequisites listed'}.\n"
-            f"**7. Bottom Line:** At {match_pct}% compatibility, you can succeed here with effort, but courses closer to your {field_label} background will give you a stronger return on your academic investment."
+        # ── MODERATE MATCH ───────────────────────────────────────────────────
+        acad_perf = (
+            f"Your GPA of {gpa:.2f} is {gpa_comment} and gives you an academic cushion — you have the "
+            f"study habits and intellectual endurance to navigate material that is partially outside your comfort zone. "
+            f"However, courses outside your core department typically demand 20-30% more preparation time "
+            f"from students without a direct departmental background."
         )
+
+        interest_align = (
+            f"Your interests ({interests_str}) partially overlap with the content of {course_title}, "
+            f"but the alignment is not as strong as it would be for courses directly within {field_label}. "
+            f"Some of what this course covers will feel familiar; other parts will require you to learn "
+            f"frameworks and concepts from scratch. Your engagement and motivation may fluctuate as a result."
+        )
+
+        problem_solving = (
+            f"{course_title} is a {course_difficulty}-level course, which means the analytical demands are "
+            f"{'moderate and manageable with preparation' if course_difficulty != 'advanced' else 'high — particularly challenging when entering without a strong departmental base'}. "
+            f"Your {field_label} background provides some transferable thinking skills, but expect to invest "
+            f"significant extra effort in the areas that do not directly map to your existing knowledge."
+        )
+
+        career_align = (
+            f"{course_title} offers some career relevance if you are looking to broaden your profile beyond pure {field_label}. "
+            f"However, for most career paths your degree targets, courses within {field_label} will be more directly valued by employers. "
+            f"Consider this course if you have a specific niche interest in {course_dept} that complements your main specialisation."
+        )
+
+        future_growth = (
+            f"At {match_pct}% compatibility, this course is manageable but not optimised for your profile. "
+            f"Your strongest future growth comes from building depth in {field_label}, where your academic "
+            f"background, interests, and department alignment all compound together. "
+            f"This course can be a valuable broadening choice, but should not replace core {field_label} electives."
+        )
+
+        verdict_text = (
+            f"{course_title} is a moderate match for your profile. Your GPA of {gpa:.2f} means you can handle the workload, "
+            f"and your partial interest alignment means you will find some of the content engaging. "
+            f"However, this course sits outside your primary department, which means you will not have the same built-in "
+            f"advantage you would have in a course directly within {field_label}. "
+            f"Approach it with clear eyes: it is achievable, but it requires more deliberate preparation."
+        )
+
+    import json as _json
+    advice = _json.dumps({
+        "academic_performance": acad_perf,
+        "interest_alignment": interest_align,
+        "problem_solving": problem_solving,
+        "career_alignment": career_align,
+        "future_growth": future_growth,
+        "verdict": verdict_text,
+        "match_pct": match_pct,
+        "is_good_match": bool(dept_boost > 0 or field_boost > 0),
+        "is_mismatch": bool(field_mismatch_penalty < 0)
+    })
 
     if success_prob >= 0.75:
         verdict = "Excellent Match"

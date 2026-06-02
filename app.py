@@ -64,8 +64,13 @@ def create_app():
         from models.user import User
         from flask import session
         import json
+        
         user = User.get_by_id(int(user_id))
         
+        # Prevent DB-reset crossover: if ID exists but email doesn't match the secure cookie, ignore it
+        if user and session.get('user_email') and user.email != session.get('user_email'):
+            user = None
+            
         # If the ephemeral SQLite database was wiped on Vercel cold-start,
         # but the secure signed session cookie is present, auto-restore the user
         if not user and session.get('user_email'):
