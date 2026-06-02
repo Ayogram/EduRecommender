@@ -462,31 +462,31 @@ def analyze_result():
         vision_payload = {"contents": [{"parts": []}]}
         
         if mime_type == "application/pdf":
-            # Extract text from PDF using pypdf (pure python, avoids Vercel shared library crashes)
+            # Convert first page of PDF to an image using pypdfium2 (works flawlessly on Vercel)
+            import pypdfium2 as pdfium
             import io
-            import pypdf
-            pdf_reader = pypdf.PdfReader(io.BytesIO(file_bytes))
-            pdf_text = ""
-            for page in pdf_reader.pages:
-                try:
-                    pdf_text += page.extract_text(extraction_mode="layout") + "\n"
-                except TypeError:
-                    pdf_text += page.extract_text() + "\n"
+            
+            doc = pdfium.PdfDocument(file_bytes)
+            if len(doc) > 0:
+                page = doc[0]
+                bitmap = page.render(scale=2.0)
+                pil_image = bitmap.to_pil()
                 
-            pdf_prompt = (
-                vision_prompt + 
-                "\n\nHere is the raw text extracted from the PDF transcript. "
-                "Because it was extracted as text, some columns might be slightly misaligned or scrambled. "
-                "Please carefully scan the text to match the Course Codes/Titles with their exact corresponding letter grades (A, B, C, D, E, F). "
-                "Do not hallucinate or guess. Rely strictly on the text provided below:\n"
-                f"{pdf_text}"
-            )
-            vision_payload["contents"][0]["parts"].append({"text": pdf_prompt})
+                # Convert PIL image to JPEG bytes
+                img_byte_arr = io.BytesIO()
+                pil_image.save(img_byte_arr, format='JPEG', quality=85)
+                img_bytes = img_byte_arr.getvalue()
+                
+                b64_data = base64.b64encode(img_bytes).decode("utf-8")
+                mime_type = "image/jpeg"
+                vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
+                vision_payload["contents"][0]["parts"].append({"inline_data": {"mime_type": mime_type, "data": b64_data}})
+            else:
+                return jsonify({"error": "The uploaded PDF has no pages."}), 400
         else:
             b64_data = base64.b64encode(file_bytes).decode("utf-8")
-            
-        vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
-        vision_payload["contents"][0]["parts"].append({"inline_data": {"mime_type": mime_type, "data": b64_data}})
+            vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
+            vision_payload["contents"][0]["parts"].append({"inline_data": {"mime_type": mime_type, "data": b64_data}})
 
         vision_url = (
             "https://generativelanguage.googleapis.com/v1beta/"
