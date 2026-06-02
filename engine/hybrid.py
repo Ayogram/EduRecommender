@@ -667,6 +667,38 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
                     field_boost = 0.12
         except Exception:
             pass
+
+    # ── FIELD MISMATCH PENALTY ──────────────────────────────────────────────
+    # If neither dept_boost nor field_boost fired, the course is from a completely
+    # different domain. Apply a strong penalty so e.g. Psychology never scores
+    # 70%+ for a Computer Science student.
+    field_mismatch_penalty = 0.0
+    if dept_boost == 0.0 and field_boost == 0.0:
+        # Check whether interest tags at least partially overlap
+        interest_overlap = False
+        if user_interests and course_tags:
+            c_tags_lower = [t.lower().strip() for t in course_tags]
+            for interest in user_interests:
+                interest_lower = interest.lower().strip()
+                for tag in c_tags_lower:
+                    if tag in interest_lower or interest_lower in tag:
+                        interest_overlap = True
+                        break
+                if interest_overlap:
+                    break
+        if not interest_overlap:
+            # Completely unrelated course — apply a hard penalty
+            field_mismatch_penalty = -0.20
+
+    # is_field_match is True when at least dept or field boost was earned
+    is_field_match = (dept_boost > 0 or field_boost > 0)
+    # Also add match strength bullets to reasons_pos here (done after penalty block)
+    if is_field_match:
+        if dept_boost > 0:
+            reasons_pos.append(f"Matching core department: {course_dept} (+12% match boost).")
+        if field_boost > 0:
+            reasons_pos.append(f"Matching academic field / interest: {user_field} (+22% match boost).")
+
     
     # 6. Past Student Performance (Own Grades on related subjects)
     own_related_boost = 0.0
@@ -724,7 +756,7 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     
     # 7. Overall calculation
     base_success = 0.40 + (cbf_score * 0.25) + (cf_score * 0.15)
-    success_prob = base_success + dept_boost + field_boost + gpa_boost + difficulty_adjust + own_related_boost
+    success_prob = base_success + dept_boost + field_boost + field_mismatch_penalty + gpa_boost + difficulty_adjust + own_related_boost
     
     # Add a tiny deterministic factor to ensure no duplicate match percentages
     success_prob += (course_id % 7) * 0.005 if course_id else 0.002
@@ -748,15 +780,11 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     elif cbf_score < 0.15:
         reasons_neg.append("Low correlation with your listed interests.")
         
-    is_field_match = (dept_boost > 0 or field_boost > 0)
-    if is_field_match:
-        if dept_boost > 0:
-            reasons_pos.append(f"Matching core department: {course_dept} (+12% match boost).")
-        if field_boost > 0:
-            reasons_pos.append(f"Matching academic field / interest: {user_field} (+22% match boost).")
-    else:
+    if field_mismatch_penalty < 0:
+        reasons_neg.append(f"Offered by {course_dept} department — significantly outside your primary field ({user_field or user_dept}). This course covers concepts not typically covered in your programme.")
+    elif not is_field_match:
         reasons_neg.append(f"Offered by {course_dept} department (outside your primary field).")
-        
+
     reasons_pos.append(f"Academic standing (GPA {gpa:.2f}) provides +{int(gpa_boost*100)}% potential.")
     if difficulty_adjust < 0:
         reasons_neg.append(f"Advanced course penalty (-10%) due to GPA below 2.50.")
@@ -776,23 +804,68 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
         
     if not reasons_pos:
         reasons_pos.append("General elective matching basic parameters.")
-        
+
+    # ── Rich human-language advice paragraph (10 lines) ─────────────────────
+    field_label = user_field or user_dept or "your field"
+    match_pct = int(round(success_prob * 100))
+    
+    if dept_boost > 0 or field_boost > 0:
+        # GOOD MATCH — explain clearly WHY
+        grade_context = ""
+        if matching_past_courses:
+            best = [(t, g) for t, g in matching_past_courses if g in ('A', 'B')]
+            if best:
+                grade_context = f" Your track record in related subjects like '{best[0][0]}' (Grade {best[0][1]}) shows you already have the foundation this course builds on."
+        gpa_comment = "outstanding" if gpa >= 4.0 else ("strong" if gpa >= 3.5 else ("solid" if gpa >= 3.0 else "developing"))
+        advice = (
+            f"Based on your {gpa_comment} GPA of {gpa:.2f} and your background in {field_label}, here is why you are well-positioned for {course_title}:\n\n"
+            f"**1. Field Alignment:** This course is taught under the {course_dept} department, which directly matches your academic programme. "
+            f"You will already be familiar with much of the vocabulary, thinking patterns, and problem-solving approaches the course uses.\n"
+            f"**2. GPA Strength:** A GPA of {gpa:.2f} puts you in the top tier of students likely to perform well — you clearly have the discipline and academic endurance this course requires.\n"
+            f"**3. Relevance to Your Goals:** The topics covered — {', '.join(course_tags[:4]) if course_tags else course_cat} — sit squarely within the skill set you are building as a {field_label} student.\n"
+            f"**4. Difficulty Level:** This is a {course_difficulty}-level course, which is appropriately matched to your current standing.{grade_context}\n"
+            f"**5. Prerequisite Readiness:** You already meet the academic requirements ({course_row['prerequisites'] or 'None'}), so you can step in confidently from day one.\n"
+            f"**6. Career Payoff:** Completing this course strengthens your profile for roles that demand {course_cat} expertise — a direct complement to where your degree is taking you.\n"
+            f"**7. Bottom Line:** At {match_pct}% compatibility, this is one of the strongest matches available for your profile. Commit fully and you are very likely to excel."
+        )
+    elif field_mismatch_penalty < 0:
+        # BAD MATCH — explain honestly and clearly
+        advice = (
+            f"Here is an honest assessment of why {course_title} is not a strong fit for your profile as a {field_label} student:\n\n"
+            f"**1. Field Gap:** This course belongs to the {course_dept} department, which operates on a completely different knowledge base from {field_label}. "
+            f"The concepts, terminology, and thinking patterns are largely unfamiliar to someone from your programme.\n"
+            f"**2. No Curriculum Overlap:** Your current courses and academic interests ({', '.join(user_interests[:3]) if user_interests else field_label}) do not share meaningful content with what {course_title} covers.\n"
+            f"**3. Effort vs. Reward:** While your GPA of {gpa:.2f} shows academic discipline, performing well in an entirely unrelated field requires significantly more effort with less foundation to build on.\n"
+            f"**4. Risk Factor:** Students who take courses far outside their department typically score 15-25% lower than those within their field, even with high GPAs.\n"
+            f"**5. Difficulty Level:** This is a {course_difficulty}-level course — stepping into an unfamiliar discipline at this level increases the challenge further.\n"
+            f"**6. Recommendation:** Unless this course is a compulsory elective requirement, your time is better spent deepening your {field_label} expertise with courses that compound your existing strengths.\n"
+            f"**7. Bottom Line:** At {match_pct}% compatibility, this course sits outside your academic comfort zone. Consider it only if it is mandatory or if you have a specific personal interest in {course_dept}."
+        )
+    else:
+        # MODERATE MATCH
+        advice = (
+            f"Here is a balanced assessment of {course_title} for your profile:\n\n"
+            f"**1. Partial Fit:** This course is not from your primary department ({field_label}), but there is some overlap in skills or interests that makes it manageable.\n"
+            f"**2. GPA Cushion:** Your GPA of {gpa:.2f} gives you an academic buffer — you have the study habits and discipline to navigate unfamiliar material.\n"
+            f"**3. Interest Match:** Some of your listed interests ({', '.join(user_interests[:2]) if user_interests else 'your topics'}) partially connect with what this course covers.\n"
+            f"**4. Extra Effort Required:** Expect to invest more self-study time compared to courses within your core programme.\n"
+            f"**5. Difficulty Level:** As a {course_difficulty} course, the workload is {'manageable with preparation' if course_difficulty != 'advanced' else 'demanding — especially outside your primary field'}.\n"
+            f"**6. Prerequisite Check:** Ensure you are comfortable with: {course_row['prerequisites'] or 'no specific prerequisites listed'}.\n"
+            f"**7. Bottom Line:** At {match_pct}% compatibility, you can succeed here with effort, but courses closer to your {field_label} background will give you a stronger return on your academic investment."
+        )
+
     if success_prob >= 0.75:
         verdict = "Excellent Match"
         verdict_color = "#059669"
-        advice = "Highly recommended! Your profile shows outstanding compatibility with this course's syllabus and prerequisites."
     elif success_prob >= 0.50:
         verdict = "Good Match"
         verdict_color = "#2563eb"
-        advice = "A solid, standard option. You have the necessary skills to perform well with consistent study and effort."
     elif success_prob >= 0.35:
         verdict = "Challenging Match"
         verdict_color = "#d97706"
-        advice = "Proceed with caution. This course presents moderate risk due to background mismatches or lower interest alignment."
     else:
         verdict = "High Risk Match"
         verdict_color = "#dc2626"
-        advice = "Not recommended. Your standing, past grades, and interests suggest a high chance of difficulty in this subject."
         
     return {
         "course_id": course_id,

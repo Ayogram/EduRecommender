@@ -577,21 +577,45 @@ def ask_advisor():
         except Exception as e:
             print(f"Error calling Gemini in advisor: {e}")
             
-    # Smart offline fallback
-    # Build local response using course descriptions and matching words
+    # Smart offline fallback — generate a useful response from the student's profile data
+    courses_compared = [c for c in [course_a, course_b, course_c] if c]
+    courses_str = " vs. ".join(f"**{c}**" for c in courses_compared)
+    
     reply = (
-        f"**Local AI Advisor Analysis & Recommendation:**\n\n"
-        f"Comparing these options based on your parameters:\n"
-        f"- **{course_a}** and **{course_b}**"
+        f"**AI Course Advisor — Profile Analysis**\n\n"
+        f"Comparing {courses_str} based on your academic profile:\n\n"
+        f"**Your Profile Summary:**\n"
+        f"- Department: {sim_dept or 'Not specified'}\n"
+        f"- Academic Field: {sim_field or 'Not specified'}\n"
+        f"- Simulated GPA: {sim_gpa or 'Not specified'}\n"
+        f"- Interests: {sim_interests or 'Not specified'}\n\n"
     )
-    if course_c:
-        reply += f" and **{course_c}**"
+    
+    # Give specific advice for each course
+    for course in courses_compared:
+        course_lower = course.lower()
+        # Detect if the course matches the student's field
+        dept_words = (sim_dept or "").lower().split()
+        field_words = (sim_field or "").lower().split()
+        course_matches = any(w in course_lower for w in dept_words + field_words if len(w) > 3)
         
-    reply += (
-        f"\n\nBased on your simulated GPA of **{sim_gpa}** and interest in **{sim_interests}**:\n"
-        f"1. Make sure you meet any target prerequisites outlined in the course catalog.\n"
-        f"2. Your department match boosts academic confidence in subjects aligned with **{sim_dept}**.\n"
-        f"3. Focus on courses with beginner/intermediate difficulties if you are looking to build a foundation before moving to advanced topics.\n\n"
-        f"*Tip: Configure your `GEMINI_API_KEY` in the `.env` file to enable real-time interactive questions with your AI Advisor!*"
-    )
+        if course_matches:
+            reply += f"✅ **{course}:** Strong alignment with your {sim_dept or sim_field} background. This course builds on knowledge you are already developing in your programme, making it a high-value choice.\n\n"
+        else:
+            reply += f"⚠️ **{course}:** This course appears to be outside your primary field. Your GPA shows academic capability, but expect to invest extra preparation time since this covers unfamiliar concepts.\n\n"
+    
+    if sim_gpa:
+        try:
+            gpa_val = float(sim_gpa)
+            if gpa_val >= 3.5:
+                reply += f"**GPA Note:** Your GPA of {sim_gpa} is excellent — you have the academic discipline to succeed in whichever course you choose, though staying within your field maximises your performance edge.\n\n"
+            elif gpa_val >= 2.5:
+                reply += f"**GPA Note:** Your GPA of {sim_gpa} is solid. Stick to courses within your department for the best results, as they complement your existing knowledge base.\n\n"
+            else:
+                reply += f"**GPA Note:** With a GPA of {sim_gpa}, focus on courses that align tightly with your core field. This reduces cognitive load and gives you the best chance of improving your standing.\n\n"
+        except Exception:
+            pass
+    
+    reply += f"**Final Recommendation:** Choose the course that most directly matches your {sim_dept or 'primary'} department. Depth in your core field is more valuable than breadth across unrelated subjects."
+    
     return jsonify({"response": reply})
