@@ -443,10 +443,9 @@ def analyze_result():
     if not api_key:
         return jsonify({"response": "**Result Sheet Uploaded** - AI reading is offline (no API key). Please manually add your grades using the Simulated Past Grades section."})
 
-    b64_data = base64.b64encode(file_bytes).decode("utf-8")
     vision_prompt = (
         "You are an expert academic result analyser for a university course recommender. "
-        "The student uploaded their result sheet or transcript (image or PDF). "
+        "The student uploaded their result sheet or transcript. "
         "Please read it carefully and extract all completed courses and their grades. "
         "Identify course codes and course titles (e.g., 'CSC313 Object-Oriented Programming') and map them to their corresponding letter grades (A, B, C, D, E, F). "
         "Please return ONLY a valid JSON object. The JSON must have the following keys:\n"
@@ -460,14 +459,25 @@ def analyze_result():
     )
 
     try:
-        vision_payload = {
-            "contents": [{
-                "parts": [
-                    {"text": vision_prompt},
-                    {"inline_data": {"mime_type": mime_type, "data": b64_data}}
-                ]
-            }]
-        }
+        vision_payload = {"contents": [{"parts": []}]}
+        
+        if mime_type == "application/pdf":
+            # Extract text from PDF using pypdf
+            import io
+            import pypdf
+            pdf_reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+            pdf_text = ""
+            for page in pdf_reader.pages:
+                pdf_text += page.extract_text() + "\n"
+                
+            vision_prompt += f"\n\nHere is the extracted text from the PDF transcript:\n{pdf_text}"
+            vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
+        else:
+            # Handle as image
+            b64_data = base64.b64encode(file_bytes).decode("utf-8")
+            vision_payload["contents"][0]["parts"].append({"text": vision_prompt})
+            vision_payload["contents"][0]["parts"].append({"inline_data": {"mime_type": mime_type, "data": b64_data}})
+
         vision_url = (
             "https://generativelanguage.googleapis.com/v1beta/"
             f"models/gemini-2.5-flash:generateContent?key={api_key}"
