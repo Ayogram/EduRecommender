@@ -22,6 +22,19 @@ def recommend():
         return redirect(url_for('auth.complete_profile'))
 
     recommendations = get_recommendations(current_user.id, top_n=12)
+    
+    # Parse JSON explanations
+    for r in recommendations:
+        try:
+            r["explanation_data"] = json.loads(r["explanation"])
+        except Exception:
+            r["explanation_data"] = {
+                "why": r.get("explanation", ""),
+                "strengths": [],
+                "career": "",
+                "advice": ""
+            }
+            
     metrics = evaluate(current_user.id, k=12)
 
     # Separate into high success (70% and above) and low success (below 70%)
@@ -296,48 +309,6 @@ def compare_courses():
         if options:
             best_choice = max(options, key=lambda x: x["success_probability"])
             
-        # ── Parse uploaded result file with Gemini Vision ──────────
-        result_ai_analysis = None
-        result_file = request.files.get('result_file')
-        if result_file and result_file.filename:
-            import os, base64, requests as req_lib
-            api_key = os.environ.get('GEMINI_API_KEY')
-            if api_key:
-                try:
-                    file_bytes = result_file.read()
-                    mime_type = result_file.content_type or 'image/jpeg'
-                    b64_data = base64.b64encode(file_bytes).decode('utf-8')
-                    
-                    vision_prompt = (
-                        "You are an academic result analyser. "
-                        "The student has uploaded their result sheet / transcript screenshot. "
-                        "Please: "
-                        "1. List the subjects/courses you can see and their grades (e.g. Mathematics: A, Physics: B). "
-                        "2. Identify strong subjects (A or B grades) and weak subjects (D, E, F). "
-                        "3. Based on the results, write 2-3 sentences explaining which academic areas this student is best suited for. "
-                        "Be concise, professional, and encouraging. Format with clear bullet points."
-                    )
-                    
-                    vision_payload = {
-                        "contents": [{
-                            "parts": [
-                                {"text": vision_prompt},
-                                {"inline_data": {"mime_type": mime_type, "data": b64_data}}
-                            ]
-                        }]
-                    }
-                    vision_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
-                    vision_resp = req_lib.post(vision_url, json=vision_payload, timeout=15)
-                    if vision_resp.status_code == 200:
-                        candidates = vision_resp.json().get('candidates', [])
-                        if candidates:
-                            parts = candidates[0].get('content', {}).get('parts', [])
-                            if parts:
-                                result_ai_analysis = parts[0].get('text', '')
-                except Exception as ex:
-                    current_app.logger.error(f"Gemini Vision error: {ex}")
-                    result_ai_analysis = None
-
         # Save parameters back to form_vals to keep them persistent
         form_vals = {
             "sim_gpa": sim_gpa,
@@ -348,9 +319,12 @@ def compare_courses():
             "course_a": course_a_input,
             "course_b": course_b_input,
             "course_c": course_c_input,
-            "compare_count": compare_count,
-            "result_ai_analysis": result_ai_analysis
+            "compare_count": compare_count
         }
+        
+        # Persist the simulated grades to the user's profile
+        if sim_past_grades_dict:
+            User.update_past_grades(current_user.id, sim_past_grades_dict)
         
     return render_template(
         "compare.html",
@@ -364,6 +338,66 @@ def compare_courses():
     )
 
 
+
+
+@recs_bp.route("/recommend/analyze-result", methods=["POST"])
+@login_required
+def analyze_result():
+    """Receive a result-sheet image via AJAX multipart and return AI Vision analysis."""
+    import os, base64
+    import requests as req_lib
+
+    result_file = request.files.get("result_file")
+    if not result_file or not result_file.filename:
+        return jsonify({"error": "No file received."}), 400
+
+    file_bytes = result_file.read()
+    if len(file_bytes) > 3 * 1024 * 1024:
+        return jsonify({"error": "File too large. Please upload an image under 3 MB."}), 400
+
+    mime_type = result_file.content_type or "image/jpeg"
+    if not mime_type.startswith("image/"):
+        return jsonify({"error": "Please upload an image file (PNG, JPG, WEBP)."}), 400
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return jsonify({"response": "**Result Sheet Uploaded** - AI reading is offline (no API key). Please manually add your grades using the Simulated Past Grades section."})
+
+    b64_data = base64.b64encode(file_bytes).decode("utf-8")
+    vision_prompt = (
+        "You are an expert academic result analyser for a university course recommender. "
+        "The student uploaded their result sheet or transcript screenshot. Please:\n"
+        "1. List each subject/course you can read and its grade (e.g. - Mathematics: A).\n"
+        "2. Highlight strong subjects (A or B) and weak ones (D, E, or F).\n"
+        "3. In 2-3 encouraging sentences, explain which academic fields this student is best suited for "
+        "and why these course recommendations make sense for their profile.\n"
+        "Format with bullet points and bold headings. Be concise and professional."
+    )
+
+    try:
+        vision_payload = {
+            "contents": [{
+                "parts": [
+                    {"text": vision_prompt},
+                    {"inline_data": {"mime_type": mime_type, "data": b64_data}}
+                ]
+            }]
+        }
+        vision_url = (
+            "https://generativelanguage.googleapis.com/v1beta/"
+            f"models/gemini-1.5-flash:generateContent?key={api_key}"
+        )
+        vision_resp = req_lib.post(vision_url, json=vision_payload, timeout=25)
+        if vision_resp.status_code == 200:
+            candidates = vision_resp.json().get("candidates", [])
+            if candidates:
+                parts_list = candidates[0].get("content", {}).get("parts", [])
+                if parts_list:
+                    return jsonify({"response": parts_list[0].get("text", "")})
+        return jsonify({"error": f"AI service returned status {vision_resp.status_code}."}), 502
+    except Exception as ex:
+        current_app.logger.error(f"analyze_result error: {ex}")
+        return jsonify({"error": "AI result reading timed out. Try a smaller or clearer image."}), 504
 @recs_bp.route("/recommend/ask-advisor", methods=["POST"])
 @login_required
 def ask_advisor():

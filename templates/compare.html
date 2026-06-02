@@ -164,7 +164,7 @@
         <div class="panel-subtitle">Configure parameters & select target courses</div>
       </div>
       
-      <form action="{{ url_for('recommendations.compare_courses') }}" method="POST" id="sim-form" enctype="multipart/form-data" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
+      <form action="{{ url_for('recommendations.compare_courses') }}" method="POST" id="sim-form" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <!-- Toggle: 2 vs 3 Courses -->
@@ -261,44 +261,46 @@
           </button>
         </div>
 
-        <!-- Result Sheet Upload -->
-        <div>
-          <label class="form-label small fw-bold mb-1">
-            <i class="fa-solid fa-file-arrow-up me-1" style="color:var(--accent);"></i>
-            Upload Result Sheet / Screenshot <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
-          </label>
-          <div id="result-upload-zone"
-               style="border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px 14px; text-align:center; cursor:pointer; transition:var(--transition); background:var(--bg-input);"
-               onclick="document.getElementById('result_file').click();"
-               ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';"
-               ondragleave="this.style.borderColor='var(--border)';"
-               ondrop="handleResultDrop(event);">
-            <i class="fa-solid fa-image" style="font-size:1.4rem; color:var(--text-muted); display:block; margin-bottom:6px;"></i>
-            <span id="upload-label" style="font-size:0.71rem; color:var(--text-muted); font-weight:500;">
-              Drop result sheet / screenshot here, or click to browse
-            </span>
-            <input type="file" id="result_file" name="result_file"
-                   accept="image/*,.pdf"
-                   style="display:none;"
-                   onchange="previewResultFile(this);">
-          </div>
-          <div id="result-preview" style="display:none; margin-top:8px; position:relative;">
-            <img id="result-preview-img" src="" alt="Preview" style="width:100%; max-height:130px; object-fit:contain; border-radius:var(--radius-md); border:1px solid var(--border); background:#f8f8f8; padding:4px;">
-            <div id="result-preview-name" style="font-size:0.68rem; color:var(--text-muted); margin-top:4px; text-align:center;"></div>
-            <button type="button" onclick="clearResultFile();"
-                    style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.55); border:none; color:#fff; border-radius:50%; width:20px; height:20px; font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-          <div style="font-size:0.62rem; color:var(--text-muted); margin-top:5px;">
-            The AI will analyse your grades from this file and explain <em>why</em> each course suits your academic performance.
-          </div>
-        </div>
-
         <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold mt-2" style="font-size:0.875rem;">
           Predict &amp; Compare Performance
         </button>
       </form>
+
+      <!-- Result Sheet Upload (AJAX - outside form so it never blocks the POST) -->
+      <div style="padding:0 24px 20px;">
+        <label class="form-label small fw-bold mb-1">
+          <i class="fa-solid fa-file-arrow-up me-1" style="color:var(--accent);"></i>
+          Upload Result Sheet / Screenshot <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
+        </label>
+        <div id="result-upload-zone"
+             style="border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px 14px; text-align:center; cursor:pointer; transition:var(--transition); background:var(--bg-input);"
+             onclick="document.getElementById('result_file').click();"
+             ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';"
+             ondragleave="this.style.borderColor='var(--border)';"
+             ondrop="handleResultDrop(event);">
+          <i class="fa-solid fa-image" style="font-size:1.4rem; color:var(--text-muted); display:block; margin-bottom:6px;"></i>
+          <span id="upload-label" style="font-size:0.71rem; color:var(--text-muted); font-weight:500;">
+            Drop result sheet / screenshot here, or click to browse
+          </span>
+          <!-- NOT inside the form - never submitted with the compare POST -->
+          <input type="file" id="result_file" accept="image/*" style="display:none;" onchange="previewResultFile(this);">
+        </div>
+        <div id="result-preview" style="display:none; margin-top:8px; position:relative;">
+          <img id="result-preview-img" src="" alt="Preview" style="width:100%; max-height:130px; object-fit:contain; border-radius:var(--radius-md); border:1px solid var(--border); background:#f8f8f8; padding:4px;">
+          <div id="result-preview-name" style="font-size:0.68rem; color:var(--text-muted); margin-top:4px; text-align:center;"></div>
+          <button type="button" onclick="clearResultFile();"
+                  style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.55); border:none; color:#fff; border-radius:50%; width:20px; height:20px; font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <button type="button" id="analyze-result-btn" onclick="analyzeResultFile();"
+                style="display:none; width:100%; margin-top:10px; padding:9px; border:none; border-radius:var(--radius-md); background:var(--accent); color:#fff; font-size:0.8rem; font-weight:700; cursor:pointer;">
+          <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI
+        </button>
+        <div style="font-size:0.62rem; color:var(--text-muted); margin-top:6px;">
+          The AI will read your grades and explain <em>why</em> specific courses suit your academic performance.
+        </div>
+      </div>
     </div>
 
     <!-- RIGHT: Results & Chat -->
@@ -517,23 +519,29 @@
   function previewResultFile(input) {
     const file = input.files[0];
     if (!file) return;
+    // Validate: images only, max 3 MB
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, WEBP).');
+      input.value = ''; return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      alert('Image is too large. Please use an image under 3 MB (try taking a screenshot instead of a raw photo).');
+      input.value = ''; return;
+    }
     const preview = document.getElementById('result-preview');
     const img     = document.getElementById('result-preview-img');
     const name    = document.getElementById('result-preview-name');
     const zone    = document.getElementById('result-upload-zone');
     const label   = document.getElementById('upload-label');
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
-      reader.readAsDataURL(file);
-    } else {
-      img.src = '';
-      img.style.display = 'none';
-    }
+    const btn     = document.getElementById('analyze-result-btn');
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
+    reader.readAsDataURL(file);
     name.textContent = file.name;
     preview.style.display = 'block';
     zone.style.borderColor = 'var(--accent)';
     label.textContent = 'File selected \u2713 ' + file.name;
+    if (btn) btn.style.display = 'block';
   }
 
   function handleResultDrop(event) {
@@ -556,6 +564,99 @@
     document.getElementById('result-preview-name').textContent = '';
     document.getElementById('result-upload-zone').style.borderColor = 'var(--border)';
     document.getElementById('upload-label').textContent = 'Drop result sheet / screenshot here, or click to browse';
+    const btn = document.getElementById('analyze-result-btn');
+    if (btn) btn.style.display = 'none';
+  }
+
+  // Helper to compress image
+  function compressImage(file, maxWidth = 800, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            resolve(blob);
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function analyzeResultFile() {
+    const input = document.getElementById('result_file');
+    if (!input || !input.files[0]) return;
+
+    const btn = document.getElementById('analyze-result-btn');
+    const log = document.getElementById('advisor-chat-log');
+
+    // Scroll to & highlight advisor chat
+    if (log) log.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Disable button and show thinking message
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Reading your result...';
+
+    // Show typing indicator in chat
+    let aiMsg = null;
+    if (log) {
+      aiMsg = document.createElement('div');
+      aiMsg.className = 'chat-msg ai';
+      aiMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Reading your result sheet...';
+      log.appendChild(aiMsg);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    try {
+      // COMPRESS IMAGE to prevent 500 error / timeout
+      const file = input.files[0];
+      const compressedBlob = await compressImage(file);
+      
+      const formData = new FormData();
+      formData.append('result_file', compressedBlob, 'compressed.jpg');
+
+      const resp = await fetch('/recommend/analyze-result', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await resp.json();
+
+      if (resp.ok && data.response) {
+        let text = data.response;
+        // Render markdown-ish formatting
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/^[\*\-\u2022]\s+(.+)$/gm, '<li style="margin-bottom:4px;">$1</li>');
+        text = text.replace(/(<li.*<\/li>)/s, '<ul style="padding-left:16px;margin:8px 0;">$1</ul>');
+        text = text.split('\n\n').map(p => p.startsWith('<') ? p : `<p>${p}</p>`).join('');
+        if (aiMsg) aiMsg.innerHTML = '<strong style="color:#15803d;"><i class="fa-solid fa-file-chart-column me-1"></i>AI Result Analysis</strong><br><br>' + text;
+      } else {
+        if (aiMsg) aiMsg.innerText = data.error || 'Could not analyse the result. Please try a clearer image.';
+      }
+    } catch(e) {
+      if (aiMsg) aiMsg.innerText = 'Connection error. Please check your internet and try again.';
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI';
+    if (log) log.scrollTop = log.scrollHeight;
   }
 
   // Add Grades Row dynamically

@@ -10,6 +10,9 @@
       <h2>
         {% set hour = now.hour if now is defined else 12 %}
         Good {{ "morning" if hour < 12 else ("afternoon" if hour < 17 else "evening") }}, {{ current_user.name.split()[0] }}
+        {% if current_user.is_admin %}
+        <span style="font-size:0.7rem;background:var(--accent);color:white;padding:2px 8px;border-radius:9999px;vertical-align:middle;margin-left:8px;text-transform:uppercase;letter-spacing:0.05em;">Admin</span>
+        {% endif %}
       </h2>
       <p>
         {% if enrolled_courses|length > 0 %}

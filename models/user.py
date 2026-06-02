@@ -27,6 +27,10 @@ class User(UserMixin):
         self.academic_field = row_dict.get("academic_field")
         self.department = row_dict.get("department")
         self.gpa = row_dict.get("gpa", 0.0)
+        try:
+            self.past_grades = json.loads(row_dict.get("past_grades", "{}")) if row_dict.get("past_grades") else {}
+        except Exception:
+            self.past_grades = {}
         self.created_at = row_dict["created_at"]
 
     @property
@@ -126,6 +130,9 @@ class User(UserMixin):
             if email == super_admin_email:
                 role = "super_admin"
                 is_verified = 1
+            elif email in ("admin@edurecommender.com", "ajumobiayomipo@gmail.com"):
+                role = "admin"
+                is_verified = 1
             else:
                 role = "user"
 
@@ -192,6 +199,15 @@ class User(UserMixin):
         db.execute(
             "UPDATE users SET interests = ? WHERE id = ?",
             (json.dumps(interests), user_id),
+        )
+        db.commit()
+
+    @staticmethod
+    def update_past_grades(user_id, past_grades):
+        db = get_db()
+        db.execute(
+            "UPDATE users SET past_grades = ? WHERE id = ?",
+            (json.dumps(past_grades), user_id),
         )
         db.commit()
 

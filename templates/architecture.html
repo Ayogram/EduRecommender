@@ -21,18 +21,20 @@
 
   <!-- Navigation Tabs -->
   <div style="display:flex;gap:8px;border-bottom:1px solid var(--border);padding-bottom:1px;margin-bottom:28px;overflow-x:auto;">
-    <button class="tab-btn active" onclick="switchTab(event, 'flow-tab')">Pipeline Flow</button>
+    <button class="tab-btn active" onclick="switchTab(event, 'flow-tab')">How It Works</button>
+    {% if current_user.role == 'admin' %}
     <button class="tab-btn" onclick="switchTab(event, 'matrix-tab')">Latent Matrix Heatmap</button>
     <button class="tab-btn" onclick="switchTab(event, 'system-tab')">System Architecture</button>
     <button class="tab-btn" onclick="switchTab(event, 'metrics-tab')">Performance & Bias Logs</button>
+    {% endif %}
   </div>
 
   <!-- ── TAB 1: Pipeline Flow ───────────────────────────── -->
   <div id="flow-tab" class="tab-content active-content">
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;margin-bottom:24px;">
-      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Hybrid Recommendation Pipeline Architecture</h3>
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">How We Choose Your Courses</h3>
       <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:24px;line-height:1.5;">
-        Our recommendation pipeline processes multi-modal student features dynamically. It balances interests (Content-Based) with similar student interactions (Collaborative) and dense dimensionality reductions (Matrix Factorization) using a weighted linear combination scoring.
+        Our system looks at your profile, your past grades, and your interests. It then compares this with the experiences of other students who have succeeded in similar courses. By combining these different perspectives, we find the best matches to help you succeed.
       </p>
       
       <!-- Interactive SVG Flow Diagram -->
@@ -90,30 +92,31 @@
       </div>
     </div>
 
-    <!-- Neural Recommendation Pipeline Details -->
+    <!-- AI Decision Details -->
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;">
-      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Neural Recommendation Pipeline Scheme</h3>
+      <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Behind the Scenes</h3>
       <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px;">
-        For deep recommendation tasks, the model integrates user embeddings and item (course) embeddings within a dual Neural Collaborative Filtering (Neural CF) framework:
+        To provide you with the most accurate recommendations, our system considers three main areas:
       </p>
       
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;font-size:0.8rem;line-height:1.5;">
         <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;">
-          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">1. Embeddings Layer</strong>
-          Maps discrete User IDs and Course IDs into continuous, dense latent vector embeddings of dimensions <code>k=16</code> or <code>k=32</code>.
+          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">1. Profile Matching</strong>
+          We match the course's content with your declared interests and academic department.
         </div>
         <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;">
-          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">2. Multi-Layer Perceptron (MLP)</strong>
-          Concatenates embedding outputs and feeds them through standard dense layers (64 &rarr; 32 &rarr; 16 units) with ReLU activations to capture highly non-linear interaction rules.
+          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">2. Peer Success Analysis</strong>
+          We analyze which courses were highly rated and successfully completed by students with backgrounds similar to yours.
         </div>
         <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;">
-          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">3. Fusion (NeuMF)</strong>
-          Combines linear dot product features (Generalized Matrix Factorization) and deep MLP features into a unified dense output, scaling matching logits to continuous probability boundaries.
+          <strong style="color:var(--text-primary);display:block;margin-bottom:6px;">3. Grade Prediction</strong>
+          We estimate your likelihood of success by factoring in your current GPA and the historical difficulty of the course.
         </div>
       </div>
     </div>
   </div>
 
+  {% if current_user.role == 'admin' %}
   <!-- ── TAB 2: Latent Matrix Heatmap ───────────────────── -->
   <div id="matrix-tab" class="tab-content" style="display:none;">
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;">
@@ -332,6 +335,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
 </div>
 

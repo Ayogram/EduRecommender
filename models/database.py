@@ -6,7 +6,15 @@ Provides get_db() for per-request connections and init_db() for schema creation.
 import os
 import sqlite3
 import json
+import re
 from flask import g, current_app
+
+try:
+    import psycopg2
+    from psycopg2.extras import DictCursor
+    HAS_PSYCOPG2 = True
+except ImportError:
+    HAS_PSYCOPG2 = False
 
 # ── Schema DDL ──────────────────────────────────────────────────────────────
 SCHEMA = """
@@ -24,6 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
     academic_field  TEXT,
     department      TEXT,
     gpa             REAL    DEFAULT 0.0,
+    past_grades     TEXT    DEFAULT '{}',
     is_verified     INTEGER NOT NULL DEFAULT 0,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -124,15 +133,53 @@ CREATE TABLE IF NOT EXISTS notifications (
 """
 
 
+class DBWrapper:
+    def __init__(self, is_postgres, conn):
+        self.is_postgres = is_postgres
+        self.conn = conn
+
+    def _convert_query(self, query):
+        if self.is_postgres:
+            # Avoid replacing ? inside simple strings by just doing a naive replace for now, 
+            # since most queries don't have ? in string literals.
+            return query.replace('?', '%s')
+        return query
+
+    def execute(self, query, params=()):
+        q = self._convert_query(query)
+        cursor = self.conn.cursor()
+        cursor.execute(q, params)
+        return cursor
+
+    def executescript(self, script):
+        if self.is_postgres:
+            cursor = self.conn.cursor()
+            cursor.execute(script)
+            return cursor
+        else:
+            return self.conn.executescript(script)
+
+    def commit(self):
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
 def get_db():
     """Return the per-request database connection (stored on Flask `g`)."""
     if "db" not in g:
-        g.db = sqlite3.connect(
-            current_app.config["DATABASE_PATH"],
-            detect_types=sqlite3.PARSE_DECLTYPES,
-        )
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
+        pg_url = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
+        if HAS_PSYCOPG2 and pg_url:
+            conn = psycopg2.connect(pg_url, cursor_factory=DictCursor)
+            g.db = DBWrapper(True, conn)
+        else:
+            conn = sqlite3.connect(
+                current_app.config["DATABASE_PATH"],
+                detect_types=sqlite3.PARSE_DECLTYPES,
+            )
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA foreign_keys = ON")
+            g.db = DBWrapper(False, conn)
     return g.db
 
 
@@ -275,10 +322,16 @@ COURSES_SEED = [
 
 def init_db():
     """Create all tables if they don't exist and auto-seed if empty."""
-    db_path = current_app.config["DATABASE_PATH"]
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
     db = get_db()
-    db.executescript(SCHEMA)
+    db_schema = SCHEMA
+    
+    if db.is_postgres:
+        db_schema = db_schema.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
+    else:
+        db_path = current_app.config["DATABASE_PATH"]
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        
+    db.executescript(db_schema)
     db.commit()
     
     # Check if courses are empty

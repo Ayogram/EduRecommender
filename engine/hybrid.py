@@ -23,7 +23,7 @@ COLD_START_THRESHOLD = 3  # min ratings before hybrid kicks in
 
 
 def _generate_explanation(user_id, course, method, cf_score, content_score, success_prob):
-    """Build a human-readable explanation string including success prediction."""
+    """Build a structured JSON explanation string including success prediction and analysis."""
     db = get_db()
 
     # Gather user's highly-rated courses for context
@@ -36,35 +36,52 @@ def _generate_explanation(user_id, course, method, cf_score, content_score, succ
     ).fetchall()
     rated_titles = [r["title"] for r in rated]
 
-    parts = []
-    
+    explanation_dict = {
+        "course": course["title"],
+        "confidence": int(success_prob * 100),
+        "why": "",
+        "strengths": [],
+        "career": "",
+        "advice": ""
+    }
+
     # Core reasoning prefix
     if method == "hybrid":
-        parts.append("This course is recommended using our hybrid AI model.")
+        explanation_dict["why"] = "Recommended using our hybrid AI model combining your profile with peer performance."
     elif method == "content":
-        parts.append("This course is recommended based on your interests and profile.")
+        explanation_dict["why"] = "Recommended directly based on your academic profile and simulated interests."
     else:
-        parts.append("This course is recommended based on similar students' preferences.")
-
-    # Success Prediction Sentence (User Request)
-    parts.append(f"We predict a **{int(success_prob * 100)}% success potential** for you in this course.")
+        explanation_dict["why"] = "Recommended because students with similar backgrounds succeeded here."
 
     if rated_titles:
-        parts.append(
-            f"Because you performed well in {', '.join(rated_titles)}, "
-            f"students with similar academic profiles also succeeded in this course."
-        )
+        explanation_dict["strengths"].append(f"Strong past performance in {', '.join(rated_titles[:2])}")
 
     if course["department"] and course["department"] != course["category"]:
-        parts.append(f"Matching your interest in the {course['department']} department.")
+        explanation_dict["strengths"].append(f"Direct match for {course['department']} department")
 
     tags = json.loads(course["tags"]) if course["tags"] else []
     if tags:
-        parts.append(f"It covers topics like {', '.join(tags[:3])}.")
+        explanation_dict["strengths"].append(f"Aligns with topics: {', '.join(tags[:3])}")
 
-    parts.append(f"This is a {course['credits']}-unit {course['difficulty']} course.")
+    if not explanation_dict["strengths"]:
+        explanation_dict["strengths"].append("Matches general academic profile")
 
-    return " ".join(parts)
+    # Static mapping for career based on category or department
+    cat = (course["category"] or "").lower()
+    if "programming" in cat or "computer" in cat or "software" in cat:
+        explanation_dict["career"] = "Software Engineer, Technical Lead, Systems Architect"
+    elif "data" in cat or "machine learning" in cat or "ai" in cat:
+        explanation_dict["career"] = "Data Scientist, ML Engineer, Data Analyst"
+    elif "network" in cat or "security" in cat or "cyber" in cat:
+        explanation_dict["career"] = "Cybersecurity Analyst, Network Admin, Security Engineer"
+    elif "business" in cat or "management" in cat:
+        explanation_dict["career"] = "Product Manager, IT Consultant, Business Analyst"
+    else:
+        explanation_dict["career"] = f"{course['department'] or 'Domain'} Specialist, Researcher, Academic"
+
+    explanation_dict["advice"] = f"This is a {course['credits']}-unit {course['difficulty']} course. Review the prerequisites ({course['prerequisites']}) carefully to ensure you're fully prepared."
+
+    return json.dumps(explanation_dict)
 
 
 def get_recommendations(user_id, top_n=10):
