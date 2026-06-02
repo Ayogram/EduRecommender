@@ -434,9 +434,14 @@
               {% endfor %}
             {% endif %}
           </div>
-          <button type="button" class="btn btn-outline-secondary w-100 py-1 border-dashed mt-2" style="font-size:0.72rem; font-weight:600;" onclick="addGradeRow();">
-            + Add Completed Subject
-          </button>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="button" class="btn btn-outline-secondary py-1 border-dashed" style="flex:1; font-size:0.72rem; font-weight:600;" onclick="addGradeRow();">
+              + Add Completed Subject
+            </button>
+            <button type="button" class="btn btn-outline-danger py-1" style="font-size:0.72rem; font-weight:600; padding:0 15px;" onclick="document.getElementById('sim-grades-container').innerHTML = '';">
+              <i class="fas fa-trash-alt me-1"></i> Clear All
+            </button>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold mt-2" style="font-size:0.875rem;">
@@ -617,7 +622,13 @@
     preview.style.display = 'block';
     zone.style.borderColor = 'var(--accent)';
     label.textContent = 'File selected \u2713 ' + file.name;
-    if (btn) btn.style.display = 'block';
+    if (btn) {
+      btn.style.display = 'block';
+      btn.disabled = false;
+      btn.style.background = 'var(--accent)';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI';
+    }
   }
 
   function handleResultDrop(event) {
