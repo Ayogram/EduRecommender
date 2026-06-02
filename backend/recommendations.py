@@ -221,6 +221,12 @@ def compare_courses():
     # Convert database completed courses to a dict structure for simulation parameter pre-population
     prepopulated_past_grades = {c["title"]: c["grade"] for c in completed_courses}
     
+    # Merge with user's saved manual past grades from the users table
+    if current_user.past_grades:
+        for c_title, c_grade in current_user.past_grades.items():
+            if c_title not in prepopulated_past_grades:
+                prepopulated_past_grades[c_title] = c_grade
+    
     comparison_calculated = False
     course_a_data = None
     course_b_data = None
@@ -318,9 +324,28 @@ def compare_courses():
             "compare_count": compare_count
         }
         
+        # Update user's profile database record with these simulation parameters so they are saved permanently
+        db = get_db()
+        try:
+            gpa_float = float(sim_gpa) if sim_gpa else 0.0
+        except ValueError:
+            gpa_float = 0.0
+            
+        db.execute(
+            """UPDATE users SET gpa = ?, department = ?, academic_field = ?, interests = ? WHERE id = ?""",
+            (gpa_float, sim_dept, sim_field, json.dumps(sim_interests_list), current_user.id)
+        )
+        db.commit()
+        
         # Persist the simulated grades to the user's profile
         if sim_past_grades_dict:
             User.update_past_grades(current_user.id, sim_past_grades_dict)
+            
+        # Synchronise current_user state with session variables
+        user = User.get_by_id(current_user.id)
+        if user:
+            from backend.auth import save_user_to_session
+            save_user_to_session(user)
         
     return render_template(
         "compare.html",

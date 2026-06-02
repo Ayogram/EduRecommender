@@ -351,6 +351,11 @@ def login():
         session.permanent = True
         save_user_to_session(user)
         flash(f"Welcome back, {user.name}!", "success")
+        
+        # Onboarding redirect: if profile lacks department or academic field, complete profile first
+        if not user.department or not user.academic_field:
+            return redirect(url_for("auth.complete_profile"))
+
         next_page = request.args.get("next")
         return redirect(next_page or url_for("main.dashboard"))
 
@@ -436,6 +441,11 @@ def google_callback():
         session.permanent = True
         save_user_to_session(user)
         flash(f"Welcome, {user.name}!", "success")
+        
+        # Onboarding redirect: if profile lacks department or academic field, complete profile first
+        if not user.department or not user.academic_field:
+            return redirect(url_for("auth.complete_profile"))
+
         return redirect(url_for("main.dashboard"))
 
     except Exception as e:

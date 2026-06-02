@@ -576,9 +576,15 @@
     document.getElementById('result-preview-img').src = '';
     document.getElementById('result-preview-name').textContent = '';
     document.getElementById('result-upload-zone').style.borderColor = 'var(--border)';
-    document.getElementById('upload-label').textContent = 'Drop result sheet / screenshot here, or click to browse';
+    document.getElementById('upload-label').textContent = 'Drop result sheet (Image or PDF) here, or click to browse';
     const btn = document.getElementById('analyze-result-btn');
-    if (btn) btn.style.display = 'none';
+    if (btn) {
+      btn.disabled = false;
+      btn.style.background = '';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI';
+      btn.style.display = 'none';
+    }
   }
 
   // Helper to compress image
@@ -638,6 +644,7 @@
       log.scrollTop = log.scrollHeight;
     }
 
+    let hasAnalysed = false;
     try {
       const file = input.files[0];
       let uploadBlob = file;
@@ -683,8 +690,7 @@
         text = text.split('\n\n').map(p => p.startsWith('<') ? p : `<p>${p}</p>`).join('');
         if (aiMsg) aiMsg.innerHTML = '<strong style="color:#15803d;"><i class="fa-solid fa-file-chart-column me-1"></i>AI Result Analysis</strong><br><br>' + text + '<br><br><em>Simulation fields have been auto-populated with your data.</em>';
         
-        // Hide upload container so user focuses on the form
-        document.getElementById('result-upload-zone').parentElement.style.display = 'none';
+        hasAnalysed = true;
       } else {
         if (aiMsg) aiMsg.innerText = data.error || 'Could not analyse the result. Please try a clearer image.';
       }
@@ -692,8 +698,15 @@
       if (aiMsg) aiMsg.innerText = 'Connection error. Please check your internet and try again.';
     }
 
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI';
+    if (hasAnalysed) {
+      btn.disabled = true;
+      btn.style.background = '#94a3b8'; // slate grey
+      btn.style.cursor = 'not-allowed';
+      btn.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>Result Analysed';
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI';
+    }
     if (log) log.scrollTop = log.scrollHeight;
   }
 
