@@ -10,4 +10,4 @@ numpy==2.2.3
 python-dotenv==1.0.1
 flask-mail==0.10.0
 psycopg2-binary==2.9.9
-PyMuPDF==1.23.21
+pypdf==4.1.0

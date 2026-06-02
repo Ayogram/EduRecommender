@@ -462,18 +462,26 @@ def analyze_result():
         vision_payload = {"contents": [{"parts": []}]}
         
         if mime_type == "application/pdf":
-            # Convert first page of PDF to image using PyMuPDF for highest accuracy
-            import fitz
-            doc = fitz.open(stream=file_bytes, filetype="pdf")
-            if len(doc) > 0:
-                page = doc[0]
-                # Render at 2x resolution (144 DPI) for clear text
-                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
-                img_bytes = pix.tobytes("jpeg")
-                b64_data = base64.b64encode(img_bytes).decode("utf-8")
-                mime_type = "image/jpeg"
-            else:
-                return jsonify({"error": "The uploaded PDF has no pages."}), 400
+            # Extract text from PDF using pypdf (pure python, avoids Vercel shared library crashes)
+            import io
+            import pypdf
+            pdf_reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+            pdf_text = ""
+            for page in pdf_reader.pages:
+                try:
+                    pdf_text += page.extract_text(extraction_mode="layout") + "\n"
+                except TypeError:
+                    pdf_text += page.extract_text() + "\n"
+                
+            pdf_prompt = (
+                vision_prompt + 
+                "\n\nHere is the raw text extracted from the PDF transcript. "
+                "Because it was extracted as text, some columns might be slightly misaligned or scrambled. "
+                "Please carefully scan the text to match the Course Codes/Titles with their exact corresponding letter grades (A, B, C, D, E, F). "
+                "Do not hallucinate or guess. Rely strictly on the text provided below:\n"
+                f"{pdf_text}"
+            )
+            vision_payload["contents"][0]["parts"].append({"text": pdf_prompt})
         else:
             b64_data = base64.b64encode(file_bytes).decode("utf-8")
             
