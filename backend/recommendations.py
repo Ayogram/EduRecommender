@@ -362,12 +362,15 @@ def analyze_result():
     b64_data = base64.b64encode(file_bytes).decode("utf-8")
     vision_prompt = (
         "You are an expert academic result analyser for a university course recommender. "
-        "The student uploaded their result sheet or transcript screenshot. Please:\n"
-        "1. List each subject/course you can read and its grade (e.g. - Mathematics: A).\n"
-        "2. Highlight strong subjects (A or B) and weak ones (D, E, or F).\n"
-        "3. In 2-3 encouraging sentences, explain which academic fields this student is best suited for "
-        "and why these course recommendations make sense for their profile.\n"
-        "Format with bullet points and bold headings. Be concise and professional."
+        "The student uploaded their result sheet or transcript. Please read it and return ONLY a valid JSON object. "
+        "The JSON must have the following keys:\n"
+        "- \"gpa\": estimated or extracted GPA (float, default 0.0)\n"
+        "- \"department\": estimated or extracted department string (e.g. 'Computer Science')\n"
+        "- \"field\": estimated academic field (e.g. 'programming, IT')\n"
+        "- \"interests\": estimated interests based on best grades (e.g. 'Web Dev, AI')\n"
+        "- \"past_grades\": a dictionary mapping course names to string grades (A, B, C, D, E, F). Map percentages/scores to these grades if needed.\n"
+        "- \"analysis\": 2-3 encouraging sentences explaining which academic fields this student is best suited for and why based on their strong and weak subjects. Format with basic markdown.\n"
+        "Return ONLY the raw JSON object, no markdown code block wrappers around it."
     )
 
     try:
@@ -389,7 +392,17 @@ def analyze_result():
             if candidates:
                 parts_list = candidates[0].get("content", {}).get("parts", [])
                 if parts_list:
-                    return jsonify({"response": parts_list[0].get("text", "")})
+                    raw_text = parts_list[0].get("text", "").strip()
+                    if raw_text.startswith("```json"):
+                        raw_text = raw_text[7:]
+                    if raw_text.endswith("```"):
+                        raw_text = raw_text[:-3]
+                    try:
+                        import json
+                        data = json.loads(raw_text)
+                        return jsonify(data)
+                    except Exception as e:
+                        return jsonify({"response": raw_text, "error_parsing": str(e)})
         return jsonify({"error": f"AI service returned status {vision_resp.status_code}."}), 502
     except Exception as ex:
         current_app.logger.error(f"analyze_result error: {ex}")

@@ -164,41 +164,7 @@
         <div class="panel-subtitle">Configure parameters & select target courses</div>
       </div>
 
-      <!-- Result Sheet Upload (AJAX - outside form so it never blocks the POST) -->
-      <div style="padding:20px 24px 0;">
-        <label class="form-label small fw-bold mb-1">
-          <i class="fa-solid fa-file-arrow-up me-1" style="color:var(--accent);"></i>
-          Upload Result Sheet / Screenshot <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
-        </label>
-        <div id="result-upload-zone"
-             style="border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px 14px; text-align:center; cursor:pointer; transition:var(--transition); background:var(--bg-input);"
-             onclick="document.getElementById('result_file').click();"
-             ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';"
-             ondragleave="this.style.borderColor='var(--border)';"
-             ondrop="handleResultDrop(event);">
-          <i class="fa-solid fa-image" style="font-size:1.4rem; color:var(--text-muted); display:block; margin-bottom:6px;"></i>
-          <span id="upload-label" style="font-size:0.71rem; color:var(--text-muted); font-weight:500;">
-            Drop result sheet (Image or PDF) here, or click to browse
-          </span>
-          <input type="file" id="result_file" accept="image/*,application/pdf" style="display:none;" onchange="previewResultFile(this);">
-        </div>
-        <div id="result-preview" style="display:none; margin-top:8px; position:relative;">
-          <img id="result-preview-img" src="" alt="Preview" style="width:100%; max-height:130px; object-fit:contain; border-radius:var(--radius-md); border:1px solid var(--border); background:#f8f8f8; padding:4px;">
-          <div id="result-preview-name" style="font-size:0.68rem; color:var(--text-muted); margin-top:4px; text-align:center;"></div>
-          <button type="button" onclick="clearResultFile();"
-                  style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.55); border:none; color:#fff; border-radius:50%; width:20px; height:20px; font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        <button type="button" id="analyze-result-btn" onclick="analyzeResultFile();"
-                style="display:none; width:100%; margin-top:10px; padding:9px; border:none; border-radius:var(--radius-md); background:var(--accent); color:#fff; font-size:0.8rem; font-weight:700; cursor:pointer;">
-          <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI
-        </button>
-        <div style="font-size:0.62rem; color:var(--text-muted); margin-top:6px;">
-          The AI will read your grades and populate the simulation fields below automatically.
-        </div>
-      </div>
-      <hr style="border-top:1px solid var(--border); margin:20px 24px 0;">
+
       
       <form action="{{ url_for('recommendations.compare_courses') }}" method="POST" id="sim-form" style="padding:20px 24px; display:flex; flex-direction:column; gap:16px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -264,6 +230,41 @@
           <label class="form-label small fw-bold">Simulated Interests</label>
           <input type="text" name="sim_interests" class="form-control bg-light border-0" placeholder="Topics (comma separated)" value="{{ form_vals.sim_interests }}">
           <div class="form-text" style="font-size:0.65rem; color:var(--text-muted);">Separate topics with commas (e.g. Security, Python, Trading)</div>
+        </div>
+
+        <!-- Result Sheet Upload (AJAX - outside form so it never blocks the POST) -->
+        <div style="margin-top:8px;">
+          <label class="form-label small fw-bold mb-1">
+            <i class="fa-solid fa-file-arrow-up me-1" style="color:var(--accent);"></i>
+            Upload Result Sheet / Screenshot <span style="font-weight:400; color:var(--text-muted);">(optional)</span>
+          </label>
+          <div id="result-upload-zone"
+               style="border:2px dashed var(--border); border-radius:var(--radius-md); padding:16px 14px; text-align:center; cursor:pointer; transition:var(--transition); background:var(--bg-input);"
+               onclick="document.getElementById('result_file').click();"
+               ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';"
+               ondragleave="this.style.borderColor='var(--border)';"
+               ondrop="handleResultDrop(event);">
+            <i class="fa-solid fa-image" style="font-size:1.4rem; color:var(--text-muted); display:block; margin-bottom:6px;"></i>
+            <span id="upload-label" style="font-size:0.71rem; color:var(--text-muted); font-weight:500;">
+              Drop result sheet (Image or PDF) here, or click to browse
+            </span>
+            <input type="file" id="result_file" accept="image/*,application/pdf" style="display:none;" onchange="previewResultFile(this);">
+          </div>
+          <div id="result-preview" style="display:none; margin-top:8px; position:relative;">
+            <img id="result-preview-img" src="" alt="Preview" style="width:100%; max-height:130px; object-fit:contain; border-radius:var(--radius-md); border:1px solid var(--border); background:#f8f8f8; padding:4px;">
+            <div id="result-preview-name" style="font-size:0.68rem; color:var(--text-muted); margin-top:4px; text-align:center;"></div>
+            <button type="button" onclick="clearResultFile();"
+                    style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.55); border:none; color:#fff; border-radius:50%; width:20px; height:20px; font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <button type="button" id="analyze-result-btn" onclick="analyzeResultFile();"
+                  style="display:none; width:100%; margin-top:10px; padding:9px; border:none; border-radius:var(--radius-md); background:var(--accent); color:#fff; font-size:0.8rem; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI
+          </button>
+          <div style="font-size:0.62rem; color:var(--text-muted); margin-top:6px;">
+            The AI will extract your grades to populate the "Simulated Past Grades" inputs below.
+          </div>
         </div>
 
         <!-- Simulated Grades Grid -->
@@ -521,9 +522,9 @@
   function previewResultFile(input) {
     const file = input.files[0];
     if (!file) return;
-    // Validate: images only, max 3 MB
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file (PNG, JPG, WEBP).');
+    // Validate: images or pdf, max 3 MB
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      alert('Please upload an image or PDF file.');
       input.value = ''; return;
     }
     if (file.size > 3 * 1024 * 1024) {
@@ -628,12 +629,16 @@
     }
 
     try {
-      // COMPRESS IMAGE to prevent 500 error / timeout
       const file = input.files[0];
-      const compressedBlob = await compressImage(file);
+      let uploadBlob = file;
+      
+      // Only compress if it is an image
+      if (file.type.startsWith('image/')) {
+        uploadBlob = await compressImage(file);
+      }
       
       const formData = new FormData();
-      formData.append('result_file', compressedBlob, 'compressed.jpg');
+      formData.append('result_file', uploadBlob, file.name);
 
       const resp = await fetch('/recommend/analyze-result', {
         method: 'POST',
@@ -641,14 +646,35 @@
       });
       const data = await resp.json();
 
-      if (resp.ok && data.response) {
-        let text = data.response;
+      if (resp.ok && (data.analysis || data.response)) {
+        // Auto-populate the simulation fields
+        if (data.gpa !== undefined) {
+          document.querySelector('input[name="sim_gpa"]').value = data.gpa;
+          document.getElementById('gpa-val').innerText = data.gpa;
+        }
+        if (data.department) document.querySelector('input[name="sim_dept"]').value = data.department;
+        if (data.field) document.querySelector('input[name="sim_field"]').value = data.field;
+        if (data.interests) document.querySelector('input[name="sim_interests"]').value = data.interests;
+        
+        // Populate past grades grid
+        if (data.past_grades && Object.keys(data.past_grades).length > 0) {
+          const container = document.getElementById('sim-grades-container');
+          container.innerHTML = ''; // clear existing rows
+          for (const [course, grade] of Object.entries(data.past_grades)) {
+            addGradeRow(course, grade);
+          }
+        }
+
+        let text = data.analysis || data.response || "Analysis complete.";
         // Render markdown-ish formatting
         text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         text = text.replace(/^[\*\-\u2022]\s+(.+)$/gm, '<li style="margin-bottom:4px;">$1</li>');
         text = text.replace(/(<li.*<\/li>)/s, '<ul style="padding-left:16px;margin:8px 0;">$1</ul>');
         text = text.split('\n\n').map(p => p.startsWith('<') ? p : `<p>${p}</p>`).join('');
-        if (aiMsg) aiMsg.innerHTML = '<strong style="color:#15803d;"><i class="fa-solid fa-file-chart-column me-1"></i>AI Result Analysis</strong><br><br>' + text;
+        if (aiMsg) aiMsg.innerHTML = '<strong style="color:#15803d;"><i class="fa-solid fa-file-chart-column me-1"></i>AI Result Analysis</strong><br><br>' + text + '<br><br><em>Simulation fields have been auto-populated with your data.</em>';
+        
+        // Hide upload container so user focuses on the form
+        document.getElementById('result-upload-zone').parentElement.style.display = 'none';
       } else {
         if (aiMsg) aiMsg.innerText = data.error || 'Could not analyse the result. Please try a clearer image.';
       }
