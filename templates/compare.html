@@ -348,8 +348,15 @@
             <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI
           </button>
           <div style="font-size:0.62rem; color:var(--text-muted); margin-top:6px;">
-            The AI will extract your grades to populate the "Simulated Past Grades" inputs below.
+            The AI will read your grades and populate the simulation fields below automatically.
           </div>
+        </div>
+
+        <!-- Visually Premium "OR" Divider -->
+        <div style="display:flex; align-items:center; margin:16px 0 12px; text-align:center;">
+          <div style="flex-grow:1; border-top:1px dashed var(--border);"></div>
+          <span style="padding:0 12px; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em;">OR configure grades manually</span>
+          <div style="flex-grow:1; border-top:1px dashed var(--border);"></div>
         </div>
 
         <!-- Simulated Grades Grid -->
@@ -659,11 +666,14 @@
 
       const resp = await fetch('/recommend/analyze-result', {
         method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token() }}'
+        },
         body: formData
       });
       const data = await resp.json();
 
-      if (resp.ok && (data.analysis || data.response)) {
+      if (resp.ok && (data.analysis || data.response || data.past_grades)) {
         // Auto-populate the simulation fields
         if (data.gpa !== undefined) {
           document.querySelector('input[name="sim_gpa"]').value = data.gpa;
@@ -846,7 +856,10 @@
     try {
       const resp = await fetch('/recommend/ask-advisor', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token() }}'
+        },
         body: JSON.stringify({
           query: query,
           course_a: courseA,

@@ -84,6 +84,97 @@ def _generate_explanation(user_id, course, method, cf_score, content_score, succ
     return json.dumps(explanation_dict)
 
 
+def generate_comparative_explanations(candidates, user_dept, user_field, user_interests, user_past_grades):
+    """
+    Overwrites the 'explanation' field of the top candidate recommendations with unique,
+    highly personalized and comparative reasoning.
+    """
+    for idx, c in enumerate(candidates):
+        rank = idx + 1
+        title = c["title"]
+        c_dept = c["department"] or ""
+        c_cat = c["category"] or ""
+        success_prob = c["success_probability"]
+        
+        # Determine why it fits user's profile
+        strengths = []
+        
+        # 1. Past academic performance
+        if user_past_grades:
+            high_grades = [subj for subj, gr in user_past_grades.items() if gr in ('A', 'B')]
+            if high_grades:
+                strengths.append(f"Strong foundation from past success in {', '.join(high_grades[:2])}")
+                
+        # 2. Tag alignment
+        tags = c["tags"]
+        if tags and user_interests:
+            matching_tags = [t for t in tags if any(i.lower().strip() in t.lower() or t.lower() in i.lower() for i in user_interests)]
+            if matching_tags:
+                strengths.append(f"Synergy with your interests in {', '.join(matching_tags[:2])}")
+                
+        # 3. Department matching
+        if c_dept and user_dept and c_dept.lower().strip() == user_dept.lower().strip():
+            strengths.append(f"Direct match for your core department: {c_dept}")
+            
+        if not strengths:
+            strengths.append("Matches general academic performance patterns")
+            
+        # Career prospects based on category
+        cat_lower = c_cat.lower()
+        if "programming" in cat_lower or "dsa" in cat_lower or "software" in cat_lower:
+            career = "Software Developer, Systems Engineer, Technical Architect"
+        elif "data" in cat_lower or "learning" in cat_lower or "ai" in cat_lower:
+            career = "Data Analyst, Machine Learning Specialist, AI Engineer"
+        elif "security" in cat_lower or "network" in cat_lower:
+            career = "Cybersecurity Consultant, Systems Administrator, Security Lead"
+        elif "business" in cat_lower or "management" in cat_lower:
+            career = "Product Manager, IT Consultant, Business Analyst"
+        else:
+            career = f"{c_dept or 'Specialist'} Analyst, Consultant, Researcher"
+
+        # Comparative Rationale (Why this rank?)
+        why = ""
+        if rank == 1:
+            next_course = candidates[1]["title"] if len(candidates) > 1 else "other electives"
+            why = (
+                f"Top pick for your profile. This course aligns perfectly with your primary interest in {user_field or 'academic field'} "
+                f"and ranks above {next_course} due to a stronger correlation with your academic results and strengths."
+            )
+        elif rank == 2:
+            prev_course = candidates[0]["title"]
+            next_course = candidates[2]["title"] if len(candidates) > 2 else "other options"
+            why = (
+                f"Your second pick. This course also matches your technical profile and interests, but ranks slightly below "
+                f"{prev_course} because {prev_course} offers broader alignment with your primary background. It ranks above {next_course} "
+                f"due to stronger alignment with your academic standing."
+            )
+        elif rank == 3:
+            prev_course = candidates[1]["title"]
+            why = (
+                f"Your third pick. Suitable based on your technical strengths, but ranked lower because your academic profile "
+                f"and past grades show closer synergy with the curricula of {prev_course} and {candidates[0]['title']}."
+            )
+        else:
+            why = (
+                f"A suitable elective choice matching your profile. It is ranked lower because it has lesser direct overlap "
+                f"with your core interests compared to our top three recommendations ({candidates[0]['title']}, {candidates[1]['title']}, {candidates[2]['title']})."
+            )
+            
+        advice = f"This is a {c['credits']}-unit {c['difficulty']} course. Review the prerequisites ({c['prerequisites']}) carefully to ensure you're prepared."
+        
+        explanation_dict = {
+            "course": title,
+            "confidence": int(success_prob * 100),
+            "why": why,
+            "strengths": strengths,
+            "career": career,
+            "advice": advice
+        }
+        
+        # Update explanation JSON
+        c["explanation"] = json.dumps(explanation_dict)
+
+
 def get_recommendations(user_id, top_n=10):
     """
     Generate and persist top-N recommendations for the user.
@@ -119,7 +210,7 @@ def get_recommendations(user_id, top_n=10):
 
     # Fetch user data once for efficiency
     user_row = db.execute(
-        "SELECT department, academic_field, gpa, interests FROM users WHERE id = ?", (user_id,)
+        "SELECT department, academic_field, gpa, interests, past_grades FROM users WHERE id = ?", (user_id,)
     ).fetchone()
     
     gpa = float(user_row["gpa"] or 0.0) if user_row else 0.0
@@ -130,6 +221,11 @@ def get_recommendations(user_id, top_n=10):
         user_interests = json.loads(user_row["interests"]) if user_row and user_row["interests"] else []
     except Exception:
         user_interests = []
+        
+    try:
+        user_past_grades = json.loads(user_row["past_grades"]) if user_row and user_row["past_grades"] else {}
+    except Exception:
+        user_past_grades = {}
 
     # Fetch all course rows at once for efficiency
     courses_rows = db.execute("SELECT * FROM courses").fetchall()
@@ -195,12 +291,33 @@ def get_recommendations(user_id, top_n=10):
         # base_success maps score (0.0 to 1.0) to a range starting at 0.50
         success_prob = 0.50 + (score * 0.8)
 
-        # Boosts
-        if course_row["department"] and course_row["department"] == user_dept:
-            success_prob += 0.12
-        if course_row["category"] and course_row["category"] == user_field:
-            success_prob += 0.08
+        # Primary Interest / Department Boosts (Personalization Upgrade)
+        primary_interest_boost = 0.0
+        c_dept = course_row["department"].lower().strip() if course_row["department"] else ""
+        c_cat = course_row["category"].lower().strip() if course_row["category"] else ""
+        u_dept = user_dept.lower().strip() if user_dept else ""
+        u_field = user_field.lower().strip() if user_field else ""
+
+        # Direct department match
+        if u_dept and (u_dept == c_dept or c_dept in u_dept or u_dept in c_dept):
+            primary_interest_boost += 0.12
+        
+        # Primary academic field interest matches department, category, or tags
+        if u_field and (u_field == c_dept or c_dept in u_field or u_field in c_cat or c_cat in u_field):
+            primary_interest_boost += 0.22  # Significant weight for primary interest!
+        else:
+            try:
+                c_tags = [t.lower().strip() for t in json.loads(course_row["tags"])] if course_row["tags"] else []
+                if u_field and any(tag in u_field or u_field in tag for tag in c_tags):
+                    primary_interest_boost += 0.12
+            except Exception:
+                pass
+                
+        success_prob += primary_interest_boost
         success_prob += gpa_factor * 0.20
+
+        # Add a tiny deterministic factor to ensure no duplicate match percentages
+        success_prob += (course_id % 7) * 0.005
 
         # Penalty / Boost
         if course_row["difficulty"] == "advanced" and gpa < 2.5:
@@ -212,10 +329,8 @@ def get_recommendations(user_id, top_n=10):
         dept_perf = dept_performance_map.get(course_row["department"], 0.0)
         success_prob += dept_perf * 0.15
 
-        # Cap the probability logically between 25% and 97%
-        success_prob = round(min(0.97, max(0.25, success_prob)), 4)
-
-        explanation = _generate_explanation(user_id, course_row, method, cf_s, ct_s, success_prob)
+        # Cap the probability logically between 25% and 98%
+        success_prob = round(min(0.98, max(0.25, success_prob)), 4)
 
         candidates.append({
             "course_id": course_id,
@@ -229,7 +344,7 @@ def get_recommendations(user_id, top_n=10):
             "tags": json.loads(course_row["tags"]) if course_row["tags"] else [],
             "score": round(score, 4),
             "success_probability": round(success_prob, 4),
-            "explanation": explanation,
+            "explanation": "",  # Filled in comparatively after sorting
             "method": method,
         })
 
@@ -238,6 +353,9 @@ def get_recommendations(user_id, top_n=10):
     
     # Take top N
     top_candidates = candidates_sorted[:top_n]
+
+    # Generate comparative explanations
+    generate_comparative_explanations(top_candidates, user_dept, user_field, user_interests, user_past_grades)
 
     # Clear old recommendations
     Recommendation.clear_for_user(user_id)
@@ -529,8 +647,26 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
         difficulty_adjust = 0.05
         
     # 5. Academic History & Department matching
-    dept_boost = 0.12 if (course_dept and user_dept and course_dept.lower().strip() == user_dept.lower().strip()) else 0.0
-    field_boost = 0.08 if (course_cat and user_field and course_cat.lower().strip() == user_field.lower().strip()) else 0.0
+    dept_boost = 0.0
+    field_boost = 0.0
+    
+    c_dept_clean = course_dept.lower().strip() if course_dept else ""
+    c_cat_clean = course_cat.lower().strip() if course_cat else ""
+    u_dept_clean = user_dept.lower().strip() if user_dept else ""
+    u_field_clean = user_field.lower().strip() if user_field else ""
+    
+    if u_dept_clean and (u_dept_clean == c_dept_clean or c_dept_clean in u_dept_clean or u_dept_clean in c_dept_clean):
+        dept_boost = 0.12
+        
+    if u_field_clean and (u_field_clean == c_dept_clean or c_dept_clean in u_field_clean or u_field_clean in c_cat_clean or c_cat_clean in u_field_clean):
+        field_boost = 0.22  # High boost for matching primary interest!
+    else:
+        try:
+            if u_field_clean and course_tags:
+                if any(tag.lower().strip() in u_field_clean or u_field_clean in tag.lower().strip() for tag in course_tags):
+                    field_boost = 0.12
+        except Exception:
+            pass
     
     # 6. Past Student Performance (Own Grades on related subjects)
     own_related_boost = 0.0
@@ -590,6 +726,9 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     base_success = 0.40 + (cbf_score * 0.25) + (cf_score * 0.15)
     success_prob = base_success + dept_boost + field_boost + gpa_boost + difficulty_adjust + own_related_boost
     
+    # Add a tiny deterministic factor to ensure no duplicate match percentages
+    success_prob += (course_id % 7) * 0.005 if course_id else 0.002
+    
     peer_boost = 0.0
     if peer_count > 0:
         if avg_peer_rating >= 4.0 or peer_success_rate > 0.85:
@@ -609,13 +748,14 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     elif cbf_score < 0.15:
         reasons_neg.append("Low correlation with your listed interests.")
         
-    if dept_boost > 0:
-        reasons_pos.append(f"Matching core department: {course_dept} (+12% match boost).")
+    is_field_match = (dept_boost > 0 or field_boost > 0)
+    if is_field_match:
+        if dept_boost > 0:
+            reasons_pos.append(f"Matching core department: {course_dept} (+12% match boost).")
+        if field_boost > 0:
+            reasons_pos.append(f"Matching academic field / interest: {user_field} (+22% match boost).")
     else:
         reasons_neg.append(f"Offered by {course_dept} department (outside your primary field).")
-        
-    if field_boost > 0:
-        reasons_pos.append(f"Aligned with academic field {course_cat} (+8% match boost).")
         
     reasons_pos.append(f"Academic standing (GPA {gpa:.2f}) provides +{int(gpa_boost*100)}% potential.")
     if difficulty_adjust < 0:

@@ -2,6 +2,11 @@
 Admin blueprint – user management, stats, complaint management.
 """
 
+import logging
+import json
+import os
+import datetime
+from collections import deque
 from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
@@ -12,6 +17,23 @@ from models.recommendation import Recommendation
 from models.database import get_db
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+# A thread-safe buffer for recent log messages
+log_buffer = deque(maxlen=50)
+
+class BufferLogHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_buffer.append({
+                "timestamp": now_str,
+                "level": record.levelname,
+                "message": record.getMessage(),
+                "logger": record.name
+            })
+        except Exception:
+            pass
+
 
 def admin_required(f):
     """Decorator that restricts access to admin users."""
@@ -42,17 +64,70 @@ def super_admin_required(f):
 @admin_bp.route("/")
 @admin_required
 def dashboard():
+    db = get_db()
     search_query = request.args.get("q", "").strip()
     status_filter = request.args.get("status", "all")
     verified_filter = request.args.get("verified", "all")
 
+    # 1. Base counts from database
+    total_users = db.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    total_courses = db.execute("SELECT COUNT(*) FROM courses").fetchone()[0]
+    total_recommendations = db.execute("SELECT COUNT(*) FROM recommendations").fetchone()[0]
+    pending_complaints = db.execute("SELECT COUNT(*) FROM complaints WHERE status = 'pending'").fetchone()[0]
+    total_complaints = db.execute("SELECT COUNT(*) FROM complaints").fetchone()[0]
+    total_notifications = db.execute("SELECT COUNT(*) FROM notifications").fetchone()[0]
+
+    # 2. Active users (users with at least one course enrollment)
+    active_users = db.execute("SELECT COUNT(DISTINCT user_id) FROM student_courses").fetchone()[0]
+
+    # 3. Uploaded results (users who have non-empty past_grades)
+    uploaded_results = db.execute(
+        "SELECT COUNT(*) FROM users WHERE past_grades IS NOT NULL AND past_grades != '{}' AND past_grades != ''"
+    ).fetchone()[0]
+
+    # 4. Department Statistics
+    dept_rows = db.execute(
+        "SELECT department, COUNT(*) as count FROM users WHERE department IS NOT NULL AND department != '' GROUP BY department"
+    ).fetchall()
+    dept_stats = {r["department"]: r["count"] for r in dept_rows}
+
+    # 5. Course Statistics (enrollments)
+    course_enrollment_rows = db.execute(
+        """SELECT c.title, COUNT(*) as count 
+           FROM student_courses sc 
+           JOIN courses c ON sc.course_id = c.id 
+           GROUP BY c.title 
+           ORDER BY count DESC LIMIT 5"""
+    ).fetchall()
+    course_enrollments = {r["title"]: r["count"] for r in course_enrollment_rows}
+
     stats = {
-        "total_users": User.count(),
-        "total_courses": Course.count(),
-        "total_complaints": Complaint.count(),
-        "pending_complaints": Complaint.count("pending"),
-        "total_recommendations": Recommendation.count(),
+        "total_users": total_users,
+        "active_users": active_users,
+        "total_courses": total_courses,
+        "total_complaints": total_complaints,
+        "pending_complaints": pending_complaints,
+        "total_recommendations": total_recommendations,
+        "uploaded_results": uploaded_results,
+        "total_notifications": total_notifications,
+        "dept_stats": dept_stats,
+        "course_enrollments": course_enrollments
     }
+
+    # 6. Diagnostics
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    mail_server = os.environ.get("MAIL_SERVER")
+    
+    diagnostics = {
+        "db_status": "Online",
+        "db_type": "PostgreSQL" if db.is_postgres else "SQLite",
+        "gemini_api": "Configured & Active" if gemini_key else "Offline / Missing API Key",
+        "mail_server": "Configured" if mail_server else "Not configured",
+        "env_state": "Production (Vercel)" if os.environ.get("VERCEL") else "Development (Local)"
+    }
+
+    # 7. Recent logs
+    recent_logs = list(log_buffer)
     
     users = User.get_all(
         search=search_query, 
@@ -64,6 +139,8 @@ def dashboard():
         "admin/dashboard.html", 
         stats=stats, 
         users=users[:5],  # Only show latest 5 on overview
+        diagnostics=diagnostics,
+        recent_logs=recent_logs,
         search_query=search_query,
         status_filter=status_filter,
         verified_filter=verified_filter

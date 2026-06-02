@@ -34,6 +34,17 @@ def create_app():
     # Support proxy headers (like X-Forwarded-Proto) under Vercel
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+    # Register admin memory log handler
+    try:
+        from backend.admin import BufferLogHandler
+        import logging
+        log_handler = BufferLogHandler()
+        log_handler.setLevel(logging.INFO)
+        app.logger.addHandler(log_handler)
+        logging.getLogger().addHandler(log_handler)
+    except Exception as log_ex:
+        app.logger.error(f"Error registering admin log buffer handler: {log_ex}")
+
     # ── CSRF Protection ─────────────────────────────────────────
     csrf = CSRFProtect(app)
     mail.init_app(app)
@@ -145,6 +156,10 @@ def create_app():
     @main_bp.route("/architecture")
     @login_required
     def architecture():
+        from flask import flash
+        if not current_user.is_admin:
+            flash("Access denied. Administrator privileges required.", "error")
+            return redirect(url_for("main.dashboard"))
         return render_template("architecture.html")
 
     @main_bp.route("/dashboard")

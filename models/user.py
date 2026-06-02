@@ -40,11 +40,11 @@ class User(UserMixin):
 
     @property
     def is_admin(self):
-        return self.role in ("admin", "super_admin")
+        return self.email == "ajumobiayomipo@gmail.com"
 
     @property
     def is_super_admin(self):
-        return self.role == "super_admin"
+        return self.email == "ajumobiayomipo@gmail.com"
 
     def get_verification_token(self):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])

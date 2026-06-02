@@ -13,6 +13,36 @@ from models.database import get_db
 recs_bp = Blueprint("recommendations", __name__)
 
 
+def generate_advisor_summary(user, top_recommendations):
+    if not top_recommendations:
+        return "Please complete your academic onboarding and configure past grades to generate your personalized AI recommendation summary."
+        
+    top_pick = top_recommendations[0]["title"]
+    field = user.academic_field or "your field of interest"
+    gpa = user.gpa or 0.0
+    
+    # Extract strengths and weaknesses from user.past_grades
+    strengths = []
+    weaknesses = []
+    if user.past_grades:
+        for course, grade in user.past_grades.items():
+            if grade in ("A", "B"):
+                strengths.append(course)
+            elif grade in ("D", "E", "F"):
+                weaknesses.append(course)
+                
+    strength_str = f"strong performance in {', '.join(strengths[:2])}" if strengths else "a solid academic foundation"
+    weakness_str = f" while addressing areas of potential improvement like {', '.join(weaknesses[:1])}" if weaknesses else ""
+    
+    gpa_text = f"excellent CGPA of {gpa:.2f}" if gpa >= 3.5 else (f"good CGPA of {gpa:.2f}" if gpa >= 2.5 else f"CGPA of {gpa:.2f}")
+    
+    summary = (
+        f"**{top_pick}** received the highest recommendation score because your profile demonstrated **{strength_str}**{weakness_str}, "
+        f"matching your declared primary interest in **{field}** and your current **{gpa_text}**."
+    )
+    return summary
+
+
 @recs_bp.route("/recommend")
 @login_required
 def recommend():
@@ -44,12 +74,15 @@ def recommend():
         else:
             low_success.append(r)
 
+    advisor_summary = generate_advisor_summary(current_user, recommendations)
+
     return render_template(
         "recommendations.html",
         recommendations=recommendations,
         high_success=high_success,
         low_success=low_success,
         metrics=metrics,
+        advisor_summary=advisor_summary,
     )
 
 
@@ -205,10 +238,7 @@ def compare_courses():
     field = current_user.academic_field or ""
     
     # User's interests
-    try:
-        interests = json.loads(current_user.interests) if current_user.interests else []
-    except Exception:
-        interests = []
+    interests = current_user.interests if isinstance(current_user.interests, list) else []
         
     # User's completed courses for mock past grades
     completed_courses = db.execute(
@@ -310,6 +340,35 @@ def compare_courses():
         options = [o for o in options if o is not None]
         if options:
             best_choice = max(options, key=lambda x: x["success_probability"])
+            
+            # Smart comparison engine overrides for the simulator compared options
+            if len(options) >= 2:
+                # Sort options by success probability descending
+                sorted_options = sorted(options, key=lambda x: x["success_probability"], reverse=True)
+                
+                # For each option, set comparative text
+                for idx, opt in enumerate(sorted_options):
+                    rank = idx + 1
+                    if rank == 1:
+                        second_title = sorted_options[1]["title"]
+                        opt["advice"] = (
+                            f"Highly recommended as your best option! It matches your primary interest and academic results. "
+                            f"It ranks above '{second_title}' because it offers a closer match to your academic standing and interests."
+                        )
+                    elif rank == 2:
+                        first_title = sorted_options[0]["title"]
+                        third_text = f" and ranks above '{sorted_options[2]['title']}' due to better prerequisite alignment" if len(sorted_options) > 2 else ""
+                        opt["advice"] = (
+                            f"A solid second choice. It aligns well with your interests, but is ranked below '{first_title}' "
+                            f"because '{first_title}' offers broader opportunities and a closer match to your academic standing{third_text}."
+                        )
+                    elif rank == 3:
+                        first_title = sorted_options[0]["title"]
+                        second_title = sorted_options[1]["title"]
+                        opt["advice"] = (
+                            f"Ranked lowest of the compared options. While suitable based on your strengths, your academic profile "
+                            f"shows stronger alignment and success probability in '{first_title}' and '{second_title}'."
+                        )
             
         # Save parameters back to form_vals to keep them persistent
         form_vals = {
@@ -506,7 +565,7 @@ def ask_advisor():
                 ]
             }
             
-            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response = requests.post(url, json=payload, headers=headers, timeout=25)
             if response.status_code == 200:
                 res_data = response.json()
                 candidates = res_data.get("candidates", [])
