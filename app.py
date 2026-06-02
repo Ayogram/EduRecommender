@@ -146,6 +146,18 @@ def create_app():
     app.register_blueprint(complaints_bp)
     app.register_blueprint(learning_bp)
 
+    # Custom Jinja filters
+    @app.template_filter('fromjson_safe')
+    def fromjson_safe_filter(s):
+        import json
+        if not s:
+            return {}
+        try:
+            return json.loads(s)
+        except (ValueError, TypeError):
+            # If it's a plain string override, wrap it in the expected format
+            return {"verdict": s}
+
     # Initialise Google OAuth
     init_oauth(app)
 
