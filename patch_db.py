@@ -1,13 +1,21 @@
 import sqlite3
 import os
 
-db_path = r"c:\Users\USER\Documents\Ayo's work\My FYP(Course Recommennder System)\database\edurecommender.db"
+def patch_db(db_path=None):
+    if not db_path:
+        try:
+            from flask import current_app
+            db_path = current_app.config["DATABASE_PATH"]
+        except Exception:
+            # Fallback to local default path
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            db_path = os.path.join(base_dir, "database", "edurecommender.db")
 
-def patch_db():
     if not os.path.exists(db_path):
-        print("Database not found. init_db() will handle it on next launch.")
+        print(f"Database not found at '{db_path}'. init_db() will handle it on next launch.")
         return
 
+    print(f"Patching database at: {db_path}")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -22,7 +30,8 @@ def patch_db():
     user_patches = [
         ("nickname", "TEXT"),
         ("department", "TEXT"),
-        ("gpa", "REAL DEFAULT 0.0")
+        ("gpa", "REAL DEFAULT 0.0"),
+        ("past_grades", "TEXT DEFAULT '{}'")
     ]
     for col, dtype in user_patches:
         if not column_exists("users", col):
@@ -33,7 +42,8 @@ def patch_db():
     course_patches = [
         ("department", "TEXT"),
         ("prerequisites", "TEXT DEFAULT 'None'"),
-        ("credits", "INTEGER DEFAULT 3")
+        ("credits", "INTEGER DEFAULT 3"),
+        ("tags", "TEXT DEFAULT '[]'")
     ]
     for col, dtype in course_patches:
         if not column_exists("courses", col):
@@ -41,11 +51,11 @@ def patch_db():
             cursor.execute(f"ALTER TABLE courses ADD COLUMN {col} {dtype}")
 
     # 3. Patch Student Courses
-    if not column_exists("student_courses", col := "grade"):
-        print(f"Adding column {col} to student_courses...")
-        cursor.execute(f"ALTER TABLE student_courses ADD COLUMN {col} TEXT DEFAULT 'N/A'")
+    if not column_exists("student_courses", "grade"):
+        print("Adding column grade to student_courses...")
+        cursor.execute("ALTER TABLE student_courses ADD COLUMN grade TEXT DEFAULT 'N/A'")
 
-    # 4. Ensure Notifications table (manually handled just in case)
+    # 4. Ensure Notifications table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS notifications (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,9 +67,9 @@ def patch_db():
     """)
 
     # 5. Patch Recommendations
-    if not column_exists("recommendations", col := "success_probability"):
-        print(f"Adding column {col} to recommendations...")
-        cursor.execute(f"ALTER TABLE recommendations ADD COLUMN {col} REAL DEFAULT 0.0")
+    if not column_exists("recommendations", "success_probability"):
+        print("Adding column success_probability to recommendations...")
+        cursor.execute("ALTER TABLE recommendations ADD COLUMN success_probability REAL DEFAULT 0.0")
 
     conn.commit()
     conn.close()

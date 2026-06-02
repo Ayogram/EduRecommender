@@ -279,6 +279,11 @@ def create_app():
     # ── Initialise DB on first request ──────────────────────────
     with app.app_context():
         init_db()
+        try:
+            from patch_db import patch_db
+            patch_db()
+        except Exception as e:
+            app.logger.error(f"Error auto-running patch_db: {e}")
 
     # ── Error Handlers ──────────────────────────────────────────
     @app.errorhandler(404)

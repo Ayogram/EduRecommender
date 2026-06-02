@@ -362,13 +362,15 @@ def analyze_result():
     b64_data = base64.b64encode(file_bytes).decode("utf-8")
     vision_prompt = (
         "You are an expert academic result analyser for a university course recommender. "
-        "The student uploaded their result sheet or transcript. Please read it and return ONLY a valid JSON object. "
-        "The JSON must have the following keys:\n"
+        "The student uploaded their result sheet or transcript (image or PDF). "
+        "Please read it carefully and extract all completed courses and their grades. "
+        "Identify course codes and course titles (e.g., 'CSC313 Object-Oriented Programming') and map them to their corresponding letter grades (A, B, C, D, E, F). "
+        "Please return ONLY a valid JSON object. The JSON must have the following keys:\n"
         "- \"gpa\": estimated or extracted GPA (float, default 0.0)\n"
         "- \"department\": estimated or extracted department string (e.g. 'Computer Science')\n"
         "- \"field\": estimated academic field (e.g. 'programming, IT')\n"
         "- \"interests\": estimated interests based on best grades (e.g. 'Web Dev, AI')\n"
-        "- \"past_grades\": a dictionary mapping course names to string grades (A, B, C, D, E, F). Map percentages/scores to these grades if needed.\n"
+        "- \"past_grades\": a dictionary mapping course names (Course Code + Course Title, e.g. 'CSC313 Object-Oriented Programming') to string grades (A, B, C, D, E, F). Do not skip any courses listed in the transcript.\n"
         "- \"analysis\": 2-3 encouraging sentences explaining which academic fields this student is best suited for and why based on their strong and weak subjects. Format with basic markdown.\n"
         "Return ONLY the raw JSON object, no markdown code block wrappers around it."
     )
@@ -384,7 +386,7 @@ def analyze_result():
         }
         vision_url = (
             "https://generativelanguage.googleapis.com/v1beta/"
-            f"models/gemini-1.5-flash:generateContent?key={api_key}"
+            f"models/gemini-2.5-flash:generateContent?key={api_key}"
         )
         vision_resp = req_lib.post(vision_url, json=vision_payload, timeout=25)
         if vision_resp.status_code == 200:
@@ -393,15 +395,20 @@ def analyze_result():
                 parts_list = candidates[0].get("content", {}).get("parts", [])
                 if parts_list:
                     raw_text = parts_list[0].get("text", "").strip()
-                    if raw_text.startswith("```json"):
-                        raw_text = raw_text[7:]
-                    if raw_text.endswith("```"):
-                        raw_text = raw_text[:-3]
+                    
+                    # Robust extraction of JSON object
+                    json_str = raw_text
+                    start_idx = raw_text.find('{')
+                    end_idx = raw_text.rfind('}')
+                    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                        json_str = raw_text[start_idx:end_idx+1]
+                    
                     try:
                         import json
-                        data = json.loads(raw_text)
+                        data = json.loads(json_str)
                         return jsonify(data)
                     except Exception as e:
+                        current_app.logger.error(f"JSON parsing error: {e}. Raw text was: {raw_text}")
                         return jsonify({"response": raw_text, "error_parsing": str(e)})
         return jsonify({"error": f"AI service returned status {vision_resp.status_code}."}), 502
     except Exception as ex:

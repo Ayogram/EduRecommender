@@ -138,6 +138,91 @@
 {% endblock %}
 
 {% block content %}
+<!-- MACRO: Course Column -->
+{% macro render_course_col(c, label) %}
+<div class="panel" style="background:var(--bg-card); transition:var(--transition);" class="hover-lift">
+  <div class="panel-header" style="background:#f8fafc; border-bottom:1px solid var(--border); padding:16px 20px;">
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+      <div>
+        <div style="font-size:0.68rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:0.04em;">Course {{ label }}</div>
+        <div class="panel-title" style="font-size:1.0rem; font-weight:800; line-height:1.2; margin-top:2px;">{{ c.title }}</div>
+      </div>
+      <span class="badge-difficulty diff-{{ c.difficulty }}">{{ c.difficulty }}</span>
+    </div>
+  </div>
+
+  <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+    
+    <!-- SVG Score Gauge -->
+    <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+      <div style="position:relative;">
+        <svg class="gauge-svg">
+          <circle class="gauge-bg" cx="50" cy="50" r="42"></circle>
+          <circle class="gauge-fill" cx="50" cy="50" r="42" 
+                  stroke="{{ c.verdict_color }}"
+                  stroke-dasharray="{{ (c.success_probability * 264)|round|int }} 264"></circle>
+        </svg>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:1.15rem; font-weight:850; color:var(--text-primary);">{{ c.success_percentage }}%</div>
+      </div>
+      <div>
+        <span class="status-pill" style="background:{{ c.verdict_color }}22; color:{{ c.verdict_color }}; font-weight:800; font-size:0.75rem; padding:4px 10px;">{{ c.verdict }}</span>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:500; margin-top:6px;">{{ c.credits }} credits · {{ c.department }}</div>
+      </div>
+    </div>
+
+    <!-- Peer performance stats -->
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Class Statistics</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; background:var(--bg-input); padding:10px 14px; border-radius:var(--radius-md);">
+        <div>
+          <div style="font-size:0.68rem; color:var(--text-muted); font-weight:500;">Peer Rating</div>
+          <div style="font-size:0.875rem; font-weight:750; color:var(--text-primary); margin-top:2px;">{{ c.avg_peer_rating }}/5.0</div>
+        </div>
+        <div>
+          <div style="font-size:0.68rem; color:var(--text-muted); font-weight:500;">Passing Rate</div>
+          <div style="font-size:0.875rem; font-weight:750; color:var(--text-primary); margin-top:2px;">{{ (c.peer_success_rate * 100)|round|int }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prerequisites -->
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Prerequisites</div>
+      <p style="font-size:0.78rem; color:var(--text-primary); margin:0;">{{ c.prerequisites }}</p>
+    </div>
+
+    <!-- Strengths (Positives) -->
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Match Strengths</div>
+      <ul style="padding-left:14px; font-size:0.78rem; color:var(--text-secondary); margin:0; list-style-type:none;">
+        {% for r in c.reasons_positive %}
+          <li style="margin-bottom:6px; position:relative; padding-left:16px;">
+            <i class="fa-solid fa-circle-check" style="color:#059669; position:absolute; left:-2px; top:3px; font-size:0.72rem;"></i>
+            {{ r }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Risks (Negatives) -->
+    {% if c.reasons_negative %}
+    <div>
+      <div style="font-size:0.72rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Risk Factors</div>
+      <ul style="padding-left:14px; font-size:0.78rem; color:var(--text-secondary); margin:0; list-style-type:none;">
+        {% for r in c.reasons_negative %}
+          <li style="margin-bottom:6px; position:relative; padding-left:16px;">
+            <i class="fa-solid fa-circle-exclamation" style="color:#dc2626; position:absolute; left:-2px; top:3px; font-size:0.72rem;"></i>
+            {{ r }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endmacro %}
+
 <div class="fade-in">
 
   <!-- Header -->
@@ -406,90 +491,7 @@
 
 </div>
 
-<!-- MACRO: Course Column -->
-{% macro render_course_col(c, label) %}
-<div class="panel" style="background:var(--bg-card); transition:var(--transition);" class="hover-lift">
-  <div class="panel-header" style="background:#f8fafc; border-bottom:1px solid var(--border); padding:16px 20px;">
-    <div style="display:flex; justify-content:space-between; align-items:start;">
-      <div>
-        <div style="font-size:0.68rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:0.04em;">Course {{ label }}</div>
-        <div class="panel-title" style="font-size:1.0rem; font-weight:800; line-height:1.2; margin-top:2px;">{{ c.title }}</div>
-      </div>
-      <span class="badge-difficulty diff-{{ c.difficulty }}">{{ c.difficulty }}</span>
-    </div>
-  </div>
 
-  <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
-    
-    <!-- SVG Score Gauge -->
-    <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-      <div style="position:relative;">
-        <svg class="gauge-svg">
-          <circle class="gauge-bg" cx="50" cy="50" r="42"></circle>
-          <circle class="gauge-fill" cx="50" cy="50" r="42" 
-                  stroke="{{ c.verdict_color }}"
-                  stroke-dasharray="{{ (c.success_probability * 264)|round|int }} 264"></circle>
-        </svg>
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:1.15rem; font-weight:850; color:var(--text-primary);">{{ c.success_percentage }}%</div>
-      </div>
-      <div>
-        <span class="status-pill" style="background:{{ c.verdict_color }}22; color:{{ c.verdict_color }}; font-weight:800; font-size:0.75rem; padding:4px 10px;">{{ c.verdict }}</span>
-        <div style="font-size:0.72rem; color:var(--text-muted); font-weight:500; margin-top:6px;">{{ c.credits }} credits · {{ c.department }}</div>
-      </div>
-    </div>
-
-    <!-- Peer performance stats -->
-    <div>
-      <div style="font-size:0.72rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Class Statistics</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; background:var(--bg-input); padding:10px 14px; border-radius:var(--radius-md);">
-        <div>
-          <div style="font-size:0.68rem; color:var(--text-muted); font-weight:500;">Peer Rating</div>
-          <div style="font-size:0.875rem; font-weight:750; color:var(--text-primary); margin-top:2px;">{{ c.avg_peer_rating }}/5.0</div>
-        </div>
-        <div>
-          <div style="font-size:0.68rem; color:var(--text-muted); font-weight:500;">Passing Rate</div>
-          <div style="font-size:0.875rem; font-weight:750; color:var(--text-primary); margin-top:2px;">{{ (c.peer_success_rate * 100)|round|int }}%</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Prereq -->
-    <div>
-      <div style="font-size:0.72rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px;">Prerequisites</div>
-      <p style="font-size:0.78rem; color:var(--text-primary); margin:0;">{{ c.prerequisites }}</p>
-    </div>
-
-    <!-- Strengths (Positives) -->
-    <div>
-      <div style="font-size:0.72rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Match Strengths</div>
-      <ul style="padding-left:14px; font-size:0.78rem; color:var(--text-secondary); margin:0; list-style-type:none;">
-        {% for r in c.reasons_positive %}
-          <li style="margin-bottom:6px; position:relative; padding-left:16px;">
-            <i class="fa-solid fa-circle-check" style="color:#059669; position:absolute; left:-2px; top:3px; font-size:0.72rem;"></i>
-            {{ r }}
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    <!-- Risks (Negatives) -->
-    {% if c.reasons_negative %}
-    <div>
-      <div style="font-size:0.72rem; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Risk Factors</div>
-      <ul style="padding-left:14px; font-size:0.78rem; color:var(--text-secondary); margin:0; list-style-type:none;">
-        {% for r in c.reasons_negative %}
-          <li style="margin-bottom:6px; position:relative; padding-left:16px;">
-            <i class="fa-solid fa-circle-exclamation" style="color:#dc2626; position:absolute; left:-2px; top:3px; font-size:0.72rem;"></i>
-            {{ r }}
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-
-  </div>
-</div>
-{% endmacro %}
 
 <!-- JAVASCRIPT & AJAX ADVISOR LOGIC -->
 <script>
@@ -528,7 +530,7 @@
       input.value = ''; return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      alert('Image is too large. Please use an image under 3 MB (try taking a screenshot instead of a raw photo).');
+      alert('File is too large. Please upload a file under 3 MB.');
       input.value = ''; return;
     }
     const preview = document.getElementById('result-preview');
@@ -537,10 +539,18 @@
     const zone    = document.getElementById('result-upload-zone');
     const label   = document.getElementById('upload-label');
     const btn     = document.getElementById('analyze-result-btn');
-    const reader = new FileReader();
-    reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
-    reader.readAsDataURL(file);
-    name.textContent = file.name;
+    
+    if (file.type === 'application/pdf') {
+      img.style.display = 'none';
+      img.src = '';
+      name.innerHTML = `<div style="padding:15px; border:1px solid #fee2e2; background:#fef2f2; border-radius:var(--radius-md); display:inline-flex; align-items:center; gap:10px;"><i class="fa-solid fa-file-pdf text-danger" style="font-size:1.8rem;"></i> <span style="font-weight:600; font-size:0.75rem; color:#991b1b;">${file.name}</span></div>`;
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
+      reader.readAsDataURL(file);
+      name.textContent = file.name;
+    }
+    
     preview.style.display = 'block';
     zone.style.borderColor = 'var(--accent)';
     label.textContent = 'File selected \u2713 ' + file.name;
