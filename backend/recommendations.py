@@ -516,8 +516,10 @@ def analyze_result():
                         return jsonify({"response": raw_text, "error_parsing": str(e)})
         return jsonify({"error": f"AI service returned status {vision_resp.status_code}."}), 502
     except Exception as ex:
-        current_app.logger.error(f"analyze_result error: {ex}")
-        return jsonify({"error": "AI result reading timed out. Try a smaller or clearer image."}), 504
+        import traceback
+        error_detail = traceback.format_exc()
+        current_app.logger.error(f"analyze_result error:\n{error_detail}")
+        return jsonify({"error": f"Internal System Error: {str(ex)}\n\nDetails:\n{error_detail}"}), 500
 @recs_bp.route("/recommend/ask-advisor", methods=["POST"])
 @login_required
 def ask_advisor():

@@ -59,7 +59,7 @@
               </div>
               <div>
                 <div class="text-muted extra-small">Member Since</div>
-                <div class="fw-bold small">{{ current_user.created_at.strftime('%B %Y') if current_user.created_at else 'N/A' }}</div>
+                <div class="fw-bold small">{{ current_user.created_at|date_format('%B %Y') if current_user.created_at else 'N/A' }}</div>
               </div>
             </div>
           </div>

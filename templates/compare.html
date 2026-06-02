@@ -738,7 +738,20 @@
         },
         body: formData
       });
-      const data = await resp.json();
+      
+      let data;
+      try {
+        data = await resp.json();
+      } catch (jsonErr) {
+        const rawText = await resp.text();
+        console.error("Non-JSON response from server:", rawText);
+        if (aiMsg) {
+          aiMsg.innerHTML = `<strong style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Server Error (${resp.status})</strong><br><br><pre style="white-space: pre-wrap; font-size: 0.72rem; background: #fee2e2; padding: 10px; border-radius: 6px; text-align: left; max-height: 200px; overflow-y: auto;">${rawText.substring(0, 1000)}</pre>`;
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-2"></i>Analyse My Result with AI';
+        return;
+      }
 
       if (resp.ok && (data.analysis || data.response || data.past_grades)) {
         // Auto-populate the simulation fields
@@ -761,6 +774,7 @@
 
         let text = data.analysis || data.response || "Analysis complete.";
         // Render markdown-ish formatting
+        text = text.replace(/\*\*(.*?)\*\//g, '<strong>$1</strong>');
         text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         text = text.replace(/^[\*\-\u2022]\s+(.+)$/gm, '<li style="margin-bottom:4px;">$1</li>');
         text = text.replace(/(<li.*<\/li>)/s, '<ul style="padding-left:16px;margin:8px 0;">$1</ul>');
@@ -769,10 +783,13 @@
         
         hasAnalysed = true;
       } else {
-        if (aiMsg) aiMsg.innerText = data.error || 'Could not analyse the result. Please try a clearer image.';
+        if (aiMsg) {
+          const errMsg = data.error || 'Could not analyse the result. Please try a clearer image.';
+          aiMsg.innerHTML = `<strong style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation me-1"></i>AI Reading Error</strong><br><br><pre style="white-space: pre-wrap; font-size: 0.72rem; background: #fee2e2; padding: 10px; border-radius: 6px; text-align: left; max-height: 200px; overflow-y: auto;">${errMsg}</pre>`;
+        }
       }
     } catch(e) {
-      if (aiMsg) aiMsg.innerText = 'Connection error. Please check your internet and try again.';
+      if (aiMsg) aiMsg.innerHTML = `<strong style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Connection Error</strong><br><br>${e.message}`;
     }
 
     if (hasAnalysed) {

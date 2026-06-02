@@ -283,18 +283,30 @@
 
 {% block scripts %}
 <script>
-  let cgpaVisible = true;
-  function toggleCGPA() {
+  let cgpaVisible = localStorage.getItem('cgpaVisible') !== 'false';
+  
+  function updateCGPADisplay() {
     const val = document.getElementById('cgpa-value');
     const hidden = document.getElementById('cgpa-hidden');
     const eyeOn = document.getElementById('eye-icon');
     const eyeOff = document.getElementById('eye-off-icon');
-    cgpaVisible = !cgpaVisible;
-    val.style.display = cgpaVisible ? '' : 'none';
-    hidden.style.display = cgpaVisible ? 'none' : '';
-    eyeOn.style.display = cgpaVisible ? '' : 'none';
-    eyeOff.style.display = cgpaVisible ? 'none' : '';
+    if (val && hidden && eyeOn && eyeOff) {
+      val.style.display = cgpaVisible ? '' : 'none';
+      hidden.style.display = cgpaVisible ? 'none' : '';
+      eyeOn.style.display = cgpaVisible ? '' : 'none';
+      eyeOff.style.display = cgpaVisible ? 'none' : '';
+    }
   }
+
+  function toggleCGPA() {
+    cgpaVisible = !cgpaVisible;
+    localStorage.setItem('cgpaVisible', cgpaVisible);
+    updateCGPADisplay();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCGPADisplay();
+  });
 
   // Animate match bars
   document.querySelectorAll('[data-width]').forEach(el => {

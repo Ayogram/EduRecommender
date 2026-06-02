@@ -87,6 +87,29 @@ def patch_db(db_path=None):
         if updated:
             print(f"  Backfilled {updated} user(s).")
 
+    # 7. Patch Module Lessons
+    if not column_exists("module_lessons", "video_url"):
+        print("Adding column video_url to module_lessons...")
+        cursor.execute("ALTER TABLE module_lessons ADD COLUMN video_url TEXT")
+
+    # 8. Check and seed courses if fewer than 500
+    cursor.execute("SELECT COUNT(*) FROM courses")
+    count = cursor.fetchone()[0]
+    if count < 500:
+        print("Fewer than 500 courses found. Seeding the massive curriculum of 595 courses...")
+        cursor.execute("DELETE FROM courses")
+        import sys
+        import json
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        from models.courses_generator import generate_all_courses
+        generated_courses = generate_all_courses()
+        for title, desc, dept, cat, diff, prereq, creds, tags in generated_courses:
+            cursor.execute(
+                """INSERT INTO courses (title, description, department, category, difficulty, prerequisites, credits, tags)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (title, desc, dept, cat, diff, prereq, creds, json.dumps(tags))
+            )
+
     conn.commit()
     conn.close()
     print("Database patched successfully.")

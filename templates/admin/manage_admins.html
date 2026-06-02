@@ -57,7 +57,7 @@
                 <span class="status-badge status-suspended">Suspended</span>
               {% endif %}
             </td>
-            <td class="small-text">{{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at else 'N/A' }}</td>
+            <td class="small-text">{{ admin.created_at|date_format('%Y-%m-%d') if admin.created_at else 'N/A' }}</td>
             <td>
               {% if current_user.is_super_admin and not admin.is_super_admin %}
               <div class="action-buttons">

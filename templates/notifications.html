@@ -23,7 +23,7 @@
             <div class="notification-item p-3 border-bottom {{ 'unread' if n.is_read == 0 else '' }}">
               <div class="d-flex justify-content-between">
                 <p class="mb-1">{{ n.message }}</p>
-                <span class="small-text text-muted">{{ n.created_at.strftime('%H:%M, %Y-%m-%d') if n.created_at else 'Just now' }}</span>
+                <span class="small-text text-muted">{{ n.created_at|date_format('%H:%M, %Y-%m-%d') if n.created_at else 'Just now' }}</span>
               </div>
             </div>
           {% endfor %}

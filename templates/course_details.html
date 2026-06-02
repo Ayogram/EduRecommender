@@ -132,7 +132,7 @@
                 <span class="text-success fw-bold"><i class="fas fa-check-circle me-2"></i> Enrolled</span>
               </div>
               <h5 class="fw-bold mb-1">Your Progress</h5>
-              <p class="small text-muted">You enrolled on {{ enrollment.enrolled_at.strftime('%b %d, %Y') if enrollment.enrolled_at else 'Recent' }}</p>
+              <p class="small text-muted">You enrolled on {{ enrollment.enrolled_at|date_format('%b %d, %Y') if enrollment.enrolled_at else 'Recent' }}</p>
             </div>
 
             <form action="{{ url_for('recommendations.rate_course', course_id=course.id) }}" method="POST">

@@ -158,6 +158,25 @@ def create_app():
             # If it's a plain string override, wrap it in the expected format
             return {"verdict": s}
 
+    @app.template_filter('date_format')
+    def date_format_filter(value, format='%Y-%m-%d'):
+        if not value:
+            return 'N/A'
+        if isinstance(value, str):
+            import datetime
+            parsed_val = None
+            for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%S.%f', '%Y-%m-%d'):
+                try:
+                    parsed_val = datetime.datetime.strptime(value.split('.')[0], fmt)
+                    break
+                except ValueError:
+                    continue
+            if parsed_val:
+                value = parsed_val
+        if hasattr(value, 'strftime'):
+            return value.strftime(format)
+        return str(value)
+
     # Initialise Google OAuth
     init_oauth(app)
 
@@ -304,6 +323,171 @@ def create_app():
             "enrolled": [dict(r) for r in enrolled],
             "recommendations": [dict(r) for r in recent_recs]
         })
+
+    @main_bp.route("/api/backup-data")
+    @login_required
+    def backup_data():
+        from flask import jsonify
+        db = get_db()
+        user_id = current_user.id
+        
+        # 1. Fetch user profile
+        user_row = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        user_data = dict(user_row) if user_row else {}
+        if "password_hash" in user_data:
+            del user_data["password_hash"]
+            
+        # 2. Fetch enrolled courses
+        enrolled = db.execute("SELECT * FROM student_courses WHERE user_id = ?", (user_id,)).fetchall()
+        enrolled_list = [dict(r) for r in enrolled]
+        
+        # 3. Fetch exam results
+        exams = db.execute("SELECT * FROM exam_results WHERE user_id = ?", (user_id,)).fetchall()
+        exams_list = [dict(r) for r in exams]
+        
+        # 4. Fetch complaints
+        complaints = db.execute("SELECT * FROM complaints WHERE user_id = ?", (user_id,)).fetchall()
+        complaints_list = [dict(r) for r in complaints]
+        
+        # 5. Fetch notifications
+        notifications = db.execute("SELECT * FROM notifications WHERE user_id = ?", (user_id,)).fetchall()
+        notifications_list = [dict(r) for r in notifications]
+        
+        return jsonify({
+            "email": current_user.email,
+            "user": user_data,
+            "enrolled": enrolled_list,
+            "exams": exams_list,
+            "complaints": complaints_list,
+            "notifications": notifications_list
+        })
+
+    @main_bp.route("/api/sync-restore", methods=["POST"])
+    @login_required
+    def sync_restore():
+        from flask import request, jsonify
+        import json
+        db = get_db()
+        user_id = current_user.id
+        data = request.get_json() or {}
+        
+        if not data or data.get("email") != current_user.email:
+            return jsonify({"status": "error", "message": "Invalid backup data"}), 400
+            
+        # Restore user profile fields (gpa, nickname, academic_field, department, interests, past_grades)
+        profile = data.get("user", {})
+        if profile:
+            interests_val = json.dumps(profile.get("interests", [])) if isinstance(profile.get("interests"), list) else (profile.get("interests") or '[]')
+            past_grades_val = json.dumps(profile.get("past_grades", {})) if isinstance(profile.get("past_grades"), dict) else (profile.get("past_grades") or '{}')
+            
+            db.execute(
+                """UPDATE users SET 
+                   nickname = ?, 
+                   academic_field = ?, 
+                   department = ?, 
+                   gpa = ?, 
+                   interests = ?, 
+                   past_grades = ?, 
+                   profile_completed = ?
+                   WHERE id = ?""",
+                (
+                    profile.get("nickname"),
+                    profile.get("academic_field"),
+                    profile.get("department"),
+                    profile.get("gpa") or 0.0,
+                    interests_val,
+                    past_grades_val,
+                    profile.get("profile_completed") or 0,
+                    user_id
+                )
+            )
+            
+        # Restore enrolled courses (student_courses)
+        enrolled = data.get("enrolled", [])
+        for c in enrolled:
+            try:
+                db.execute(
+                    """INSERT INTO student_courses 
+                       (user_id, course_id, rating, grade, completed, current_module_id, current_lesson_id, progress, enrolled_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        user_id, c["course_id"], c.get("rating", 0.0), c.get("grade", "N/A"),
+                        c.get("completed", 0), c.get("current_module_id"), c.get("current_lesson_id"),
+                        c.get("progress", 0.0), c.get("enrolled_at")
+                    )
+                )
+            except Exception:
+                db.execute(
+                    """UPDATE student_courses SET
+                       rating = ?, grade = ?, completed = ?, current_module_id = ?, 
+                       current_lesson_id = ?, progress = ?
+                       WHERE user_id = ? AND course_id = ?""",
+                    (
+                        c.get("rating", 0.0), c.get("grade", "N/A"), c.get("completed", 0), 
+                        c.get("current_module_id"), c.get("current_lesson_id"), c.get("progress", 0.0),
+                        user_id, c["course_id"]
+                    )
+                )
+                
+        # Restore exam results
+        exams = data.get("exams", [])
+        for e in exams:
+            try:
+                history_val = json.dumps(e.get("history", [])) if isinstance(e.get("history"), list) else (e.get("history") or '[]')
+                db.execute(
+                    """INSERT INTO exam_results 
+                       (user_id, module_id, score, attempts, best_score, history, updated_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        user_id, e["module_id"], e.get("score") or 0.0, e.get("attempts") or 1,
+                        e.get("best_score") or 0.0, history_val, e.get("updated_at")
+                    )
+                )
+            except Exception:
+                history_val = json.dumps(e.get("history", [])) if isinstance(e.get("history"), list) else (e.get("history") or '[]')
+                db.execute(
+                    """UPDATE exam_results SET
+                       score = ?, attempts = ?, best_score = ?, history = ?
+                       WHERE user_id = ? AND module_id = ?""",
+                    (
+                        e.get("score") or 0.0, e.get("attempts") or 1, e.get("best_score") or 0.0,
+                        history_val, user_id, e["module_id"]
+                    )
+                )
+                
+        # Restore complaints
+        complaints = data.get("complaints", [])
+        for c in complaints:
+            try:
+                db.execute(
+                    """INSERT INTO complaints 
+                       (user_id, subject, message, status, admin_response, created_at, resolved_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        user_id, c["subject"], c["message"], c.get("status", "pending"),
+                        c.get("admin_response"), c.get("created_at"), c.get("resolved_at")
+                    )
+                )
+            except Exception:
+                pass
+                
+        # Restore notifications
+        notifications = data.get("notifications", [])
+        for n in notifications:
+            try:
+                db.execute(
+                    """INSERT INTO notifications 
+                       (user_id, message, is_read, created_at)
+                       VALUES (?, ?, ?, ?)""",
+                    (
+                        user_id, n["message"], n.get("is_read", 0), n.get("created_at")
+                    )
+                )
+            except Exception:
+                pass
+                
+        db.commit()
+        return jsonify({"status": "success", "message": "State synchronized successfully"})
 
     app.register_blueprint(main_bp)
 

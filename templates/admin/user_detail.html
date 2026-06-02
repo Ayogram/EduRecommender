@@ -41,7 +41,7 @@
                <span class="badge bg-secondary">User</span>
              {% endif %}
           </div>
-          <p class="small-text">Member since {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</p>
+          <p class="small-text">Member since {{ user.created_at|date_format('%Y-%m-%d') if user.created_at else 'N/A' }}</p>
         </div>
       </div>
 
@@ -111,14 +111,14 @@
                 <tr>
                   <td><span class="badge bg-warning">Complaint</span></td>
                   <td>{{ comp.subject }}</td>
-                  <td class="small-text">{{ comp.created_at.strftime('%Y-%m-%d') }}</td>
+                  <td class="small-text">{{ comp.created_at|date_format('%Y-%m-%d') }}</td>
                 </tr>
                 {% endfor %}
                 {% for rec in recommendations[:5] %}
                 <tr>
                   <td><span class="badge bg-info">Rec</span></td>
                   <td>Course ID: {{ rec.course_id }} (Score: {{ "%.2f"|format(rec.score) }})</td>
-                  <td class="small-text">{{ rec.created_at.strftime('%Y-%m-%d') }}</td>
+                  <td class="small-text">{{ rec.created_at|date_format('%Y-%m-%d') }}</td>
                 </tr>
                 {% endfor %}
                 {% if not complaints and not recommendations %}

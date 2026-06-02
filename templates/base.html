@@ -265,6 +265,52 @@
         dropdown.style.display = 'none';
       }
     });
+
+    // Global state self-healing database recovery for Vercel
+    {% if current_user.is_authenticated %}
+    (function() {
+      const userEmail = "{{ current_user.email }}";
+      if (!userEmail) return;
+      const backupKey = `user_backup_${userEmail}`;
+      const localBackupStr = localStorage.getItem(backupKey);
+
+      async function checkAndSync() {
+        try {
+          const resp = await fetch('/api/backup-data');
+          if (resp.ok) {
+            const data = await resp.json();
+            const isServerEmpty = (!data.enrolled || data.enrolled.length === 0) &&
+                                  (!data.exams || data.exams.length === 0) &&
+                                  (!data.complaints || data.complaints.length === 0);
+
+            if (isServerEmpty && localBackupStr) {
+              const localBackup = JSON.parse(localBackupStr);
+              console.log("Server database has been reset. Synchronizing from local backup...");
+              const restoreResp = await fetch('/api/sync-restore', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(localBackup)
+              });
+              if (restoreResp.ok) {
+                console.log("Database restore complete. Refreshing...");
+                window.location.reload();
+              }
+            } else if (!isServerEmpty) {
+              localStorage.setItem(backupKey, JSON.stringify(data));
+            }
+          }
+        } catch (err) {
+          console.error("Backup sync error:", err);
+        }
+      }
+      window.addEventListener('load', () => {
+        setTimeout(checkAndSync, 800);
+      });
+    })();
+    {% endif %}
   </script>
   {% block scripts %}{% endblock %}
 </body>
