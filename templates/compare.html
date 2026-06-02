@@ -706,14 +706,14 @@
 
     // Disable button and show thinking message
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Reading your result...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Reading your result...';
 
     // Show typing indicator in chat
     let aiMsg = null;
     if (log) {
       aiMsg = document.createElement('div');
       aiMsg.className = 'chat-msg ai';
-      aiMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Reading your result sheet...';
+      aiMsg.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Reading your result sheet...';
       log.appendChild(aiMsg);
       log.scrollTop = log.scrollHeight;
     }
