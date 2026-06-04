@@ -12,53 +12,211 @@ import re
 
 learning_bp = Blueprint("learning", __name__, url_prefix="/learning")
 
-def search_youtube_video(query):
+def search_youtube_video(lesson_title, course_title=""):
+    """
+    Search YouTube for a video that closely matches the lesson topic.
+    Builds a tight, topic-first query so the result actually teaches the subject.
+    Returns an embeddable YouTube URL.
+    """
+    import re
+    import urllib.request
+    import urllib.parse
+
+    # ── 1. Build a sharp, specific query ────────────────────────────────────
+    # Put the LESSON TITLE first (most important), then add course for context,
+    # then restrict to educational content.
+    # Strip generic module phase words that pollute results.
+    stop_words = {
+        'foundational principles', 'intermediate methodologies',
+        'final assessment', 'capstone', 'module', 'week',
+        'introduction to', 'advanced', 'basics of'
+    }
+    clean_lesson = lesson_title.strip()
+    for sw in stop_words:
+        clean_lesson = re.sub(re.escape(sw), '', clean_lesson, flags=re.IGNORECASE).strip()
+
+    # Build query: lesson topic + course subject + "explained" for educational bias
+    if course_title and course_title.lower() not in clean_lesson.lower():
+        raw_query = f"{clean_lesson} {course_title} explained"
+    else:
+        raw_query = f"{clean_lesson} explained"
+
+    # Remove any remaining special chars
+    clean_query = re.sub(r'[^\w\s-]', ' ', raw_query).strip()
+    # Collapse whitespace
+    clean_query = re.sub(r'\s+', ' ', clean_query)
+
+    encoded_query = urllib.parse.quote(clean_query)
+    url = f"https://www.youtube.com/results?search_query={encoded_query}"
+
     try:
-        # Clean query to prevent search parsing issues
-        clean_query = re.sub(r'[^\w\s-]', '', query).strip()
-        search_term = f"{clean_query} tutorial lecture"
-        encoded_query = urllib.parse.quote(search_term)
-        url = f"https://www.youtube.com/results?search_query={encoded_query}"
-        
-        # Request with user-agent to bypass blockages
         req = urllib.request.Request(
-            url, 
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'}
+            url,
+            headers={
+                'User-Agent': (
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/124.0.0.0 Safari/537.36'
+                )
+            }
         )
-        with urllib.request.urlopen(req, timeout=4) as response:
-            html = response.read().decode('utf-8')
-            
-        video_ids = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', html)
-        if video_ids:
-            # Get the first unique video id
-            seen = set()
-            unique_ids = [x for x in video_ids if not (x in seen or seen.add(x))]
-            if unique_ids:
-                return f"https://www.youtube.com/embed/{unique_ids[0]}"
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+
+        # Extract all videoIds, deduplicated, in order
+        all_ids = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', html)
+        seen = set()
+        unique_ids = [x for x in all_ids if not (x in seen or seen.add(x))]
+
+        # Pick the first candidate that is NOT a YouTube Short (Shorts have
+        # vertical thumbnails and are usually <= 60s; we can't detect duration
+        # here, so just take the first 5 unique IDs and return the first one).
+        # In practice the first result is almost always the best match.
+        candidates = unique_ids[:5]
+        if candidates:
+            return f"https://www.youtube.com/embed/{candidates[0]}"
+
     except Exception as e:
-        print(f"Error searching YouTube for '{query}': {e}")
-        
-    # Categorized fallback high-quality course playlist videos
-    query_lower = query.lower()
-    if any(k in query_lower for k in ["research", "methodology", "thesis", "academic writing"]):
-        return "https://www.youtube.com/embed/nJza2kfI8GU"
-    elif any(k in query_lower for k in ["mis", "information system", "management information"]):
-        return "https://www.youtube.com/embed/rN9e8-p56H0"
-    elif any(k in query_lower for k in ["programming", "code", "python", "java", "script"]):
-        return "https://www.youtube.com/embed/rfscVS0vtbw"
-    elif any(k in query_lower for k in ["structure", "algorithm", "dsa"]):
-        return "https://www.youtube.com/embed/8hly31xKjhc"
-    elif any(k in query_lower for k in ["database", "sql"]):
-        return "https://www.youtube.com/embed/HXV3zeQKqGY"
-    elif any(k in query_lower for k in ["ethic", "philosophy", "justice"]):
-        return "https://www.youtube.com/embed/kBdfcR-8hEY"
-    elif any(k in query_lower for k in ["business", "management", "finance", "accounting", "marketing"]):
-        return "https://www.youtube.com/embed/rN9e8-p56H0"
-    elif any(k in query_lower for k in ["anatomy", "medicine", "health"]):
-        return "https://www.youtube.com/embed/uBGl2BujkPQ"
-    elif any(k in query_lower for k in ["law", "rights", "legal"]):
-        return "https://www.youtube.com/embed/sTz5L_O5ZGU"
-    return "https://www.youtube.com/embed/rN9e8-p56H0"
+        print(f"YouTube search error for '{clean_query}': {e}", flush=True)
+
+    # ── 2. Smart keyword fallback ────────────────────────────────────────────
+    q = (lesson_title + " " + course_title).lower()
+
+    keyword_map = [
+        (["python", "programming", "coding", "script", "software development"],
+         "https://www.youtube.com/embed/rfscVS0vtbw"),
+        (["java ", "object oriented", "oop"],
+         "https://www.youtube.com/embed/eIrMbAQSU34"),
+        (["javascript", "web dev", "html", "css", "frontend"],
+         "https://www.youtube.com/embed/PkZNo7MFNFg"),
+        (["data structure", "algorithm", "dsa", "sorting", "searching"],
+         "https://www.youtube.com/embed/8hly31xKjhc"),
+        (["database", "sql", "mysql", "postgresql", "nosql", "mongodb"],
+         "https://www.youtube.com/embed/HXV3zeQKqGY"),
+        (["machine learning", "deep learning", "neural network", "ai ", "artificial intelligence"],
+         "https://www.youtube.com/embed/GwIo3gDZCVQ"),
+        (["data science", "data analysis", "pandas", "numpy", "statistics"],
+         "https://www.youtube.com/embed/ua-CiDNNj30"),
+        (["network", "tcp", "ip", "cisco", "firewall", "cybersecurity", "hacking"],
+         "https://www.youtube.com/embed/qiQR5rTSshw"),
+        (["operating system", "linux", "unix", "kernel", "process scheduling"],
+         "https://www.youtube.com/embed/26QPDBe-NB8"),
+        (["cloud", "aws", "azure", "google cloud", "devops", "docker", "kubernetes"],
+         "https://www.youtube.com/embed/M988_fsOSWo"),
+        (["research", "methodology", "thesis", "academic writing", "literature review"],
+         "https://www.youtube.com/embed/nJza2kfI8GU"),
+        (["mis", "information system", "management information"],
+         "https://www.youtube.com/embed/rN9e8-p56H0"),
+        (["accounting", "financial statement", "balance sheet", "ledger", "bookkeeping"],
+         "https://www.youtube.com/embed/yYX4bvQSqbo"),
+        (["finance", "investment", "economics", "microeconomics", "macroeconomics"],
+         "https://www.youtube.com/embed/IB6iFZKqZRQ"),
+        (["marketing", "brand", "consumer behaviour", "market research"],
+         "https://www.youtube.com/embed/pInFCOovMcI"),
+        (["business", "management", "strategy", "entrepreneurship", "organisation"],
+         "https://www.youtube.com/embed/4VdHxEEzSBo"),
+        (["anatomy", "physiology", "biology", "medicine", "health", "nursing"],
+         "https://www.youtube.com/embed/uBGl2BujkPQ"),
+        (["chemistry", "organic", "inorganic", "reaction", "molecule"],
+         "https://www.youtube.com/embed/bka20Q9TN6M"),
+        (["physics", "mechanics", "thermodynamics", "quantum", "optics"],
+         "https://www.youtube.com/embed/ZM8ECpBuQYE"),
+        (["mathematics", "calculus", "algebra", "statistics", "probability"],
+         "https://www.youtube.com/embed/OmJ-4B-mS-Y"),
+        (["law", "legal", "rights", "constitution", "contract"],
+         "https://www.youtube.com/embed/sTz5L_O5ZGU"),
+        (["philosophy", "ethics", "logic", "epistemology", "moral"],
+         "https://www.youtube.com/embed/kBdfcR-8hEY"),
+        (["psychology", "behaviour", "mental health", "cognitive", "therapy"],
+         "https://www.youtube.com/embed/vo4pMVb0R6M"),
+        (["sociology", "society", "culture", "anthropology"],
+         "https://www.youtube.com/embed/YR5ApYxkU-U"),
+        (["geography", "environment", "climate", "ecology", "sustainability"],
+         "https://www.youtube.com/embed/HCDVN7DCzYE"),
+        (["history", "civilization", "world war", "colonial", "ancient"],
+         "https://www.youtube.com/embed/Yocja_N5s1I"),
+        (["civil engineering", "structural", "construction", "geotechnical"],
+         "https://www.youtube.com/embed/9yzxnb-aIlI"),
+        (["electrical", "circuit", "electronics", "signal", "semiconductor"],
+         "https://www.youtube.com/embed/mc979OhitAg"),
+        (["mechanical engineering", "thermofluids", "manufacturing", "cad"],
+         "https://www.youtube.com/embed/SzTimDT7oRM"),
+        (["nursing", "pharmacology", "patient care", "clinical"],
+         "https://www.youtube.com/embed/uBGl2BujkPQ"),
+        (["agriculture", "crop", "soil", "livestock", "farm"],
+         "https://www.youtube.com/embed/5_opa2DPYS8"),
+        (["architecture", "design", "urban planning", "building"],
+         "https://www.youtube.com/embed/fUBqeomCMvI"),
+    ]
+
+    for keywords, embed_url in keyword_map:
+        if any(kw in q for kw in keywords):
+            return embed_url
+
+    # Ultimate fallback — generic education video
+    return "https://www.youtube.com/embed/rfscVS0vtbw"
+
+
+@learning_bp.route("/refresh-video/<int:lesson_id>")
+@login_required
+def refresh_lesson_video(lesson_id):
+    """Force-refresh the video for a single lesson by clearing its cached URL,
+    then immediately re-fetch using the improved search logic and redirect back."""
+    db = get_db()
+    lesson = db.execute(
+        """SELECT ml.*, cm.course_id, c.title as course_title
+           FROM module_lessons ml
+           JOIN course_modules cm ON ml.module_id = cm.id
+           JOIN courses c ON cm.course_id = c.id
+           WHERE ml.id = ?""",
+        (lesson_id,)
+    ).fetchone()
+
+    if not lesson:
+        flash("Lesson not found.", "error")
+        return redirect(url_for("recommendations.my_courses"))
+
+    # Clear stale URL
+    db.execute("UPDATE module_lessons SET video_url = NULL WHERE id = ?", (lesson_id,))
+    db.commit()
+
+    # Immediately fetch a fresh video with the new improved query
+    new_url = search_youtube_video(lesson['title'], lesson['course_title'])
+    db.execute("UPDATE module_lessons SET video_url = ? WHERE id = ?", (new_url, lesson_id))
+    db.commit()
+
+    flash("Video refreshed! A new relevant video has been loaded.", "success")
+    # Redirect back to the lesson
+    course_id = lesson['course_id']
+    module_id_row = db.execute(
+        "SELECT id FROM course_modules WHERE course_id = ? ORDER BY sort_order LIMIT 1",
+        (course_id,)
+    ).fetchone()
+    module_id = lesson['module_id'] if hasattr(lesson, 'module_id') else (module_id_row['id'] if module_id_row else 1)
+    return redirect(url_for(
+        "learning.view_lesson",
+        course_id=course_id,
+        module_id=lesson['module_id'],
+        lesson_id=lesson_id
+    ))
+
+
+@learning_bp.route("/admin/refresh-all-videos")
+@login_required
+def admin_refresh_all_videos():
+    """Admin-only: Clears ALL cached lesson video URLs so they get re-fetched
+    with the new improved search_youtube_video logic on next page load."""
+    from flask_login import current_user
+    if not getattr(current_user, 'is_admin', False):
+        flash("Admin access only.", "error")
+        return redirect(url_for("recommendations.my_courses"))
+
+    db = get_db()
+    db.execute("UPDATE module_lessons SET video_url = NULL")
+    db.commit()
+    flash("All lesson videos cleared. They will be refreshed automatically when next viewed.", "success")
+    return redirect(url_for("recommendations.my_courses"))
+
 
 def update_course_grade_if_completed(db, user_id, course_id):
     # 1. Get all module IDs for this course
@@ -175,8 +333,8 @@ def view_lesson(course_id, module_id):
         new_lessons = tutor.generate_module_content(course['title'], module['title'])
         
         for i, l in enumerate(new_lessons):
-            video_query = f"{course['title']} - {l['title']}"
-            video_url = search_youtube_video(video_query)
+            video_query_title = l['title']
+            video_url = search_youtube_video(video_query_title, course['title'])
             db.execute(
                 "INSERT INTO module_lessons (module_id, title, content, video_url, sort_order) VALUES (?, ?, ?, ?, ?)",
                 (module['id'], l['title'], l['content'], video_url, i+1)
@@ -204,8 +362,7 @@ def view_lesson(course_id, module_id):
     current_lesson_dict = dict(current_lesson)
     
     if not current_lesson_dict.get('video_url'):
-        video_query = f"{course['title']} - {current_lesson_dict['title']}"
-        video_url = search_youtube_video(video_query)
+        video_url = search_youtube_video(current_lesson_dict['title'], course['title'])
         db.execute(
             "UPDATE module_lessons SET video_url = ? WHERE id = ?",
             (video_url, current_lesson_dict['id'])

@@ -85,7 +85,18 @@
               <span class="pulse-red-dot"></span> AI-CURATED LECTURE: {{ current_lesson.title }}
             </div>
           </div>
+          <!-- Refresh Video Button (top-right) -->
+          <div style="position:absolute;top:12px;right:12px;z-index:20;">
+            <a href="{{ url_for('learning.refresh_lesson_video', lesson_id=current_lesson.id) }}"
+               title="Video not relevant? Click to fetch a fresh one."
+               style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);color:#fff;padding:6px 12px;border-radius:9999px;font-size:0.73rem;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.15);transition:background 0.2s;"
+               onmouseover="this.style.background='rgba(139,92,246,0.85)'"
+               onmouseout="this.style.background='rgba(0,0,0,0.65)'">
+              <i class="fas fa-sync-alt" style="font-size:0.7rem;"></i> Refresh Video
+            </a>
+          </div>
         </div>
+
 
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
           <div class="card-header bg-white p-4 border-bottom">
