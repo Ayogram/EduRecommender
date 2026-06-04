@@ -195,6 +195,12 @@ class User(UserMixin):
                 (name, nickname, academic_field, json.dumps(interests), department, gpa, user_id)
             )
         db.commit()
+        # Regenerate recommendations when profile is updated so it's fresh
+        try:
+            from engine.hybrid import get_recommendations
+            get_recommendations(user_id, top_n=12)
+        except Exception as e:
+            print(f"Error pre-generating recommendations on update: {e}", flush=True)
 
     @staticmethod
     def update_avatar(user_id, avatar_url):

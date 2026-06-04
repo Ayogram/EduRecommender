@@ -360,6 +360,8 @@ def login():
             return redirect(url_for("auth.complete_profile"))
 
         next_page = request.args.get("next")
+        if next_page and ("logout" in next_page or "register" in next_page):
+            next_page = None
         return redirect(next_page or url_for("main.dashboard"))
 
     if request.args.get("verified") == "true":
@@ -370,9 +372,15 @@ def login():
 # ── Logout ──────────────────────────────────────────────────────────────────
 
 @auth_bp.route("/logout")
-@login_required
 def logout():
-    logout_user()
+    # Clear custom session keys to prevent any stale restore collisions
+    for key in ['user_email', 'user_name', 'user_nickname', 'user_google_id', 
+                'user_profile_picture', 'user_role', 'user_academic_field', 
+                'user_department', 'user_gpa', 'user_interests', 
+                'user_profile_completed', 'user_past_grades', 'enrolled_courses']:
+        session.pop(key, None)
+    if current_user.is_authenticated:
+        logout_user()
     flash("You have been logged out.", "info")
     return redirect(url_for("auth.login"))
 
@@ -686,6 +694,9 @@ def get_sub_interests(field):
 @auth_bp.route("/complete-profile", methods=["GET", "POST"])
 @login_required
 def complete_profile():
+    if request.method == "GET" and current_user.is_authenticated and getattr(current_user, "profile_completed", 0):
+        return redirect(url_for("main.dashboard"))
+
     if request.method == "POST":
         academic_field = request.form.get("academic_field")
         # Unified Interest Parsing
@@ -720,6 +731,12 @@ def complete_profile():
         if user:
             login_user(user, remember=True)
             save_user_to_session(user)
+            # Sync recommendations synchronously to clear cache and update for new profile
+            try:
+                from engine.hybrid import get_recommendations
+                get_recommendations(user.id, top_n=12)
+            except Exception as e:
+                print(f"Error pre-generating recommendations: {e}", flush=True)
         
         flash("Profile completed! Welcome to EduRecommender.", "success")
         return redirect(url_for("main.dashboard"))
@@ -729,3 +746,185 @@ def complete_profile():
         fields_map = json.load(f)
         
     return render_template("auth/complete_profile.html", fields_map=fields_map)
+
+@auth_bp.route("/api/public-sync-restore", methods=["POST"])
+def public_sync_restore():
+    db = get_db()
+    data = request.get_json() or {}
+    
+    email = data.get("email")
+    if not email:
+        return jsonify({"status": "error", "message": "Email is required"}), 400
+        
+    profile = data.get("user", {})
+    if not profile:
+        return jsonify({"status": "error", "message": "Profile data is required"}), 400
+        
+    import json
+    interests_val = json.dumps(profile.get("interests", [])) if isinstance(profile.get("interests"), list) else (profile.get("interests") or '[]')
+    past_grades_val = json.dumps(profile.get("past_grades", {})) if isinstance(profile.get("past_grades"), dict) else (profile.get("past_grades") or '{}')
+    
+    # Check if the user already exists in the database
+    user_row = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if user_row:
+        user_id = user_row["id"]
+        # Update user profile with latest backup data
+        db.execute(
+            """UPDATE users SET 
+               name = ?,
+               nickname = ?, 
+               academic_field = ?, 
+               department = ?, 
+               gpa = ?, 
+               interests = ?, 
+               past_grades = ?, 
+               profile_completed = ?,
+               is_verified = ?
+               WHERE id = ?""",
+            (
+                profile.get("name"),
+                profile.get("nickname"),
+                profile.get("academic_field"),
+                profile.get("department"),
+                profile.get("gpa") or 0.0,
+                interests_val,
+                past_grades_val,
+                profile.get("profile_completed") or 0,
+                profile.get("is_verified") or 1,
+                user_id
+            )
+        )
+    else:
+        # Re-create the user in the database
+        db.execute(
+            """INSERT INTO users 
+               (name, email, password_hash, google_id, profile_picture, role, status, interests, nickname, academic_field, department, gpa, past_grades, profile_completed, is_verified)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                profile.get("name"),
+                email,
+                profile.get("password_hash"),
+                profile.get("google_id"),
+                profile.get("profile_picture", "/static/img/default_avatar.png"),
+                profile.get("role", "user"),
+                profile.get("status", "active"),
+                interests_val,
+                profile.get("nickname"),
+                profile.get("academic_field"),
+                profile.get("department"),
+                profile.get("gpa") or 0.0,
+                past_grades_val,
+                profile.get("profile_completed") or 0,
+                profile.get("is_verified") or 0
+            )
+        )
+        db.commit()
+        
+        # Get the newly created user's ID
+        new_user = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        user_id = new_user["id"]
+        
+    # Restore enrolled courses (upsert)
+    enrolled = data.get("enrolled", [])
+    for c in enrolled:
+        try:
+            db.execute(
+                """INSERT INTO student_courses 
+                   (user_id, course_id, rating, grade, completed, current_module_id, current_lesson_id, progress, enrolled_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    user_id, c["course_id"], c.get("rating", 0.0), c.get("grade", "N/A"),
+                    c.get("completed", 0), c.get("current_module_id"), c.get("current_lesson_id"),
+                    c.get("progress", 0.0), c.get("enrolled_at")
+                )
+            )
+        except Exception:
+            try:
+                db.execute(
+                    """UPDATE student_courses SET
+                       rating = ?, grade = ?, completed = ?, current_module_id = ?, 
+                       current_lesson_id = ?, progress = ?
+                       WHERE user_id = ? AND course_id = ?""",
+                    (
+                        c.get("rating", 0.0), c.get("grade", "N/A"), c.get("completed", 0), 
+                        c.get("current_module_id"), c.get("current_lesson_id"), c.get("progress", 0.0),
+                        user_id, c["course_id"]
+                    )
+                )
+            except Exception:
+                pass
+                
+    # Restore exam results (upsert)
+    exams = data.get("exams", [])
+    for e in exams:
+        try:
+            history_val = json.dumps(e.get("history", [])) if isinstance(e.get("history"), list) else (e.get("history") or '[]')
+            db.execute(
+                """INSERT INTO exam_results 
+                   (user_id, module_id, score, attempts, best_score, history, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    user_id, e["module_id"], e.get("score") or 0.0, e.get("attempts") or 1,
+                    e.get("best_score") or 0.0, history_val, e.get("updated_at")
+                )
+            )
+        except Exception:
+            try:
+                history_val = json.dumps(e.get("history", [])) if isinstance(e.get("history"), list) else (e.get("history") or '[]')
+                db.execute(
+                    """UPDATE exam_results SET
+                       score = ?, attempts = ?, best_score = ?, history = ?
+                       WHERE user_id = ? AND module_id = ?""",
+                    (
+                        e.get("score") or 0.0, e.get("attempts") or 1, e.get("best_score") or 0.0,
+                        history_val, user_id, e["module_id"]
+                    )
+                )
+            except Exception:
+                pass
+                
+    # Restore complaints (prevent duplicates)
+    complaints = data.get("complaints", [])
+    for c in complaints:
+        try:
+            # Check for existing duplicate complaint to avoid duplicate rows
+            existing = db.execute(
+                "SELECT id FROM complaints WHERE user_id = ? AND subject = ? AND message = ?",
+                (user_id, c["subject"], c["message"])
+            ).fetchone()
+            if not existing:
+                db.execute(
+                    """INSERT INTO complaints 
+                       (user_id, subject, message, status, admin_response, created_at, resolved_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        user_id, c["subject"], c["message"], c.get("status", "pending"),
+                        c.get("admin_response"), c.get("created_at"), c.get("resolved_at")
+                    )
+                )
+        except Exception:
+            pass
+            
+    # Restore notifications (prevent duplicates)
+    notifications = data.get("notifications", [])
+    for n in notifications:
+        try:
+            existing = db.execute(
+                "SELECT id FROM notifications WHERE user_id = ? AND message = ?",
+                (user_id, n["message"])
+            ).fetchone()
+            if not existing:
+                db.execute(
+                    """INSERT INTO notifications 
+                       (user_id, message, is_read, created_at)
+                       VALUES (?, ?, ?, ?)""",
+                    (
+                        user_id, n["message"], n.get("is_read", 0), n.get("created_at")
+                    )
+                )
+        except Exception:
+            pass
+            
+    db.commit()
+    return jsonify({"status": "success", "message": "User data restored successfully"})
+

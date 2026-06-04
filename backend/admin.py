@@ -310,7 +310,7 @@ def respond_complaint(complaint_id):
                 db = get_db()
                 db.execute(
                     "INSERT INTO notifications (user_id, message) VALUES (?, ?)",
-                    (complaint.user_id, f"An administrator has responded to your complaint: '{complaint.subject}'")
+                    (complaint.user_id, f"An administrator has responded to your complaint '{complaint.subject}': '{response}'")
                 )
                 db.commit()
             except Exception as e:

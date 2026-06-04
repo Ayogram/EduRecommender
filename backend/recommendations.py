@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from engine.hybrid import get_recommendations, evaluate
 from models.user import User
 from models.course import Course
-from models.database import get_db
+from models.database import get_db, ensure_enrollment
 
 recs_bp = Blueprint("recommendations", __name__)
 
@@ -137,10 +137,7 @@ def course_details(course_id):
         return redirect(url_for('recommendations.browse_courses'))
 
     # Check enrollment
-    enrollment = db.execute(
-        "SELECT * FROM student_courses WHERE user_id = ? AND course_id = ?",
-        (current_user.id, course_id),
-    ).fetchone()
+    enrollment = ensure_enrollment(db, current_user.id, course_id)
 
     return render_template(
         "course_details.html",

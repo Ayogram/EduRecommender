@@ -105,8 +105,12 @@
             {% endif %}
           </a>
           <a href="{{ url_for('complaints.my_complaints') }}" class="{% if request.blueprint == 'complaints' %}active{% endif %}">
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-             Help Desk
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Help Desk
+          </a>
+          <a href="{{ url_for('main.leaderboard') }}" class="{% if request.endpoint == 'main.leaderboard' %}active{% endif %}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>
+              Leaderboard
           </a>
 
           {% if current_user.is_admin %}

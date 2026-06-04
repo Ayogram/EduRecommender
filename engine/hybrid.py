@@ -214,7 +214,8 @@ def get_recommendations(user_id, top_n=10):
     ).fetchone()
     
     gpa = float(user_row["gpa"] or 0.0) if user_row else 0.0
-    gpa_factor = min(gpa / 4.0, 1.0)
+    gpa_scale = 5.0 if gpa > 4.0 else 4.0
+    gpa_factor = min(gpa / gpa_scale, 1.0)
     user_dept = user_row["department"] if user_row else None
     user_field = user_row["academic_field"] if user_row else None
     try:
@@ -319,16 +320,45 @@ def get_recommendations(user_id, top_n=10):
         # Add a tiny deterministic factor to ensure no duplicate match percentages
         success_prob += (course_id % 7) * 0.005
 
-        # Penalty / Boost
-        if course_row["difficulty"] == "advanced" and gpa < 2.5:
-            success_prob -= 0.10
-        elif course_row["difficulty"] == "beginner" and gpa >= 3.5:
-            success_prob += 0.05
+        # CGPA-based difficulty adjustments
+        difficulty_adjust = 0.0
+        if gpa >= (3.5 if gpa_scale == 4.0 else 4.25):
+            if course_row["difficulty"] == "advanced":
+                difficulty_adjust = 0.35
+            elif course_row["difficulty"] == "intermediate":
+                difficulty_adjust = 0.20
+            elif course_row["difficulty"] == "beginner":
+                difficulty_adjust = -0.25
+        elif gpa >= (3.0 if gpa_scale == 4.0 else 3.75):
+            if course_row["difficulty"] == "advanced":
+                difficulty_adjust = 0.15
+            elif course_row["difficulty"] == "intermediate":
+                difficulty_adjust = 0.10
+            elif course_row["difficulty"] == "beginner":
+                difficulty_adjust = -0.05
+        elif gpa >= (2.0 if gpa_scale == 4.0 else 2.5):
+            if course_row["difficulty"] == "beginner":
+                difficulty_adjust = 0.20
+            elif course_row["difficulty"] == "intermediate":
+                difficulty_adjust = 0.05
+            elif course_row["difficulty"] == "advanced":
+                difficulty_adjust = -0.25
+        else:
+            if course_row["difficulty"] == "beginner":
+                difficulty_adjust = 0.35
+            elif course_row["difficulty"] == "intermediate":
+                difficulty_adjust = -0.25
+            elif course_row["difficulty"] == "advanced":
+                difficulty_adjust = -0.45
+        success_prob += difficulty_adjust
 
         # Historical boost
         dept_perf = dept_performance_map.get(course_row["department"], 0.0)
         success_prob += dept_perf * 0.15
 
+        # Calculate raw success probability for fine-grained sorting
+        success_prob_raw = success_prob
+        
         # Cap the probability logically between 25% and 98%
         success_prob = round(min(0.98, max(0.25, success_prob)), 4)
 
@@ -343,13 +373,14 @@ def get_recommendations(user_id, top_n=10):
             "difficulty": course_row["difficulty"],
             "tags": json.loads(course_row["tags"]) if course_row["tags"] else [],
             "score": round(score, 4),
+            "success_probability_raw": success_prob_raw,
             "success_probability": round(success_prob, 4),
             "explanation": "",  # Filled in comparatively after sorting
             "method": method,
         })
 
-    # Sort all candidate recommendations by success_probability descending (highest to lowest)
-    candidates_sorted = sorted(candidates, key=lambda x: x["success_probability"], reverse=True)
+    # Sort all candidate recommendations by success_probability_raw descending and then content score descending
+    candidates_sorted = sorted(candidates, key=lambda x: (x["success_probability_raw"], x["score"]), reverse=True)
     
     # Take top N
     top_candidates = candidates_sorted[:top_n]
@@ -641,10 +672,32 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
     gpa_boost = gpa_factor * 0.20
     
     difficulty_adjust = 0.0
-    if course_difficulty == "advanced" and gpa < 2.5:
-        difficulty_adjust = -0.10
-    elif course_difficulty == "beginner" and gpa >= 3.5:
-        difficulty_adjust = 0.05
+    if gpa >= 3.5:
+        if course_difficulty == "advanced":
+            difficulty_adjust = 0.25
+        elif course_difficulty == "intermediate":
+            difficulty_adjust = 0.12
+        elif course_difficulty == "beginner":
+            difficulty_adjust = -0.15
+    elif gpa >= 3.0:
+        if course_difficulty == "advanced":
+            difficulty_adjust = 0.05
+        elif course_difficulty == "intermediate":
+            difficulty_adjust = 0.05
+    elif gpa >= 2.0:
+        if course_difficulty == "beginner":
+            difficulty_adjust = 0.15
+        elif course_difficulty == "intermediate":
+            difficulty_adjust = 0.02
+        elif course_difficulty == "advanced":
+            difficulty_adjust = -0.20
+    else:
+        if course_difficulty == "beginner":
+            difficulty_adjust = 0.20
+        elif course_difficulty == "intermediate":
+            difficulty_adjust = -0.15
+        elif course_difficulty == "advanced":
+            difficulty_adjust = -0.35
         
     # 5. Academic History & Department matching
     dept_boost = 0.0

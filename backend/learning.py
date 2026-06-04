@@ -4,7 +4,7 @@ Learning blueprint – handles course modules, lessons, and AI-driven classroom 
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from models.database import get_db
+from models.database import get_db, ensure_enrollment
 import json
 import urllib.request
 import urllib.parse
@@ -111,10 +111,7 @@ def view_lesson(course_id, module_id):
     db = get_db()
     
     # 1. Check enrollment
-    enrollment = db.execute(
-        "SELECT * FROM student_courses WHERE user_id = ? AND course_id = ?",
-        (current_user.id, course_id)
-    ).fetchone()
+    enrollment = ensure_enrollment(db, current_user.id, course_id)
     
     if not enrollment:
         flash("Please enroll in the course to start learning.", "warning")
@@ -329,6 +326,62 @@ def download_syllabus(course_id):
     response.headers["Content-Disposition"] = f"attachment; filename=syllabus_{clean_title}.txt"
     return response
 
+@learning_bp.route("/module/<int:module_id>/quiz-preview")
+@login_required
+def quiz_preview(module_id):
+    db = get_db()
+    module = db.execute("SELECT * FROM course_modules WHERE id = ?", (module_id,)).fetchone()
+    if not module:
+        flash("Module not found.", "error")
+        return redirect(url_for('main.dashboard'))
+        
+    course_id = module['course_id']
+    course = db.execute("SELECT * FROM courses WHERE id = ?", (course_id,)).fetchone()
+    
+    enrollment = ensure_enrollment(db, current_user.id, course_id)
+    if not enrollment:
+        flash("Please enroll in this course before taking assessments.", "warning")
+        return redirect(url_for('recommendations.course_details', course_id=course_id))
+        
+    exam = db.execute("SELECT * FROM module_exams WHERE module_id = ?", (module_id,)).fetchone()
+    if not exam:
+        from engine.tutor import TutorEngine
+        tutor = TutorEngine()
+        # Fetch actual lessons to align MCQ generation with lesson videos
+        lessons_rows = db.execute(
+            "SELECT title, video_url FROM module_lessons WHERE module_id = ? ORDER BY sort_order",
+            (module_id,)
+        ).fetchall()
+        lessons_list = [dict(l) for l in lessons_rows]
+        questions = tutor.generate_mcqs(course['title'], module['title'], lessons_info=lessons_list)
+        db.execute(
+            "INSERT INTO module_exams (module_id, questions) VALUES (?, ?)",
+            (module_id, json.dumps(questions))
+        )
+        db.commit()
+        exam = db.execute("SELECT * FROM module_exams WHERE module_id = ?", (module_id,)).fetchone()
+
+    questions = json.loads(exam['questions'])
+    question_count = len(questions)
+    time_limit = question_count * 2
+    
+    result = db.execute(
+        "SELECT attempts, best_score FROM exam_results WHERE user_id = ? AND module_id = ?",
+        (current_user.id, module_id)
+    ).fetchone()
+    attempts = result['attempts'] if result else 0
+    best_score = result['best_score'] if result else None
+    
+    return render_template(
+        "learning/quiz_preview.html",
+        module=module,
+        course=course,
+        question_count=question_count,
+        time_limit=time_limit,
+        attempts=attempts,
+        best_score=best_score
+    )
+
 @learning_bp.route("/module/<int:module_id>/exam")
 @login_required
 def start_exam(module_id):
@@ -391,9 +444,12 @@ def submit_exam(module_id):
         (current_user.id, module_id)
     ).fetchone()
     
+    from datetime import datetime
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+    
     if existing:
         history = json.loads(existing['history'])
-        history.append({"score": percentage, "date": "today"}) # simplifying date
+        history.append({"score": percentage, "date": now_str})
         best = max(existing['best_score'], percentage)
         db.execute(
             "UPDATE exam_results SET score = ?, attempts = attempts + 1, best_score = ?, history = ? WHERE id = ?",
@@ -404,7 +460,7 @@ def submit_exam(module_id):
     else:
         db.execute(
             "INSERT INTO exam_results (user_id, module_id, score, best_score, history) VALUES (?, ?, ?, ?, ?)",
-            (current_user.id, module_id, percentage, percentage, json.dumps([{"score": percentage, "date": "today"}]))
+            (current_user.id, module_id, percentage, percentage, json.dumps([{"score": percentage, "date": now_str}]))
         )
         attempts = 1
         best_score = percentage

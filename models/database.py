@@ -16,6 +16,47 @@ try:
 except ImportError:
     HAS_PSYCOPG2 = False
 
+# Safe timestamp converter to prevent sqlite3 ValueError: too many values to unpack (expected 2)
+# on Vercel environment where backup restores can write ISO-8601 strings (containing "T").
+def convert_timestamp_safe(val):
+    if not val:
+        return None
+    try:
+        val_str = val.decode('utf-8').strip()
+        # Clean timezone indicators
+        clean_val = val_str.replace('Z', '').split('+')[0]
+        
+        # Try split by space or 'T'
+        for separator in (' ', 'T'):
+            if separator in clean_val:
+                parts = clean_val.split(separator)
+                if len(parts) == 2:
+                    date_part, time_part = parts
+                    import datetime
+                    time_fmt = '%H:%M:%S.%f' if '.' in time_part else '%H:%M:%S'
+                    try:
+                        return datetime.datetime.strptime(f"{date_part} {time_part}", f"%Y-%m-%d {time_fmt}")
+                    except ValueError:
+                        continue
+        
+        # Fallback to general parsing
+        import datetime
+        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%S.%f', '%Y-%m-%d'):
+            try:
+                return datetime.datetime.strptime(clean_val.split('.')[0], fmt)
+            except ValueError:
+                continue
+                
+        return val_str
+    except Exception:
+        try:
+            return val.decode('utf-8', errors='ignore')
+        except Exception:
+            return str(val)
+
+sqlite3.register_converter("timestamp", convert_timestamp_safe)
+sqlite3.register_converter("TIMESTAMP", convert_timestamp_safe)
+
 # ── Schema DDL ──────────────────────────────────────────────────────────────
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -225,3 +266,29 @@ def init_db():
 def init_app(app):
     """Register teardown and CLI hooks."""
     app.teardown_appcontext(close_db)
+
+
+def ensure_enrollment(db, user_id, course_id):
+    """Ensure user is enrolled in the database if they are in the session's enrolled list."""
+    enrollment = db.execute(
+        "SELECT * FROM student_courses WHERE user_id = ? AND course_id = ?",
+        (user_id, course_id)
+    ).fetchone()
+    if not enrollment:
+        from flask import session
+        enrolled_session = session.get('enrolled_courses', [])
+        if enrolled_session and course_id in enrolled_session:
+            try:
+                db.execute(
+                    "INSERT OR IGNORE INTO student_courses (user_id, course_id) VALUES (?, ?)",
+                    (user_id, course_id)
+                )
+                db.commit()
+                enrollment = db.execute(
+                    "SELECT * FROM student_courses WHERE user_id = ? AND course_id = ?",
+                    (user_id, course_id)
+                ).fetchone()
+            except Exception as e:
+                print(f"Error auto-healing enrollment record for course {course_id}: {e}", flush=True)
+    return enrollment
+

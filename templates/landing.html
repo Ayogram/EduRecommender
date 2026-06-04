@@ -568,29 +568,16 @@
           <div class="form-group">
             <label>Field of Study</label>
             <select id="sim-dept" class="form-select" onchange="updateSuggestedInterests()">
-              <option value="Computer Science">Computer Science</option>
-              <option value="Information and Computer Engineering">Information and Computer Engineering</option>
-              <option value="Mechanical Engineering">Mechanical Engineering</option>
-              <option value="Petroleum Engineering">Petroleum Engineering</option>
-              <option value="Electrical Engineering">Electrical Engineering</option>
-              <option value="Industrial Mathematics">Industrial Mathematics</option>
-              <option value="Industrial Physics">Industrial Physics</option>
-              <option value="Psychology">Psychology</option>
-              <option value="Economics">Economics</option>
-              <option value="Fintech">Fintech</option>
-              <option value="Law">Law</option>
-              <option value="Medicine">Medicine</option>
-              <option value="Business Administration">Business Administration</option>
-              <option value="Accounting">Accounting</option>
-              <option value="Arts">Arts</option>
-              <option value="Social Sciences">Social Sciences</option>
-              <option value="Others">Others</option>
+              <option value="" disabled selected>Select Field of Study</option>
+              {% for field in fields_map.keys() %}
+              <option value="{{ field }}">{{ field }}</option>
+              {% endfor %}
             </select>
           </div>
 
           <div class="form-group">
-            <label>Simulated GPA: <span id="gpa-label" style="color: var(--accent); font-weight:700;">4.0</span></label>
-            <input type="range" id="sim-gpa" class="form-range" min="0.0" max="5.0" step="0.1" value="4.0" oninput="document.getElementById('gpa-label').innerText = this.value">
+            <label>Simulated GPA: <span id="gpa-label" style="color: var(--accent); font-weight:700;">0.0</span></label>
+            <input type="range" id="sim-gpa" class="form-range" min="0.0" max="5.0" step="0.1" value="0.0" oninput="document.getElementById('gpa-label').innerText = this.value">
           </div>
 
           <div class="form-group">
@@ -621,6 +608,8 @@
       </div>
     </div>
   </section>
+
+
 
   <!-- Features -->
   <section class="features-section" id="features">
@@ -665,82 +654,7 @@
   </footer>
 
   <script>
-    const interestsMap = {
-      "Computer Science": [
-        "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", 
-        "Cloud Computing", "Web Development", "Machine Learning", "Database Management", 
-        "Networks & Distributed Systems", "Algorithms & Data Structures"
-      ],
-      "Information and Computer Engineering": [
-        "Software Engineering", "Computer Architecture", "Computer Networks", "Database Management", "Embedded Systems", 
-        "Information Security", "System Architecture", "VLSI Design", "Digital Signal Processing", "Operating Systems"
-      ],
-      "Mechanical Engineering": [
-        "Fluid Mechanics", "Thermodynamics", "Machine Design", "Materials Science", "CAD/CAM", 
-        "Manufacturing Processes", "Control Systems", "Heat Transfer", "Solid Mechanics", "Robotics"
-      ],
-      "Petroleum Engineering": [
-        "Drilling Engineering", "Reservoir Engineering", "Production Engineering", "Petrophysics", "Geology", 
-        "Well Logging", "Enhanced Oil Recovery", "Natural Gas Engineering", "Offshore Drilling", "Reservoir Simulation"
-      ],
-      "Electrical Engineering": [
-        "AC/DC Circuits", "Electromagnetism", "Power Systems", "Control Systems", "Signal Processing", 
-        "Digital Electronics", "Power Electronics", "Analog Circuits", "Renewable Energy Systems", "High Voltage Engineering"
-      ],
-      "Industrial Mathematics": [
-        "Calculus", "Linear Algebra", "Numerical Analysis", "Operations Research", "Probability & Statistics", 
-        "Mathematical Modeling", "Differential Equations", "Optimization Theory", "Data Analytics", "Financial Mathematics"
-      ],
-      "Industrial Physics": [
-        "Thermodynamics", "Quantum Mechanics", "Electromagnetism", "Optics", "Fluid Dynamics", 
-        "Solid State Physics", "Laser Physics", "Materials Physics", "Acoustics", "Nuclear Physics"
-      ],
-      "Psychology": [
-        "Clinical Psychology", "Cognitive Psychology", "Behavioral Analysis", "Social Psychology", "Neuropsychology", 
-        "Developmental Psychology", "Psychopathology", "Research Methods", "Organizational Psychology", "Forensic Psychology"
-      ],
-      "Economics": [
-        "Microeconomics", "Macroeconomics", "Econometrics", "Behavioral Economics", "Development Economics", 
-        "Financial Markets", "International Economics", "Public Economics", "Game Theory", "Environmental Economics"
-      ],
-      "Fintech": [
-        "Blockchain & Crypto", "Quantitative Finance", "Algorithmic Trading", "Risk Management", "Data Analytics in Finance", 
-        "Financial Regulation", "Machine Learning in Finance", "Payment Systems", "Digital Banking", "Financial Technology Innovation"
-      ],
-      "Law": [
-        "Criminal Law", "Corporate Law", "International Law", "Human Rights", 
-        "Constitutional Law", "IP Law", "Civil Rights", "Legal Writing", 
-        "Advocacy", "Arbitration & Dispute Resolution"
-      ],
-      "Medicine": [
-        "Surgery", "Pediatrics", "Pharmacology", "Anatomy", 
-        "Neurology", "Psychiatry", "Public Health", "Genetics", 
-        "Medical Ethics", "Clinical Research"
-      ],
-      "Business Administration": [
-        "Management", "Marketing", "Entrepreneurship", "Human Resources", 
-        "Supply Chain", "Business Ethics", "Strategic Planning", "Financial Management", 
-        "Corporate Governance", "Operations Management"
-      ],
-      "Accounting": [
-        "Financial Accounting", "Audit", "Taxation", "Management Accounting", 
-        "Forensic Accounting", "Corporate Finance", "Financial Reporting", "Risk Management"
-      ],
-      "Arts": [
-        "Fine Arts", "Graphic Design", "History of Art", "Music Theory", 
-        "Visual Communication", "Creative Writing", "Photography", "Digital Illustration", 
-        "Animation"
-      ],
-      "Social Sciences": [
-        "Psychology", "Sociology", "Political Science", "Economics", 
-        "Anthropology", "International Relations", "Criminology", "Media Studies"
-      ],
-      "Others": [
-        "Mathematics", "Physics", "Chemistry", "Biology", 
-        "Environmental Science", "Architecture", "Education", "Statistics", 
-        "Research Methodology"
-      ]
-    };
+    const interestsMap = {{ fields_map|tojson|safe }};
 
     const coursePool = {
       "Computer Science": [
@@ -852,6 +766,10 @@
     function runSimulation() {
       const out = document.getElementById("sim-output");
       const dept = document.getElementById("sim-dept").value;
+      if (!dept) {
+        out.innerHTML = `<div class="sim-empty-state"><i class="fa-solid fa-circle-exclamation" style="color:#dc2626;"></i><p style="font-size:0.82rem;color:#dc2626;font-weight:600;margin-top:8px;">Please select a Field of Study first.</p></div>`;
+        return;
+      }
       const gpa = parseFloat(document.getElementById("sim-gpa").value);
 
       // Render the loader structure
@@ -920,8 +838,13 @@
       }, 1900);
     }
 
-    // Initialize
-    updateSuggestedInterests();
+    // Initialize & Force Reset
+    window.addEventListener('load', () => {
+      document.getElementById("sim-dept").value = "";
+      document.getElementById("sim-gpa").value = "0.0";
+      document.getElementById("gpa-label").innerText = "0.0";
+      updateSuggestedInterests();
+    });
   </script>
 </body>
 </html>

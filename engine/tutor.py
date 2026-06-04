@@ -1403,9 +1403,9 @@ Prepare your final thesis/project application by applying all concepts learned a
             
         return final_lessons
 
-    def generate_mcqs(self, course_title, module_title):
+    def generate_mcqs(self, course_title, module_title, lessons_info=None):
         """
-        Generates 30 MCQ questions tailored to the course and module.
+        Generates 30 MCQ questions tailored to the course and module, referencing watched videos.
         """
         category = self._determine_category(course_title, module_title)
         
@@ -1426,13 +1426,27 @@ Prepare your final thesis/project application by applying all concepts learned a
         final_questions = []
         
         # We have 15 concepts. We generate 2 questions per concept to make exactly 30 questions!
-        for name, definition in concepts:
-            # Question 1: Term to Definition
-            q_text_1 = f"Based on the video tutorial and course content for '{course_title}', which of the following best defines the concept of '{name}'?"
+        for idx, (name, definition) in enumerate(concepts):
+            # Map index to associated lesson reference
+            if lessons_info and len(lessons_info) > 0:
+                lesson_idx = min(idx // 5, len(lessons_info) - 1)
+                lesson_title = lessons_info[lesson_idx]["title"]
+                lesson_ref = f"video tutorial for '{lesson_title}'"
+            else:
+                lesson_ref = f"video lecture on '{course_title}'"
+
+            # Phrasing options to make it sound like the AI watched it
+            phrasings_1 = [
+                f"In the {lesson_ref}, what core definition is given for the concept of '{name}'?",
+                f"Based on the explanation in the {lesson_ref}, which of the following best defines '{name}'?",
+                f"The instructor in the {lesson_ref} highlights '{name}' as having which of these characteristics?",
+                f"During the {lesson_ref}, how was '{name}' defined in the context of this module?"
+            ]
+            q_text_1 = random.choice(phrasings_1)
             
             # Select 3 distractors (definitions of other concepts in the same module)
             other_concepts = [c for c in concepts if c[0] != name]
-            distractor_concepts = random.sample(other_concepts, 3)
+            distractor_concepts = random.sample(other_concepts, min(3, len(other_concepts)))
             distractor_defs = [c[1] for c in distractor_concepts]
             
             options_1 = [definition] + distractor_defs
@@ -1444,8 +1458,13 @@ Prepare your final thesis/project application by applying all concepts learned a
                 "correct_answer": definition
             })
             
-            # Question 2: Definition to Term
-            q_text_2 = f"In the video lecture, a key concept was explained as: '{definition}'. Which academic term corresponds to this explanation?"
+            phrasings_2 = [
+                f"The {lesson_ref} introduced a key term defined as: '{definition}'. What is this term?",
+                f"In the {lesson_ref}, the speaker detailed a concept as: '{definition}'. Which academic term is this?",
+                f"Which concept was characterized in the {lesson_ref} as: '{definition}'?",
+                f"According to the {lesson_ref}, which of the following terms matches the definition: '{definition}'?"
+            ]
+            q_text_2 = random.choice(phrasings_2)
             
             distractor_names = [c[0] for c in distractor_concepts]
             options_2 = [name] + distractor_names

@@ -52,7 +52,7 @@
             {% endfor %}
             
             {% set quiz_week = mod.sort_order * 4 %}
-            <a href="{{ url_for('learning.start_exam', module_id=mod.id) }}" class="lesson-item p-3 px-5 d-flex align-items-center gap-3 bg-soft-warning text-decoration-none">
+            <a href="{{ url_for('learning.quiz_preview', module_id=mod.id) }}" class="lesson-item p-3 px-5 d-flex align-items-center gap-3 bg-soft-warning text-decoration-none">
               <i class="fas fa-file-alt text-warning"></i>
               <span class="small fw-bold text-dark">Week {{ quiz_week }}: Take Module Quiz</span>
             </a>
@@ -132,7 +132,7 @@
                  Next Lesson <i class="fas fa-arrow-right"></i>
                </a>
              {% else %}
-               <a href="{{ url_for('learning.start_exam', module_id=module.id) }}" class="btn btn-warning px-5 rounded-pill fw-bold shadow-sm text-dark" style="display:inline-flex;align-items:center;gap:6px;">
+               <a href="{{ url_for('learning.quiz_preview', module_id=module.id) }}" class="btn btn-warning px-5 rounded-pill fw-bold shadow-sm text-dark" style="display:inline-flex;align-items:center;gap:6px;">
                  Take Module Quiz <i class="fas fa-graduation-cap"></i>
                </a>
              {% endif %}

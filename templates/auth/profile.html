@@ -21,8 +21,8 @@
               <img src="{{ current_user.profile_picture }}" id="avatar-preview" class="profile-avatar-img">
             {% else %}
               <div id="avatar-initials" class="profile-avatar-initials">
-                {% set name_parts = current_user.name.split() %}
-                {{ name_parts[0][0]|upper if name_parts|length > 0 else 'U' }}{{ name_parts[1][0]|upper if name_parts|length > 1 else '' }}
+                {% set name_parts = current_user.name.split() if current_user.name else ['Student'] %}
+                {{ name_parts[0][0]|upper if name_parts|length > 0 else 'S' }}{{ name_parts[1][0]|upper if name_parts|length > 1 else '' }}
               </div>
             {% endif %}
             <button class="avatar-edit-overlay" onclick="document.getElementById('avatar-input').click();">
@@ -32,7 +32,7 @@
         </div>
         <div class="card-body text-center pt-5 pb-4">
           <h3 class="fw-bold mb-1">{{ current_user.name }}</h3>
-          <p class="text-muted small mb-4">@{{ current_user.nickname or current_user.name.split(' ')[0]|lower }}</p>
+          <p class="text-muted small mb-4">@{{ current_user.nickname or (current_user.name.split(' ')[0]|lower if current_user.name else 'student') }}</p>
           
           <div class="d-flex justify-content-center gap-2 mb-4">
             <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill d-flex align-items-center">

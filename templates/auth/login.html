@@ -85,6 +85,39 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+
+  // Public state self-healing database recovery for Vercel (restores user row on login page load)
+  (function() {
+    console.log("Checking for local backups to self-heal the database...");
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('user_backup_')) {
+        const backupStr = localStorage.getItem(key);
+        if (backupStr) {
+          try {
+            const backup = JSON.parse(backupStr);
+            if (backup && backup.email) {
+              console.log("Restoring user profile for " + backup.email + " before login...");
+              fetch('/api/public-sync-restore', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(backup)
+              }).then(resp => {
+                if (resp.ok) {
+                  console.log("User profile restored successfully for " + backup.email);
+                }
+              }).catch(err => console.error("Restore error:", err));
+            }
+          } catch (e) {
+            console.error("Backup parse error:", e);
+          }
+        }
+      }
+    }
+  })();
 });
 </script>
 {% endblock %}

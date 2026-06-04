@@ -61,91 +61,85 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        from models.user import User
-        from flask import session
-        import json
-        
-        user = User.get_by_id(int(user_id))
-        
-        # Prevent DB-reset crossover: if ID exists but email doesn't match the secure cookie, ignore it
-        if user and session.get('user_email') and user.email != session.get('user_email'):
-            user = None
+        try:
+            from models.user import User
+            from flask import session
+            import json
             
-        # If the ephemeral SQLite database was wiped on Vercel cold-start,
-        # but the secure signed session cookie is present, auto-restore the user
-        if not user and session.get('user_email'):
-            # First check if they exist by email or google_id under a different ID in the new DB
-            user = User.get_by_email(session.get('user_email'))
-            if not user and session.get('user_google_id'):
-                user = User.get_by_google_id(session.get('user_google_id'))
+            try:
+                uid = int(user_id)
+                user = User.get_by_id(uid)
+            except (ValueError, TypeError):
+                user = None
+            
+            # Prevent DB-reset crossover: if ID exists but email doesn't match the secure cookie, ignore it
+            if user and session.get('user_email') and user.email != session.get('user_email'):
+                user = None
                 
-            if user:
-                # Update session to point to the correct, restored user ID
-                session['_user_id'] = str(user.id)
-            else:
-                interests_raw = session.get('user_interests', [])
-                if isinstance(interests_raw, str):
-                    try:
-                        interests_list = json.loads(interests_raw)
-                    except Exception:
-                        interests_list = []
-                else:
-                    interests_list = list(interests_raw) if interests_raw else []
-
-                # Re-create the user in the database
-                user = User.create(
-                    name=session.get('user_name'),
-                    email=session.get('user_email'),
-                    google_id=session.get('user_google_id'),
-                    profile_picture=session.get('user_profile_picture'),
-                    role=session.get('user_role', 'user'),
-                    interests=interests_list,
-                    academic_field=session.get('user_academic_field'),
-                    department=session.get('user_department'),
-                    is_verified=1
-                )
-                # Re-fetch user to get the full object with generated ID
+            # If the ephemeral SQLite database was wiped on Vercel cold-start,
+            # but the secure signed session cookie is present, auto-restore the user
+            if not user and session.get('user_email'):
+                # First check if they exist by email or google_id under a different ID in the new DB
                 user = User.get_by_email(session.get('user_email'))
-                
+                if not user and session.get('user_google_id'):
+                    user = User.get_by_google_id(session.get('user_google_id'))
+                    
                 if user:
                     # Update session to point to the correct, restored user ID
                     session['_user_id'] = str(user.id)
-                    
-                    # Restore GPA, nickname, profile_completed flag, and past_grades
-                    from models.database import get_db
-                    db = get_db()
-                    past_grades_raw = session.get('user_past_grades', {})
-                    past_grades_val = json.dumps(past_grades_raw) if isinstance(past_grades_raw, dict) else (past_grades_raw or '{}')
-                    db.execute(
-                        "UPDATE users SET gpa = ?, nickname = ?, profile_completed = ?, past_grades = ? WHERE id = ?",
-                        (
-                            session.get('user_gpa', 0.0),
-                            session.get('user_nickname'),
-                            session.get('user_profile_completed', 0),
-                            past_grades_val,
-                            user.id
-                        )
-                    )
-                    db.commit()
-                    # Re-fetch again
-                    user = User.get_by_id(user.id)
-                    
-                # Restore course enrollments if saved in session
-                enrolled_ids = session.get('enrolled_courses', [])
-                if user and enrolled_ids:
-                    from models.database import get_db
-                    db = get_db()
-                    for c_id in enrolled_ids:
+                else:
+                    interests_raw = session.get('user_interests', [])
+                    if isinstance(interests_raw, str):
                         try:
-                            db.execute(
-                                "INSERT OR IGNORE INTO student_courses (user_id, course_id, enrolled_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
-                                (user.id, c_id)
-                            )
+                            interests_list = json.loads(interests_raw)
                         except Exception:
-                            pass
-                    db.commit()
+                            interests_list = []
+                    else:
+                        interests_list = list(interests_raw) if interests_raw else []
 
-        return user
+                    # Re-create the user in the database
+                    user = User.create(
+                        name=session.get('user_name') or session.get('user_email').split('@')[0],
+                        email=session.get('user_email'),
+                        google_id=session.get('user_google_id'),
+                        profile_picture=session.get('user_profile_picture'),
+                        role=session.get('user_role', 'user'),
+                        interests=interests_list,
+                        academic_field=session.get('user_academic_field'),
+                        department=session.get('user_department'),
+                        is_verified=1
+                    )
+                    # Re-fetch user to get the full object with generated ID
+                    user = User.get_by_email(session.get('user_email'))
+                    
+                    if user:
+                        # Update session to point to the correct, restored user ID
+                        session['_user_id'] = str(user.id)
+                        
+                        # Restore GPA, nickname, profile_completed flag, and past_grades
+                        from models.database import get_db
+                        db = get_db()
+                        past_grades_raw = session.get('user_past_grades', {})
+                        past_grades_val = json.dumps(past_grades_raw) if isinstance(past_grades_raw, dict) else (past_grades_raw or '{}')
+                        db.execute(
+                            "UPDATE users SET gpa = ?, nickname = ?, profile_completed = ?, past_grades = ? WHERE id = ?",
+                            (
+                                session.get('user_gpa', 0.0),
+                                session.get('user_nickname'),
+                                session.get('user_profile_completed', 0),
+                                past_grades_val,
+                                user.id
+                            )
+                        )
+                        db.commit()
+                        # Re-fetch again
+                        user = User.get_by_id(user.id)
+            return user
+        except Exception as e:
+            import traceback
+            import logging
+            logging.error(f"CRITICAL error in load_user: {e}\n{traceback.format_exc()}")
+            return None
 
     # ── Register Blueprints ─────────────────────────────────────
     from backend.auth import auth_bp, init_oauth
@@ -210,7 +204,20 @@ def create_app():
 
     @main_bp.route("/")
     def index():
-        return render_template("landing.html")
+        from models.database import get_db
+        import json
+        db = get_db()
+        all_courses = db.execute("SELECT * FROM courses ORDER BY title ASC").fetchall()
+        
+        # Load fields map from database JSON file
+        fields_file = os.path.join(app.root_path, "database", "fields_and_interests.json")
+        try:
+            with open(fields_file, "r") as f:
+                fields_map = json.load(f)
+        except Exception:
+            fields_map = {}
+            
+        return render_template("landing.html", all_courses=all_courses, fields_map=fields_map)
 
     @main_bp.route("/architecture")
     @login_required
@@ -286,6 +293,32 @@ def create_app():
         for n in user_notifications:
             Notification.mark_as_read(n.id)
         return render_template("notifications.html", notifications=user_notifications)
+
+    @main_bp.route("/leaderboard")
+    @login_required
+    def leaderboard():
+        db = get_db()
+        # Query students ranked by average best_score
+        rankings = db.execute(
+            """SELECT u.id, u.name, u.nickname, u.academic_field, u.department, u.profile_picture,
+                      COUNT(er.id) as exams_taken,
+                      AVG(er.best_score) as avg_score
+               FROM users u
+               LEFT JOIN exam_results er ON u.id = er.user_id
+               WHERE u.role = 'user'
+               GROUP BY u.id, u.name, u.nickname, u.academic_field, u.department, u.profile_picture
+               ORDER BY COALESCE(AVG(er.best_score), 0) DESC, exams_taken DESC"""
+        ).fetchall()
+        
+        # Convert to list of dicts and calculate rank
+        ranking_list = []
+        for i, row in enumerate(rankings):
+            d = dict(row)
+            d['rank'] = i + 1
+            d['avg_score'] = round(d['avg_score'], 1) if d['avg_score'] is not None else 0.0
+            ranking_list.append(d)
+            
+        return render_template("leaderboard.html", rankings=ranking_list)
 
     @main_bp.route("/api/dashboard")
     def api_dashboard():
@@ -535,6 +568,11 @@ def create_app():
 
     @app.errorhandler(500)
     def internal_error(e):
+        import traceback
+        import logging
+        tb = traceback.format_exc()
+        logging.error(f"500 Internal Server Error: {e}\n{tb}")
+        print(f"500 Internal Server Error: {e}\n{tb}", flush=True)
         return render_template("errors/500.html"), 500
 
     return app
