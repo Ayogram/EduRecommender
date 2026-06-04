@@ -32,6 +32,7 @@ def save_user_to_session(user):
     session['user_gpa'] = user.gpa
     session['user_interests'] = user.interests
     session['user_profile_completed'] = getattr(user, 'profile_completed', 0)
+    session['user_past_grades'] = getattr(user, 'past_grades', {})
     
     # Save enrolled course IDs
     try:

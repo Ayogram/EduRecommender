@@ -279,13 +279,23 @@
           const resp = await fetch('/api/backup-data');
           if (resp.ok) {
             const data = await resp.json();
-            const isServerEmpty = (!data.enrolled || data.enrolled.length === 0) &&
-                                  (!data.exams || data.exams.length === 0) &&
-                                  (!data.complaints || data.complaints.length === 0);
+            const serverUser = data.user || {};
+            const localBackup = localBackupStr ? JSON.parse(localBackupStr) : null;
+            const localUser = localBackup ? (localBackup.user || {}) : {};
 
-            if (isServerEmpty && localBackupStr) {
-              const localBackup = JSON.parse(localBackupStr);
-              console.log("Server database has been reset. Synchronizing from local backup...");
+            const serverHasData = (data.enrolled && data.enrolled.length > 0) ||
+                                  (data.exams && data.exams.length > 0) ||
+                                  (data.complaints && data.complaints.length > 0) ||
+                                  (serverUser.profile_completed === 1);
+
+            const localHasData = localBackup && 
+                                 ((localBackup.enrolled && localBackup.enrolled.length > 0) ||
+                                  (localBackup.exams && localBackup.exams.length > 0) ||
+                                  (localBackup.complaints && localBackup.complaints.length > 0) ||
+                                  (localUser.profile_completed === 1));
+
+            if (!serverHasData && localHasData) {
+              console.log("Server database has been reset or is empty. Synchronizing from local backup...");
               const restoreResp = await fetch('/api/sync-restore', {
                 method: 'POST',
                 headers: {
@@ -298,7 +308,7 @@
                 console.log("Database restore complete. Refreshing...");
                 window.location.reload();
               }
-            } else if (!isServerEmpty) {
+            } else if (serverHasData) {
               localStorage.setItem(backupKey, JSON.stringify(data));
             }
           }

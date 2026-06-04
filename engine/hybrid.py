@@ -138,7 +138,7 @@ def generate_comparative_explanations(candidates, user_dept, user_field, user_in
             next_course = candidates[1]["title"] if len(candidates) > 1 else "other electives"
             why = (
                 f"Top pick for your profile. This course aligns perfectly with your primary interest in {user_field or 'academic field'} "
-                f"and ranks above {next_course} due to a stronger correlation with your academic results and strengths."
+                f"and ranks above {next_course} due to a stronger correlation with your academic results and strengths, indicating high success potential."
             )
         elif rank == 2:
             prev_course = candidates[0]["title"]
@@ -146,18 +146,18 @@ def generate_comparative_explanations(candidates, user_dept, user_field, user_in
             why = (
                 f"Your second pick. This course also matches your technical profile and interests, but ranks slightly below "
                 f"{prev_course} because {prev_course} offers broader alignment with your primary background. It ranks above {next_course} "
-                f"due to stronger alignment with your academic standing."
+                f"due to stronger alignment with your academic standing, representing strong success potential."
             )
         elif rank == 3:
             prev_course = candidates[1]["title"]
             why = (
                 f"Your third pick. Suitable based on your technical strengths, but ranked lower because your academic profile "
-                f"and past grades show closer synergy with the curricula of {prev_course} and {candidates[0]['title']}."
+                f"and past grades show closer synergy with the curricula of {prev_course} and {candidates[0]['title']}. It still shows high success potential."
             )
         else:
             why = (
                 f"A suitable elective choice matching your profile. It is ranked lower because it has lesser direct overlap "
-                f"with your core interests compared to our top three recommendations ({candidates[0]['title']}, {candidates[1]['title']}, {candidates[2]['title']})."
+                f"with your core interests compared to our top three recommendations ({candidates[0]['title']}, {candidates[1]['title']}, {candidates[2]['title']}), though it offers good success potential."
             )
             
         advice = f"This is a {c['credits']}-unit {c['difficulty']} course. Review the prerequisites ({c['prerequisites']}) carefully to ensure you're prepared."
