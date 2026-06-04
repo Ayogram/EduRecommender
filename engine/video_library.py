@@ -122,7 +122,7 @@ LESSON_VIDEO_MAP = {
 
     # ── MANAGEMENT INFORMATION SYSTEMS (MIS) ─────────────────────────────────
     "introduction to management information systems (mis)":
-        "https://www.youtube.com/embed/rN9e8-p56H0",        # MIS Introduction
+        "https://www.youtube.com/embed/f_BYsthkFZo",        # MIS Introduction
     "information systems types: tps, dss, and ess":
         "https://www.youtube.com/embed/YIilZI1KVXY",        # TPS, DSS, ESS Explained
     "data vs information & information quality":
@@ -217,7 +217,7 @@ KEYWORD_VIDEO_MAP = [
 
     # MIS
     (["management information system", "mis", "tps", "dss", "ess"],
-                                                          "https://www.youtube.com/embed/rN9e8-p56H0"),
+                                                          "https://www.youtube.com/embed/f_BYsthkFZo"),
     (["sdlc", "system development life cycle"],           "https://www.youtube.com/embed/i-QyW8D3ei0"),
     (["erp", "enterprise resource", "crm", "supply chain"],
                                                           "https://www.youtube.com/embed/2T_r7RB6pBo"),
@@ -300,7 +300,7 @@ KEYWORD_VIDEO_MAP = [
 CATEGORY_FALLBACKS = {
     "programming":   "https://www.youtube.com/embed/rfscVS0vtbw",
     "dsa":           "https://www.youtube.com/embed/RBSGKlAvoiM",
-    "mis":           "https://www.youtube.com/embed/rN9e8-p56H0",
+    "mis":           "https://www.youtube.com/embed/f_BYsthkFZo",
     "research":      "https://www.youtube.com/embed/nJza2kfI8GU",
     "business":      "https://www.youtube.com/embed/K2P2rRLl1Ik",
     "law":           "https://www.youtube.com/embed/k8GMElKpIcA",

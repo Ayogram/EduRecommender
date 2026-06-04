@@ -251,6 +251,11 @@ def init_db():
     count = db.execute("SELECT COUNT(*) FROM courses").fetchone()[0]
     if count < 500:
         db.execute("DELETE FROM courses")
+        if not db.is_postgres:
+            try:
+                db.execute("DELETE FROM sqlite_sequence WHERE name = 'courses'")
+            except Exception:
+                pass
         db.commit()
         from models.courses_generator import generate_all_courses
         generated_courses = generate_all_courses()
