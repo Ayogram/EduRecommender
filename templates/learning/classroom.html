@@ -39,7 +39,7 @@
             <a href="{{ url_for('learning.view_lesson', course_id=course_id, module_id=mod.id, lesson_id=lesson.id) }}" 
                class="lesson-item p-3 px-5 d-flex align-items-center gap-3 {% if lesson.id == current_lesson.id %}active{% endif %}">
               <div class="status-icon">
-                {% if lesson.id < current_lesson.id %}
+                {% if lesson.sort_order < current_lesson.sort_order %}
                   <i class="fas fa-check-circle text-success"></i>
                 {% elif lesson.id == current_lesson.id %}
                   <i class="fas fa-play-circle text-primary"></i>

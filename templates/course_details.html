@@ -127,12 +127,33 @@
       <div class="card shadow border-0 mb-4 sticky-top" style="top: 20px; z-index: 10;">
         <div class="card-body p-4">
           {% if enrollment %}
-            <div class="text-center mb-4">
+            <div class="text-center mb-3">
               <div class="bg-soft-success rounded-pill d-inline-block px-4 py-2 mb-3">
                 <span class="text-success fw-bold"><i class="fas fa-check-circle me-2"></i> Enrolled</span>
               </div>
               <h5 class="fw-bold mb-1">Your Progress</h5>
-              <p class="small text-muted">You enrolled on {{ enrollment.enrolled_at|date_format('%b %d, %Y') if enrollment.enrolled_at else 'Recent' }}</p>
+              <p class="small text-muted">You enrolled on <span class="local-date" data-utc="{{ enrollment.enrolled_at }}">{{ enrollment.enrolled_at|date_format('%b %d, %Y') if enrollment.enrolled_at else 'Recent' }}</span></p>
+            </div>
+
+            <!-- Real-time progress bar -->
+            {% set prog = enrollment.progress|round|int if enrollment.progress is not none else 0 %}
+            <div class="mb-4">
+              <div class="d-flex justify-content-between small fw-bold mb-1">
+                <span class="text-muted">Overall Progress</span>
+                <span class="text-primary">{{ prog }}%</span>
+              </div>
+              <div class="progress" style="height:10px;border-radius:9999px;">
+                <div class="progress-bar bg-primary" style="width:{{ prog }}%;border-radius:9999px;transition:width 0.6s;"></div>
+              </div>
+            </div>
+
+            <!-- Continue Learning button -->
+            <div class="d-grid mb-4">
+              <a href="{{ url_for('learning.view_lesson', course_id=course.id, module_id=enrollment.current_module_id or 1) }}"
+                 class="btn btn-success btn-lg fw-bold py-3 shadow" style="border-radius:12px;">
+                <i class="fas fa-play-circle me-2"></i>
+                {% if prog > 0 %}Continue Learning{% else %}Start Learning{% endif %}
+              </a>
             </div>
 
             <form action="{{ url_for('recommendations.rate_course', course_id=course.id) }}" method="POST">

@@ -26,7 +26,9 @@
         <div class="complaint-subject">{{ c.subject }}</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <span class="badge badge-{{ c.status }}">{{ c.status }}</span>
-          <span class="complaint-date local-time" data-utc="{{ c.created_at }}">{{ c.created_at }}</span>
+          {% if c.created_at %}
+            <span class="complaint-date local-time" data-utc="{{ c.created_at }}">{{ c.created_at }}</span>
+          {% endif %}
         </div>
       </div>
       <div class="complaint-body">{{ c.message }}</div>
@@ -47,33 +49,4 @@
     </div>
   {% endif %}
 </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll(".local-time").forEach(el => {
-    let utcStr = el.getAttribute("data-utc");
-    if (utcStr) {
-      if (!utcStr.includes('T')) {
-        utcStr = utcStr.replace(' ', 'T');
-      }
-      if (!utcStr.endsWith('Z') && !utcStr.includes('+') && !utcStr.includes('-')) {
-        utcStr += 'Z';
-      }
-      try {
-        const d = new Date(utcStr);
-        if (!isNaN(d.getTime())) {
-          const hours = String(d.getHours()).padStart(2, '0');
-          const minutes = String(d.getMinutes()).padStart(2, '0');
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, '0');
-          const date = String(d.getDate()).padStart(2, '0');
-          el.textContent = `${hours}:${minutes}, ${year}-${month}-${date}`;
-        }
-      } catch(e) {
-        console.error("Error formatting date:", e);
-      }
-    }
-  });
-});
-</script>
 {% endblock %}

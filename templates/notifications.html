@@ -21,10 +21,23 @@
         <div class="notification-list">
           {% for n in notifications %}
             <div class="notification-item p-3 border-bottom {{ 'unread' if n.is_read == 0 else '' }}">
-              <div class="d-flex justify-content-between">
-                <p class="mb-1">{{ n.message }}</p>
-                <span class="small-text text-muted local-time" data-utc="{% if n.created_at %}{{ n.created_at }}{% endif %}">{{ n.created_at|date_format('%H:%M, %Y-%m-%d') if n.created_at else 'Just now' }}</span>
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <p class="mb-1" style="flex:1;">{{ n.message }}</p>
+                {% if n.created_at %}
+                  <span class="small text-muted text-nowrap local-time"
+                        data-utc="{{ n.created_at }}"
+                        style="min-width:160px;text-align:right;">
+                    {{ n.created_at }}
+                  </span>
+                {% else %}
+                  <span class="small text-muted">Just now</span>
+                {% endif %}
               </div>
+              {% if n.is_read == 0 %}
+                <span class="badge bg-primary mt-1" style="font-size:0.65rem;">New</span>
+              {% else %}
+                <span class="badge bg-light text-muted mt-1 border" style="font-size:0.65rem;">Read</span>
+              {% endif %}
             </div>
           {% endfor %}
         </div>
@@ -37,35 +50,6 @@
     </div>
   </div>
 </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll(".local-time").forEach(el => {
-    let utcStr = el.getAttribute("data-utc");
-    if (utcStr) {
-      if (!utcStr.includes('T')) {
-        utcStr = utcStr.replace(' ', 'T');
-      }
-      if (!utcStr.endsWith('Z') && !utcStr.includes('+') && !utcStr.includes('-')) {
-        utcStr += 'Z';
-      }
-      try {
-        const d = new Date(utcStr);
-        if (!isNaN(d.getTime())) {
-          const hours = String(d.getHours()).padStart(2, '0');
-          const minutes = String(d.getMinutes()).padStart(2, '0');
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, '0');
-          const date = String(d.getDate()).padStart(2, '0');
-          el.textContent = `${hours}:${minutes}, ${year}-${month}-${date}`;
-        }
-      } catch(e) {
-        console.error("Error formatting date:", e);
-      }
-    }
-  });
-});
-</script>
 
 <style>
 .notification-item {

@@ -279,10 +279,16 @@ def ensure_enrollment(db, user_id, course_id):
         enrolled_session = session.get('enrolled_courses', [])
         if enrolled_session and course_id in enrolled_session:
             try:
-                db.execute(
-                    "INSERT OR IGNORE INTO student_courses (user_id, course_id) VALUES (?, ?)",
-                    (user_id, course_id)
-                )
+                if db.is_postgres:
+                    db.execute(
+                        "INSERT INTO student_courses (user_id, course_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                        (user_id, course_id)
+                    )
+                else:
+                    db.execute(
+                        "INSERT OR IGNORE INTO student_courses (user_id, course_id) VALUES (?, ?)",
+                        (user_id, course_id)
+                    )
                 db.commit()
                 enrollment = db.execute(
                     "SELECT * FROM student_courses WHERE user_id = ? AND course_id = ?",
@@ -291,4 +297,107 @@ def ensure_enrollment(db, user_id, course_id):
             except Exception as e:
                 print(f"Error auto-healing enrollment record for course {course_id}: {e}", flush=True)
     return enrollment
+
+
+def update_course_progress(db, user_id, course_id):
+    """Dynamically compute and update the overall course progress (0-100) based on completed modules and lessons."""
+    try:
+        # Get all modules for this course
+        modules = db.execute(
+            "SELECT id, sort_order FROM course_modules WHERE course_id = ? ORDER BY sort_order",
+            (course_id,)
+        ).fetchall()
+        
+        if not modules:
+            return
+            
+        # Get the user's enrollment record
+        enrollment = db.execute(
+            "SELECT current_module_id, current_lesson_id, completed FROM student_courses WHERE user_id = ? AND course_id = ?",
+            (user_id, course_id)
+        ).fetchone()
+        
+        if not enrollment:
+            return
+            
+        if enrollment['completed']:
+            db.execute(
+                "UPDATE student_courses SET progress = 100.0 WHERE user_id = ? AND course_id = ?",
+                (user_id, course_id)
+            )
+            db.commit()
+            return
+
+        # Let's count how many modules/lessons/exams the user has completed.
+        module_ids = [m['id'] for m in modules]
+        placeholders = ",".join("?" for _ in module_ids)
+        all_lessons = db.execute(
+            f"SELECT id, module_id, sort_order FROM module_lessons WHERE module_id IN ({placeholders}) ORDER BY module_id, sort_order",
+            module_ids
+        ).fetchall()
+        
+        # Group lessons by module_id
+        lessons_by_module = {}
+        for l in all_lessons:
+            lessons_by_module.setdefault(l['module_id'], []).append(l)
+            
+        # Get all exam results for the user on these modules
+        exam_results = db.execute(
+            f"SELECT module_id FROM exam_results WHERE user_id = ? AND module_id IN ({placeholders})",
+            [user_id] + module_ids
+        ).fetchall()
+        completed_exam_module_ids = {r['module_id'] for r in exam_results}
+        
+        current_mod_id = enrollment['current_module_id'] or modules[0]['id']
+        current_les_id = enrollment['current_lesson_id']
+        
+        # Find current module sort order
+        curr_mod_order = 1
+        for m in modules:
+            if m['id'] == current_mod_id:
+                curr_mod_order = m['sort_order']
+                break
+                
+        total_items = 0
+        completed_items = 0
+        
+        for m in modules:
+            m_id = m['id']
+            m_lessons = lessons_by_module.get(m_id, [])
+            m_lesson_count = len(m_lessons)
+            
+            # Each module has lessons + 1 exam
+            total_items += m_lesson_count + 1
+            
+            if m_id in completed_exam_module_ids:
+                completed_items += m_lesson_count + 1
+            elif m['sort_order'] < curr_mod_order:
+                completed_items += m_lesson_count + 1
+            elif m_id == current_mod_id:
+                if current_les_id:
+                    curr_les_order = 1
+                    for l in m_lessons:
+                        if l['id'] == current_les_id:
+                            curr_les_order = l['sort_order']
+                            break
+                    completed_items += max(0, curr_les_order - 1)
+                else:
+                    pass
+                    
+        progress_percent = min(100.0, round((completed_items / total_items) * 100, 1)) if total_items > 0 else 0.0
+        
+        if progress_percent >= 100.0:
+            db.execute(
+                "UPDATE student_courses SET progress = 100.0, completed = 1 WHERE user_id = ? AND course_id = ?",
+                (user_id, course_id)
+            )
+        else:
+            db.execute(
+                "UPDATE student_courses SET progress = ? WHERE user_id = ? AND course_id = ?",
+                (progress_percent, user_id, course_id)
+            )
+        db.commit()
+    except Exception as e:
+        print(f"Error updating course progress for course {course_id}: {e}", flush=True)
+
 

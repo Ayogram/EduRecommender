@@ -193,7 +193,12 @@ def view_lesson(course_id, module_id):
     if lesson_id:
         current_lesson = next((l for l in lessons if l['id'] == lesson_id), lessons[0])
     else:
-        current_lesson = lessons[0]
+        # Resume state: check if they have a saved lesson for this module
+        saved_les_id = dict(enrollment).get('current_lesson_id') if enrollment else None
+        if saved_les_id:
+            current_lesson = next((l for l in lessons if l['id'] == saved_les_id), None)
+        if not current_lesson:
+            current_lesson = lessons[0]
 
     # Convert to dict to allow adding video_url on the fly
     current_lesson_dict = dict(current_lesson)
@@ -214,6 +219,10 @@ def view_lesson(course_id, module_id):
         (module['id'], current_lesson_dict['id'], current_user.id, course_id)
     )
     db.commit()
+
+    # Dynamic course progress calculation
+    from models.database import update_course_progress
+    update_course_progress(db, current_user.id, course_id)
 
     # 6. Get all modules for sidebar navigation
     all_modules = db.execute(
@@ -470,6 +479,8 @@ def submit_exam(module_id):
     module_info = db.execute("SELECT course_id FROM course_modules WHERE id = ?", (module_id,)).fetchone()
     if module_info:
         update_course_grade_if_completed(db, current_user.id, module_info['course_id'])
+        from models.database import update_course_progress
+        update_course_progress(db, current_user.id, module_info['course_id'])
     
     return render_template("learning/exam_result.html", score=percentage, total=total, results=results, module_id=module_id, attempts=attempts, best_score=best_score)
 

@@ -198,6 +198,8 @@ def rate_course(course_id):
         (rating, completed, current_user.id, course_id),
     )
     db.commit()
+    from models.database import update_course_progress
+    update_course_progress(db, current_user.id, course_id)
     flash("Course progress updated!", "success")
     return redirect(url_for("recommendations.course_details", course_id=course_id))
 
