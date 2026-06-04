@@ -824,17 +824,71 @@ def public_sync_restore():
         new_user = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
         user_id = new_user["id"]
         
-    # Restore enrolled courses (upsert)
+    def _ensure_modules(course_id):
+        """Lazy-init course modules and their lessons so foreign keys and progress won't fail."""
+        mods = db.execute(
+            "SELECT id, sort_order, title FROM course_modules WHERE course_id = ? ORDER BY sort_order",
+            (course_id,)
+        ).fetchall()
+        if not mods:
+            course_row = db.execute("SELECT title FROM courses WHERE id = ?", (course_id,)).fetchone()
+            course_title = course_row["title"] if course_row else "Course"
+            
+            titles = ["Foundational Principles", "Intermediate Methodologies", "Final Assessment & Capstone"]
+            for i, t in enumerate(titles):
+                db.execute(
+                    "INSERT INTO course_modules (course_id, title, sort_order) VALUES (?, ?, ?)",
+                    (course_id, t, i + 1)
+                )
+            db.commit()
+            mods = db.execute(
+                "SELECT id, sort_order, title FROM course_modules WHERE course_id = ? ORDER BY sort_order",
+                (course_id,)
+            ).fetchall()
+            
+            # Pre-generate lessons for all modules using TutorEngine
+            from engine.tutor import TutorEngine
+            from backend.learning import search_youtube_video
+            tutor = TutorEngine()
+            for m in mods:
+                new_lessons = tutor.generate_module_content(course_title, m["title"])
+                for j, l in enumerate(new_lessons):
+                    video_url = search_youtube_video(l["title"], course_title)
+                    db.execute(
+                        "INSERT INTO module_lessons (module_id, title, content, video_url, sort_order) VALUES (?, ?, ?, ?, ?)",
+                        (m["id"], l["title"], l["content"], video_url, j + 1)
+                    )
+            db.commit()
+        return {m['sort_order']: m['id'] for m in mods}
+
+    # Restore enrolled courses (upsert) using sort_order for id resolution
     enrolled = data.get("enrolled", [])
     for c in enrolled:
+        course_id = c.get("course_id")
+        if not course_id:
+            continue
+        mod_map = _ensure_modules(course_id)
+        mod_sort = c.get("current_module_sort_order", 1) or 1
+        les_sort = c.get("current_lesson_sort_order")
+        resolved_mod_id = mod_map.get(mod_sort) or list(mod_map.values())[0] if mod_map else None
+        
+        # Resolve lesson id from sort order
+        resolved_les_id = None
+        if resolved_mod_id and les_sort:
+            les_row = db.execute(
+                "SELECT id FROM module_lessons WHERE module_id = ? AND sort_order = ?",
+                (resolved_mod_id, les_sort)
+            ).fetchone()
+            resolved_les_id = les_row['id'] if les_row else None
+            
         try:
             db.execute(
                 """INSERT INTO student_courses 
                    (user_id, course_id, rating, grade, completed, current_module_id, current_lesson_id, progress, enrolled_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    user_id, c["course_id"], c.get("rating", 0.0), c.get("grade", "N/A"),
-                    c.get("completed", 0), c.get("current_module_id"), c.get("current_lesson_id"),
+                    user_id, course_id, c.get("rating", 0.0), c.get("grade", "N/A"),
+                    c.get("completed", 0), resolved_mod_id, resolved_les_id,
                     c.get("progress", 0.0), c.get("enrolled_at")
                 )
             )
@@ -847,16 +901,24 @@ def public_sync_restore():
                        WHERE user_id = ? AND course_id = ?""",
                     (
                         c.get("rating", 0.0), c.get("grade", "N/A"), c.get("completed", 0), 
-                        c.get("current_module_id"), c.get("current_lesson_id"), c.get("progress", 0.0),
-                        user_id, c["course_id"]
+                        resolved_mod_id, resolved_les_id, c.get("progress", 0.0),
+                        user_id, course_id
                     )
                 )
             except Exception:
                 pass
                 
-    # Restore exam results (upsert)
+    # Restore exam results (upsert) using sort_order to resolve module_id
     exams = data.get("exams", [])
     for e in exams:
+        course_id = e.get("course_id")
+        mod_sort = e.get("module_sort_order")
+        if not course_id or not mod_sort:
+            continue
+        mod_map = _ensure_modules(course_id)
+        resolved_mod_id = mod_map.get(mod_sort)
+        if not resolved_mod_id:
+            continue
         try:
             history_val = json.dumps(e.get("history", [])) if isinstance(e.get("history"), list) else (e.get("history") or '[]')
             db.execute(
@@ -864,7 +926,7 @@ def public_sync_restore():
                    (user_id, module_id, score, attempts, best_score, history, updated_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    user_id, e["module_id"], e.get("score") or 0.0, e.get("attempts") or 1,
+                    user_id, resolved_mod_id, e.get("score") or 0.0, e.get("attempts") or 1,
                     e.get("best_score") or 0.0, history_val, e.get("updated_at")
                 )
             )
@@ -877,13 +939,13 @@ def public_sync_restore():
                        WHERE user_id = ? AND module_id = ?""",
                     (
                         e.get("score") or 0.0, e.get("attempts") or 1, e.get("best_score") or 0.0,
-                        history_val, user_id, e["module_id"]
+                        history_val, user_id, resolved_mod_id
                     )
                 )
             except Exception:
                 pass
                 
-    # Restore complaints (prevent duplicates)
+    # Restore complaints
     complaints = data.get("complaints", [])
     for c in complaints:
         try:
@@ -905,13 +967,13 @@ def public_sync_restore():
         except Exception:
             pass
             
-    # Restore notifications (prevent duplicates)
+    # Restore notifications (skip exact duplicates)
     notifications = data.get("notifications", [])
     for n in notifications:
         try:
             existing = db.execute(
-                "SELECT id FROM notifications WHERE user_id = ? AND message = ?",
-                (user_id, n["message"])
+                "SELECT id FROM notifications WHERE user_id = ? AND message = ? AND created_at = ?",
+                (user_id, n["message"], n.get("created_at"))
             ).fetchone()
             if not existing:
                 db.execute(

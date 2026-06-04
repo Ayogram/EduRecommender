@@ -467,12 +467,16 @@ def create_app():
             )
 
         def _ensure_modules(course_id):
-            """Lazy-init course modules so foreign keys won't fail."""
+            """Lazy-init course modules and their lessons so foreign keys and progress won't fail."""
             mods = db.execute(
-                "SELECT id, sort_order FROM course_modules WHERE course_id = ? ORDER BY sort_order",
+                "SELECT id, sort_order, title FROM course_modules WHERE course_id = ? ORDER BY sort_order",
                 (course_id,)
             ).fetchall()
             if not mods:
+                # Retrieve course title to customize lessons
+                course_row = db.execute("SELECT title FROM courses WHERE id = ?", (course_id,)).fetchone()
+                course_title = course_row["title"] if course_row else "Course"
+                
                 titles = ["Foundational Principles", "Intermediate Methodologies", "Final Assessment & Capstone"]
                 for i, t in enumerate(titles):
                     db.execute(
@@ -481,9 +485,23 @@ def create_app():
                     )
                 db.commit()
                 mods = db.execute(
-                    "SELECT id, sort_order FROM course_modules WHERE course_id = ? ORDER BY sort_order",
+                    "SELECT id, sort_order, title FROM course_modules WHERE course_id = ? ORDER BY sort_order",
                     (course_id,)
                 ).fetchall()
+                
+                # Pre-generate lessons for all modules using TutorEngine
+                from engine.tutor import TutorEngine
+                from backend.learning import search_youtube_video
+                tutor = TutorEngine()
+                for m in mods:
+                    new_lessons = tutor.generate_module_content(course_title, m["title"])
+                    for j, l in enumerate(new_lessons):
+                        video_url = search_youtube_video(l["title"], course_title)
+                        db.execute(
+                            "INSERT INTO module_lessons (module_id, title, content, video_url, sort_order) VALUES (?, ?, ?, ?, ?)",
+                            (m["id"], l["title"], l["content"], video_url, j + 1)
+                        )
+                db.commit()
             return {m['sort_order']: m['id'] for m in mods}
 
         # Restore enrolled courses using sort_order for id resolution
