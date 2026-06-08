@@ -179,6 +179,86 @@ LESSON_VIDEO_MAP = {
         "https://www.youtube.com/embed/rfscVS0vtbw",
     "final capstone integration exercise":
         "https://www.youtube.com/embed/rfscVS0vtbw",
+
+    # ── CHEMISTRY ────────────────────────────────────────────────────────────
+    "introduction to general chemistry and atomic structure":
+        "https://www.youtube.com/embed/bka20Q9TN6M",
+    "chemical bonding, molecular geometry and periodic trends":
+        "https://www.youtube.com/embed/Q3gtjElh26c",
+    "stoichiometry, chemical reactions and balancing equations":
+        "https://www.youtube.com/embed/UL1jmJaUkaQ",
+    "organic chemistry: hydrocarbons and functional groups":
+        "https://www.youtube.com/embed/V8_7yPzT4gc",
+    "physical chemistry: thermodynamics and kinetics":
+        "https://www.youtube.com/embed/A27yjpECNL8",
+    "analytical chemistry and laboratory techniques":
+        "https://www.youtube.com/embed/g2T0oE9A68k",
+    "biochemistry: proteins, nucleic acids and metabolism":
+        "https://www.youtube.com/embed/H8WJ2KENlK0",
+    "inorganic chemistry and coordination compounds":
+        "https://www.youtube.com/embed/e1k_Wv1Fjmg",
+    "final chemistry research capstone project":
+        "https://www.youtube.com/embed/bka20Q9TN6M",
+
+    # ── BIOLOGY ──────────────────────────────────────────────────────────────
+    "introduction to cellular biology and genetics":
+        "https://www.youtube.com/embed/URUJD5NEXC8",
+    "evolutionary biology and the diversity of life":
+        "https://www.youtube.com/embed/F38BmgPc1_Y",
+    "plant biology, structure and photosynthesis":
+        "https://www.youtube.com/embed/ExKa6z167D8",
+    "microbiology: bacteria, viruses and fungi":
+        "https://www.youtube.com/embed/fTzT-FzS_P0",
+    "biotechnology, genetic engineering and recombinant dna":
+        "https://www.youtube.com/embed/yYEV97XPSc4",
+    "ecology, ecosystems and environmental analysis":
+        "https://www.youtube.com/embed/izRvPaAWgyw",
+    "human physiology, organ systems and homeostasis":
+        "https://www.youtube.com/embed/uBGl2BujkPQ",
+    "molecular biology and gene expression regulation":
+        "https://www.youtube.com/embed/gG7uCskUOrA",
+    "final biological sciences capstone project":
+        "https://www.youtube.com/embed/URUJD5NEXC8",
+
+    # ── AGRICULTURE ──────────────────────────────────────────────────────────
+    "introduction to agricultural science and crop production":
+        "https://www.youtube.com/embed/fD14S92pW8I",
+    "soil science, chemistry and nutrient management":
+        "https://www.youtube.com/embed/l59S5M2Wsz4",
+    "principles of animal science and husbandry":
+        "https://www.youtube.com/embed/_G3o528gWv4",
+    "agronomy, irrigation and farm management":
+        "https://www.youtube.com/embed/p1o1_j9kG2Y",
+    "pest management and plant pathology":
+        "https://www.youtube.com/embed/cMizd6vjWnk",
+    "agricultural economics and marketing":
+        "https://www.youtube.com/embed/YdGZ4H_Y0rU",
+    "sustainable agriculture and organic farming":
+        "https://www.youtube.com/embed/7D5t1iK128Q",
+    "precision agriculture and agribusiness technology":
+        "https://www.youtube.com/embed/9wD0Kq0cIag",
+    "final agricultural science capstone project":
+        "https://www.youtube.com/embed/fD14S92pW8I",
+
+    # ── EDUCATION ────────────────────────────────────────────────────────────
+    "introduction to pedagogy and educational philosophy":
+        "https://www.youtube.com/embed/H0tDuXcX-o4",
+    "educational psychology and human development":
+        "https://www.youtube.com/embed/y_2634Vd6K4",
+    "curriculum design and learning objectives":
+        "https://www.youtube.com/embed/1-WjD7gXQ34",
+    "classroom management and instructional strategies":
+        "https://www.youtube.com/embed/PGm8M5-xL4c",
+    "educational assessment, testing and evaluation":
+        "https://www.youtube.com/embed/dC7-sLekrX0",
+    "inclusive education and special needs pedagogy":
+        "https://www.youtube.com/embed/yQ8Dk3wK2zM",
+    "educational technology and digital learning":
+        "https://www.youtube.com/embed/d1-F648qWd4",
+    "educational leadership and school administration":
+        "https://www.youtube.com/embed/pCzeT3vWl-s",
+    "final education capstone research project":
+        "https://www.youtube.com/embed/H0tDuXcX-o4",
 }
 
 
@@ -259,15 +339,15 @@ KEYWORD_VIDEO_MAP = [
     (["international law", "global treaty"],              "https://www.youtube.com/embed/aJ5bC7ZG7GY"),
     (["legal writing", "advocacy", "litigation"],         "https://www.youtube.com/embed/bNpx7gpSqbY"),
 
-    # Medicine
-    (["pathology", "medical system"],                     "https://www.youtube.com/embed/lDqL4WScGSw"),
-    (["pharmacokinetic", "pharmacodynamic", "pharmacology"],
+    # Medicine / Health
+    (["pathology", "medical system", "nursing", "nurse", "clinic", "clinical", "hospital"], "https://www.youtube.com/embed/lDqL4WScGSw"),
+    (["pharmacokinetic", "pharmacodynamic", "pharmacology", "pharmacy", "drug"],
                                                           "https://www.youtube.com/embed/BfElFJVGFcc"),
     (["cell biology", "histology"],                       "https://www.youtube.com/embed/URUJD5NEXC8"),
     (["infectious disease", "immunology"],                "https://www.youtube.com/embed/zBcSO_UrCvw"),
-    (["anatomy", "physiology", "surgical"],               "https://www.youtube.com/embed/uBGl2BujkPQ"),
+    (["anatomy", "physiology", "surgical", "dentistry", "dentist", "physiotherapy"], "https://www.youtube.com/embed/uBGl2BujkPQ"),
     (["epidemiology", "public health"],                   "https://www.youtube.com/embed/4A_g81RKjdQ"),
-    (["clinical diagnosis", "patient care"],              "https://www.youtube.com/embed/8fQ5HXwWVso"),
+    (["clinical diagnosis", "patient care", "ethics"],    "https://www.youtube.com/embed/8fQ5HXwWVso"),
     (["pharmacotherapy", "targeted treatment"],           "https://www.youtube.com/embed/Q-Xcs0dHIh0"),
 
     # General CS & technology
@@ -293,6 +373,15 @@ KEYWORD_VIDEO_MAP = [
     (["physics", "mechanics", "thermodynamics", "quantum"],
                                                           "https://www.youtube.com/embed/ZM8ECpBuQYE"),
     (["psychology", "behaviour", "cognitive"],            "https://www.youtube.com/embed/vo4pMVb0R6M"),
+    (["biology", "microbiolog", "biotech"],               "https://www.youtube.com/embed/URUJD5NEXC8"),
+
+    # Agriculture
+    (["agriculture", "agric", "crop", "agronomy", "soil", "animal science", "livestock", "farm"],
+                                                          "https://www.youtube.com/embed/fD14S92pW8I"),
+
+    # Education
+    (["education", "educat", "pedagogy", "teach", "classroom", "curriculum", "learning"],
+                                                          "https://www.youtube.com/embed/H0tDuXcX-o4"),
 ]
 
 
@@ -305,6 +394,17 @@ CATEGORY_FALLBACKS = {
     "business":      "https://www.youtube.com/embed/K2P2rRLl1Ik",
     "law":           "https://www.youtube.com/embed/k8GMElKpIcA",
     "medicine":      "https://www.youtube.com/embed/uBGl2BujkPQ",
+    "engineering":   "https://www.youtube.com/embed/wYF_jnFOFCs",
+    "math":          "https://www.youtube.com/embed/OmJ-4B-mS-Y",
+    "physics":       "https://www.youtube.com/embed/ZM8ECpBuQYE",
+    "chemistry":     "https://www.youtube.com/embed/bka20Q9TN6M",
+    "biology":       "https://www.youtube.com/embed/URUJD5NEXC8",
+    "psychology":    "https://www.youtube.com/embed/vo4pMVb0R6M",
+    "finance":       "https://www.youtube.com/embed/IB6iFZKqZRQ",
+    "social_sciences":"https://www.youtube.com/embed/vo4pMVb0R6M",
+    "arts":          "https://www.youtube.com/embed/rfscVS0vtbw",
+    "agriculture":   "https://www.youtube.com/embed/fD14S92pW8I",
+    "education":     "https://www.youtube.com/embed/H0tDuXcX-o4",
     "default":       "https://www.youtube.com/embed/rfscVS0vtbw",
 }
 
@@ -315,7 +415,7 @@ def get_lesson_video(lesson_title: str, course_title: str = "") -> str:
     Three-tier lookup:
       1. Exact match in LESSON_VIDEO_MAP
       2. Keyword match in KEYWORD_VIDEO_MAP
-      3. Generic educational fallback
+      3. Generic educational fallback (mapped dynamically by category)
     """
     key = lesson_title.strip().lower()
 
@@ -329,5 +429,15 @@ def get_lesson_video(lesson_title: str, course_title: str = "") -> str:
         if any(kw in combined for kw in keywords):
             return url
 
-    # Tier 3 — generic fallback
+    # Tier 3 — category-level fallback (determined from course title)
+    from engine.tutor import TutorEngine
+    try:
+        tutor = TutorEngine()
+        cat = tutor._determine_category(course_title, lesson_title)
+        if cat in CATEGORY_FALLBACKS:
+            return CATEGORY_FALLBACKS[cat]
+    except Exception:
+        pass
+
+    # Final fallback
     return CATEGORY_FALLBACKS["default"]

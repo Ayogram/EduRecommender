@@ -215,7 +215,12 @@ def view_lesson(course_id, module_id):
         
         # In a real app, this would be an async call. Here we do it sync for simplicity
         tutor = TutorEngine()
-        new_lessons = tutor.generate_module_content(course['title'], module['title'])
+        new_lessons = tutor.generate_module_content(
+            course['title'],
+            module['title'],
+            course_category=course['category'],
+            course_dept=course['department']
+        )
         
         for i, l in enumerate(new_lessons):
             video_query_title = l['title']
@@ -404,7 +409,13 @@ def quiz_preview(module_id):
             (module_id,)
         ).fetchall()
         lessons_list = [dict(l) for l in lessons_rows]
-        questions = tutor.generate_mcqs(course['title'], module['title'], lessons_info=lessons_list)
+        questions = tutor.generate_mcqs(
+            course['title'],
+            module['title'],
+            lessons_info=lessons_list,
+            course_category=course['category'],
+            course_dept=course['department']
+        )
         db.execute(
             "INSERT INTO module_exams (module_id, questions) VALUES (?, ?)",
             (module_id, json.dumps(questions))
@@ -447,8 +458,19 @@ def start_exam(module_id):
     if not exam:
         from engine.tutor import TutorEngine
         tutor = TutorEngine()
-        course = db.execute("SELECT title FROM courses WHERE id = ?", (module['course_id'],)).fetchone()
-        questions = tutor.generate_mcqs(course['title'], module['title'])
+        course = db.execute("SELECT title, category, department FROM courses WHERE id = ?", (module['course_id'],)).fetchone()
+        lessons_rows = db.execute(
+            "SELECT title, video_url FROM module_lessons WHERE module_id = ? ORDER BY sort_order",
+            (module_id,)
+        ).fetchall()
+        lessons_list = [dict(l) for l in lessons_rows]
+        questions = tutor.generate_mcqs(
+            course['title'],
+            module['title'],
+            lessons_info=lessons_list,
+            course_category=course['category'],
+            course_dept=course['department']
+        )
         db.execute(
             "INSERT INTO module_exams (module_id, questions) VALUES (?, ?)",
             (module_id, json.dumps(questions))

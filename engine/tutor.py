@@ -1330,10 +1330,10 @@ Prepare your final thesis/project application by applying all concepts learned a
         },
     }
 
-    def _determine_category(self, course_title, category_hint):
+    def _determine_category(self, course_title, category_hint=None, course_category=None, course_dept=None):
         """Map course metadata to a specific curriculum keys."""
         import re
-        text = f"{course_title} {category_hint or ''}".lower()
+        text = f"{course_title} {category_hint or ''} {course_category or ''} {course_dept or ''}".lower()
         words = re.findall(r'[a-z0-9]+', text)
         
         def has_match(keywords):
@@ -1348,7 +1348,7 @@ Prepare your final thesis/project application by applying all concepts learned a
 
         if has_match(["structure", "algorithm", "dsa"]):
             return "dsa"
-        elif has_match(["python", "program", "code", "coding", "java", "script"]):
+        elif has_match(["python", "program", "code", "coding", "java", "script", "cyber", "network", "cloud", "blockchain", "software", "development", "computing", "computer"]):
             return "programming"
         elif has_match(["physic", "thermodynamics", "optics", "quantum", "laser", "electromagnetism", "fluid"]):
             return "physics"
@@ -1356,32 +1356,76 @@ Prepare your final thesis/project application by applying all concepts learned a
             return "math"
         elif has_match(["psycholog", "cognitive", "clinical", "behavior", "neuropsychology"]):
             return "psychology"
-        elif has_match(["anatomy", "surgery", "pharmacology", "medicine", "health", "biological"]):
+        elif has_match(["anatomy", "surgery", "pharmacology", "medicine", "health", "biological", "nurs", "nurse", "pharmacy", "dent", "physio", "medical", "clinic", "pathology", "radiography", "optometry", "hospital"]):
             return "medicine"
-        elif has_match(["law", "rights", "legal", "court"]):
+        elif has_match(["law", "rights", "legal", "court", "governance", "constitut", "jurisprudence"]):
             return "law"
         elif has_match(["research", "methodology", "thesis", "dissertation"]):
             return "research"
         elif has_match(["management information", "mis", "information systems"]) or ("mis" in words):
             return "mis"
-        elif has_match(["fintech", "blockchain", "crypto", "bitcoin", "finance", "accounting", "audit", "tax", "econom"]):
+        elif has_match(["fintech", "finance", "accounting", "audit", "tax", "econom", "banking", "invest"]):
             return "finance"
-        elif has_match(["sociolog", "politic", "media", "social", "criminolog", "public policy", "relations"]):
+        elif has_match(["sociolog", "politic", "media", "social", "criminolog", "public policy", "relations", "anthropology", "peace", "conflict"]):
             return "social_sciences"
-        elif has_match(["mechanic", "circuit", "engineering", "petroleum", "reservoir", "drill", "power", "embedded", "vlsi", "device", "cad", "material"]):
+        elif has_match(["mechanic", "circuit", "engineering", "petroleum", "reservoir", "drill", "power", "embedded", "vlsi", "device", "cad", "material", "civil", "aerospace", "mechatronics", "biomedical", "environmental"]):
             return "engineering"
-        elif has_match(["ethic", "business", "management", "market", "corporate"]):
+        elif has_match(["ethic", "business", "management", "market", "corporate", "administration", "human resource", "entrepreneurship", "supply chain"]):
             return "business"
-        elif has_match(["art", "design", "graphic", "illustration", "animat", "paint", "music", "writing"]):
+        elif has_match(["art", "design", "graphic", "illustration", "animat", "paint", "music", "writing", "architecture", "theatre", "film"]):
             return "arts"
-        
+        elif has_match(["agric", "crop", "animal", "agronomy", "fisher", "forest", "horticult", "soil"]):
+            return "agriculture"
+        elif has_match(["educat", "teach", "classroom", "curriculum", "counsell"]):
+            return "education"
+        elif has_match(["chem", "organic", "inorganic", "biochem"]):
+            return "chemistry"
+        elif has_match(["biolog", "microbiolog", "biotech"]):
+            return "biology"
+            
+        # Fallback category mapping based on the main 14 categories from the database:
+        if course_category:
+            cat_clean = course_category.lower()
+            if "computing" in cat_clean or "technology" in cat_clean:
+                return "programming"
+            elif "engineering" in cat_clean:
+                return "engineering"
+            elif "medicine" in cat_clean or "health" in cat_clean:
+                return "medicine"
+            elif "business" in cat_clean or "finance" in cat_clean:
+                return "finance"
+            elif "law" in cat_clean or "governance" in cat_clean:
+                return "law"
+            elif "social" in cat_clean:
+                return "social_sciences"
+            elif "natural" in cat_clean:
+                if course_dept and "physic" in course_dept.lower():
+                    return "physics"
+                elif course_dept and "chem" in course_dept.lower():
+                    return "chemistry"
+                elif course_dept and "biolog" in course_dept.lower():
+                    return "biology"
+                return "physics"  # Default natural science fallback
+            elif "mathematics" in cat_clean or "statistics" in cat_clean:
+                return "math"
+            elif "agriculture" in cat_clean:
+                return "agriculture"
+            elif "education" in cat_clean:
+                return "education"
+            elif "arts" in cat_clean or "creative" in cat_clean:
+                return "arts"
+            elif "communication" in cat_clean or "media" in cat_clean:
+                return "social_sciences"
+            elif "emerging" in cat_clean:
+                return "programming"
+                
         return "default"
 
-    def generate_module_content(self, course_title, module_title):
+    def generate_module_content(self, course_title, module_title, course_category=None, course_dept=None):
         """
         Generates highly specific and formatted lessons for the module.
         """
-        category = self._determine_category(course_title, "")
+        category = self._determine_category(course_title, "", course_category=course_category, course_dept=course_dept)
         curriculum = self.curriculum_data.get(category, self.default_category)
         
         # Determine module list to load (Foundational, Intermediate, or Capstone)
@@ -1403,11 +1447,11 @@ Prepare your final thesis/project application by applying all concepts learned a
             
         return final_lessons
 
-    def generate_mcqs(self, course_title, module_title, lessons_info=None):
+    def generate_mcqs(self, course_title, module_title, lessons_info=None, course_category=None, course_dept=None):
         """
         Generates 30 MCQ questions tailored to the course and module, referencing watched videos.
         """
-        category = self._determine_category(course_title, module_title)
+        category = self._determine_category(course_title, module_title, course_category=course_category, course_dept=course_dept)
         
         # Determine module list
         if "Principles" in module_title or "1" in module_title or "Foundational" in module_title:

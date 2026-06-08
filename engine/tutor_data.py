@@ -309,6 +309,182 @@ NEW_CURRICULUM = {
                 "content": "### 🏁 Social Program Proposal\nDraft a comprehensive policy proposal designed to solve a local social issue, using data-driven impact audits.\n"
             }
         ]
+    },
+    "chemistry": {
+        "Foundational Principles": [
+            {
+                "title": "Introduction to General Chemistry and Atomic Structure",
+                "content": "### ⚛️ Atomic Theory & General Chemistry\nChemistry studies matter, its properties, and interactions. Atomic structure explores protons, neutrons, and electrons forming elements.\n\n### 🔑 Core Principles\n- **Subatomic Particles**: Protons, neutrons, and electrons.\n- **Periodic Table**: Arranging elements by atomic number and valence configurations.\n"
+            },
+            {
+                "title": "Chemical Bonding, Molecular Geometry and Periodic Trends",
+                "content": "### 🔗 Molecular Bonding & Geometries\nChemical bonds hold atoms together. Ionic bonds transfer electrons, covalent bonds share them. Molecular geometry defines 3D shapes.\n\n### 📐 Trends & Shapes\n- **Electronegativity**: Power of an atom to attract electrons.\n- **VSEPR Theory**: Predicting molecular shape based on electron repulsion.\n"
+            },
+            {
+                "title": "Stoichiometry, Chemical Reactions and Balancing Equations",
+                "content": "### ⚖️ Balancing Chemical Equations\nStoichiometry calculates reactants and products in chemical reactions based on the law of conservation of mass.\n"
+            }
+        ],
+        "Intermediate Methodologies": [
+            {
+                "title": "Organic Chemistry: Hydrocarbons and Functional Groups",
+                "content": "### 🧪 Carbon-Based Molecules\nOrganic chemistry explores carbon compounds. Hydrocarbons (alkanes, alkenes, alkynes) and functional groups dictate reactivity.\n"
+            },
+            {
+                "title": "Physical Chemistry: Thermodynamics and Kinetics",
+                "content": "### ⚡ Energy & Reaction Speeds\nThermodynamics governs heat changes and spontaneity. Kinetics measures chemical reaction rates and activation energy.\n"
+            },
+            {
+                "title": "Analytical Chemistry and Laboratory Techniques",
+                "content": "### 🔬 Chemical Separation & Measurements\nAnalytical chemistry uses chromatography, titration, and spectroscopy to identify and quantify chemical compositions.\n"
+            }
+        ],
+        "Final Assessment & Capstone": [
+            {
+                "title": "Biochemistry: Proteins, Nucleic Acids and Metabolism",
+                "content": "### 🧬 Biomolecules & Metabolism\nExplore proteins, carbohydrates, lipids, and nucleic acids. Track enzymatic pathways converting glucose to ATP.\n"
+            },
+            {
+                "title": "Inorganic Chemistry and Coordination Compounds",
+                "content": "### 🧪 Transition Metals & Ligands\nInorganic chemistry covers coordination complexes, where central metal atoms bond with surrounding electron-donor ligands.\n"
+            },
+            {
+                "title": "Final Chemistry Research Capstone Project",
+                "content": "### 🏁 Capstone Thesis\nDesign and execute a chemical synthesis or analysis model, documenting safety protocols and molecular calculations.\n"
+            }
+        ]
+    },
+    "biology": {
+        "Foundational Principles": [
+            {
+                "title": "Introduction to Cellular Biology and Genetics",
+                "content": "### 🔬 Cells, Organelles & DNA\nCell biology studies cell structure and functions. Genetics details DNA replication, transcription, and inheritance.\n"
+            },
+            {
+                "title": "Evolutionary Biology and the Diversity of Life",
+                "content": "### 🐒 Darwinian Evolution & Taxonomy\nEvolution details natural selection and adaptation. Taxonomy classifies living organisms into domains and kingdoms.\n"
+            },
+            {
+                "title": "Plant Biology, Structure and Photosynthesis",
+                "content": "### 🌱 Plant Physiology & Energy\nExplore plant tissues (xylem, phloem), stomata mechanisms, and light/dark reactions converting sunlight to glucose.\n"
+            }
+        ],
+        "Intermediate Methodologies": [
+            {
+                "title": "Microbiology: Bacteria, Viruses and Fungi",
+                "content": "### 🦠 Microscopic Pathogens & Fungi\nMicrobiology details single-celled organisms, viral replication cycles, fungal spores, and culturing techniques.\n"
+            },
+            {
+                "title": "Biotechnology, Genetic Engineering and Recombinant DNA",
+                "content": "### 🧬 Gene Cloning & CRISPR\nBiotechnology manipulates DNA to build insulin, GMO crops, or run PCR tests and gel electrophoresis.\n"
+            },
+            {
+                "title": "Ecology, Ecosystems and Environmental Analysis",
+                "content": "### 🌍 Energy Flows & Ecosystems\nEcology analyzes food webs, niche boundaries, population growth, and human impacts on biological habitats.\n"
+            }
+        ],
+        "Final Assessment & Capstone": [
+            {
+                "title": "Human Physiology, Organ Systems and Homeostasis",
+                "content": "### 🩺 Cardiovascular, Nervous & Endocrine Systems\nTrack human organ functions, nerve impulses, hormone feedback loops, and physiological homeostasis mechanisms.\n"
+            },
+            {
+                "title": "Molecular Biology and Gene Expression Regulation",
+                "content": "### 🧬 Transcription Factors & Operons\nDetail molecular cell dynamics, RNA processing, operon controls, and epigenetic modifications in eukaryotic genomes.\n"
+            },
+            {
+                "title": "Final Biological Sciences Capstone Project",
+                "content": "### 🏁 Capstone Research Proposal\nDraft a complete biological research proposal detailing laboratory protocols, model organisms, and expected outputs.\n"
+            }
+        ]
+    },
+    "agriculture": {
+        "Foundational Principles": [
+            {
+                "title": "Introduction to Agricultural Science and Crop Production",
+                "content": "### 🚜 Crop Farming & Agronomy\nAgricultural science studies crop growth, soil management, and livestock systems. Agronomy optimizes food, fiber, and fuel output.\n"
+            },
+            {
+                "title": "Soil Science, Chemistry and Nutrient Management",
+                "content": "### 🌾 Soil Properties & Fertilizers\nSoil science profiles horizons, pH levels, cation exchange capacity, and nitrogen/phosphorus/potassium nutrient levels.\n"
+            },
+            {
+                "title": "Principles of Animal Science and Husbandry",
+                "content": "### 🐄 Livestock Breeding & Nutrition\nAnimal husbandry studies livestock care, genetic selection, feed rations, and dairy/poultry processing systems.\n"
+            }
+        ],
+        "Intermediate Methodologies": [
+            {
+                "title": "Agronomy, Irrigation and Farm Management",
+                "content": "### 💧 Water Systems & Crop Management\nExplore crop rotations, tillage methods, sprinkler/drip irrigation schedules, and farm business bookkeeping.\n"
+            },
+            {
+                "title": "Pest Management and Plant Pathology",
+                "content": "### 🐛 Herbicides, Pesticides & Crop Diseases\nPlant pathology tracks fungal/viral crop blights. Pest management uses chemical sprays and biological control agents.\n"
+            },
+            {
+                "title": "Agricultural Economics and Marketing",
+                "content": "### 📈 Agribusiness & Crop Pricing\nAgribusiness economics tracks commodity supply/demand curves, futures markets, farm subsidies, and import/export quotas.\n"
+            }
+        ],
+        "Final Assessment & Capstone": [
+            {
+                "title": "Sustainable Agriculture and Organic Farming",
+                "content": "### 🌍 Conservation Tillage & Bio-fertilizers\nSustainable farming preserves soil quality using crop rotation, green manure, composting, and avoiding synthetic chemicals.\n"
+            },
+            {
+                "title": "Precision Agriculture and Agribusiness Technology",
+                "content": "### 🛰️ Drones, GPS Mapping & Smart Sensors\nPrecision agriculture uses GPS yield maps, drone scouting, and soil moisture sensors to optimize fertilizer and water feeds.\n"
+            },
+            {
+                "title": "Final Agricultural Science Capstone Project",
+                "content": "### 🏁 Agribusiness Model Proposal\nDevelop and document a farm business proposal detailing crop rotations, soil diagnostics, irrigation budgets, and marketing plans.\n"
+            }
+        ]
+    },
+    "education": {
+        "Foundational Principles": [
+            {
+                "title": "Introduction to Pedagogy and Educational Philosophy",
+                "content": "### 🏫 Methods of Instruction & Theories\nPedagogy is the theory and practice of learning. Philosophy of education explores the goals, values, and history of schooling.\n"
+            },
+            {
+                "title": "Educational Psychology and Human Development",
+                "content": "### 🧠 Cognitive Growth & Learning Styles\nEducational psychology maps student memory retention, motivation, cognitive development stages, and behavioral conditioning.\n"
+            },
+            {
+                "title": "Curriculum Design and Learning Objectives",
+                "content": "### 📋 Designing Lesson Syllabi\nCurriculum design structures learning modules, defining clear behavioral objectives using Bloom's Taxonomy.\n"
+            }
+        ],
+        "Intermediate Methodologies": [
+            {
+                "title": "Classroom Management and Instructional Strategies",
+                "content": "### 💬 Group Control & Active Learning\nClassroom management sets rules and routines. Instructional strategies cover lectures, group discussions, and active learning projects.\n"
+            },
+            {
+                "title": "Educational Assessment, Testing and Evaluation",
+                "content": "### 📊 Formative, Summative & Normed Testing\nAssessment measures student progress. Formative quizzes provide quick feedback; summative exams assign grades.\n"
+            },
+            {
+                "title": "Inclusive Education and Special Needs Pedagogy",
+                "content": "### ♿ Individualized Education Programs (IEPs)\nInclusive pedagogy modifies classroom environments and lessons to support students with learning disabilities or sensory impairments.\n"
+            }
+        ],
+        "Final Assessment & Capstone": [
+            {
+                "title": "Educational Technology and Digital Learning",
+                "content": "### 💻 LMS Systems & Digital Classrooms\nEducational technology uses Learning Management Systems (LMS), interactive whiteboards, and online quizzes to enrich classrooms.\n"
+            },
+            {
+                "title": "Educational Leadership and School Administration",
+                "content": "### 💼 School Management & Policy Laws\nAdministration oversees school budgets, teacher evaluations, student conduct codes, and local education laws.\n"
+            },
+            {
+                "title": "Final Education Capstone Research Project",
+                "content": "### 🏁 Action Research Proposal\nDesign and document a classroom research study investigating the impact of a specific instructional strategy on student grades.\n"
+            }
+        ]
     }
 }
 
@@ -682,6 +858,218 @@ NEW_CONCEPTS = {
             ("Ethics Board Certification", "Formal approval declaring study protocols satisfy safety rules"),
             ("Focus Group Triangulation", "Fusing interviews, surveys, and focus groups to validate conclusions"),
             ("Social Research Capstone", "Drafting and presenting a complete data-driven sociological study")
+        ]
+    },
+    "chemistry": {
+        "Foundational Principles": [
+            ("Atoms", "The basic unit of a chemical element, consisting of protons, neutrons, and electrons"),
+            ("Protons", "Subatomic particles with a positive electrical charge found in the nucleus"),
+            ("Neutrons", "Subatomic particles with no electrical charge found in the nucleus"),
+            ("Electrons", "Subatomic particles with a negative electrical charge orbiting the nucleus"),
+            ("Atomic Number", "The number of protons in the nucleus of an atom, determining its element identity"),
+            ("Periodic Table", "A tabular arrangement of elements showing recurring chemical trends"),
+            ("Valence Electrons", "Electrons in the outermost shell of an atom participating in bond formation"),
+            ("Electronegativity", "A measure of the tendency of an atom to attract a bonding pair of electrons"),
+            ("Ionic Bond", "A chemical bond formed through the electrostatic attraction between oppositely charged ions"),
+            ("Covalent Bond", "A chemical bond that involves the sharing of electron pairs between atoms"),
+            ("VSEPR Theory", "Valence Shell Electron Pair Repulsion theory predicting molecular shapes"),
+            ("Stoichiometry", "The calculation of relative quantities of reactants and products in chemical reactions"),
+            ("Mole Concept", "The chemical unit representing 6.022 x 10^23 particles of a substance"),
+            ("Balanced Equation", "A chemical equation showing equal numbers of atoms for each element on both sides"),
+            ("Conservation of Mass", "The law stating that mass is neither created nor destroyed in a chemical reaction")
+        ],
+        "Intermediate Methodologies": [
+            ("Organic Chemistry", "The branch of chemistry concerned with carbon-containing compounds"),
+            ("Hydrocarbons", "Organic compounds consisting entirely of hydrogen and carbon atoms"),
+            ("Functional Groups", "Specific groupings of atoms within molecules dictating their chemical reactions"),
+            ("Alkanes", "Saturated hydrocarbons containing only single covalent bonds"),
+            ("Alkenes", "Unsaturated hydrocarbons containing at least one carbon-carbon double bond"),
+            ("Alkyne", "Unsaturated hydrocarbons containing at least one carbon-carbon triple bond"),
+            ("Chemical Kinetics", "The study of rates of chemical processes and reaction mechanisms"),
+            ("Activation Energy", "The minimum energy required to initiate a chemical reaction"),
+            ("Enthalpy", "The total heat content of a system at constant pressure"),
+            ("Entropy Chemistry", "A measure of the thermal energy per unit temperature unavailable for useful work"),
+            ("Chromatography", "A laboratory technique used for separating mixtures of chemical substances"),
+            ("Spectroscopy", "The study of the interaction between matter and electromagnetic radiation"),
+            ("Titration", "A method of quantitative chemical analysis used to determine an unknown concentration"),
+            ("Chemical Spontaneity", "The natural tendency of a chemical reaction to occur without external energy"),
+            ("Reaction Mechanism", "The step-by-step sequence of elementary reactions by which overall chemical change occurs")
+        ],
+        "Final Assessment & Capstone": [
+            ("Biochemistry", "The branch of science exploring chemical processes within living organisms"),
+            ("Proteins", "Large biomolecules consisting of one or more long chains of amino acid residues"),
+            ("Nucleic Acids", "Biopolymers, such as DNA and RNA, composed of nucleotide chains"),
+            ("Enzymes", "Biological catalysts that accelerate chemical reactions in cells"),
+            ("Metabolic Pathways", "Linked series of chemical reactions occurring within a cell to sustain life"),
+            ("Inorganic Chemistry", "The study of the synthesis and behavior of inorganic and organometallic compounds"),
+            ("Coordination Complex", "A structure consisting of a central atom bonded to a surrounding array of molecules or ligands"),
+            ("Ligands", "An ion or molecule that binds to a central metal atom to form a complex"),
+            ("Transition Metals", "Elements in the d-block of the periodic table forming coordination complexes"),
+            ("Chemical Synthesis", "The execution of chemical reactions to obtain a product or products"),
+            ("Molecular Geometry", "The 3D arrangement of the atoms that constitute a molecule"),
+            ("Active Sites", "The region of an enzyme where substrate molecules bind and undergo a chemical reaction"),
+            ("Catalysis", "The acceleration of a chemical reaction by a catalyst"),
+            ("Thermodynamic Spontaneity", "Reactions occurring naturally without continuous external intervention"),
+            ("Quantitative Titration", "Measuring precisely the volume of a reactant to determine concentration values")
+        ]
+    },
+    "biology": {
+        "Foundational Principles": [
+            ("Cell", "The basic structural, functional, and biological unit of all known organisms"),
+            ("Organelles", "Subcellular structures having one or more specific jobs to perform in the cell"),
+            ("Genetics", "The study of genes, genetic variation, and heredity in organisms"),
+            ("DNA Replication", "The biological process of producing two identical replicas of DNA from one original"),
+            ("Transcription", "The process of copying a segment of DNA into RNA"),
+            ("Translation Biology", "The process in which ribosomes synthesize proteins after transcription"),
+            ("Natural Selection", "The process where organisms better adapted to their environment tend to survive and reproduce"),
+            ("Evolutionary Biology", "The subfield of biology that studies the evolutionary processes that produced life diversity"),
+            ("Taxonomy", "The science of naming, describing, and classifying organisms"),
+            ("Xylem", "The vascular tissue in plants that conducts water and dissolved nutrients upward from the root"),
+            ("Phloem", "The vascular tissue in plants that conducts sugars and other metabolic products downward"),
+            ("Stomata", "Microscopic pores on plant leaves regulating gas exchange and transpiration"),
+            ("Photosynthesis", "The process by which green plants use sunlight to synthesize nutrients from carbon dioxide and water"),
+            ("Chloroplasts", "Organelles in plant cells where photosynthesis takes place"),
+            ("Light Reactions", "The first stage of photosynthesis converting solar energy into chemical energy")
+        ],
+        "Intermediate Methodologies": [
+            ("Microbiology", "The study of microscopic organisms, such as bacteria, viruses, archaea, fungi, and protozoa"),
+            ("Bacteria", "Single-celled microscopic organisms lacking a defined nucleus"),
+            ("Viruses", "Infectious agents that can replicate only inside the living cells of an organism"),
+            ("Fungi", "Eukaryotic organisms, including yeasts and molds, that absorb organic nutrients"),
+            ("Biotechnology", "The exploitation of biological processes for industrial and other purposes"),
+            ("Genetic Engineering", "The deliberate modification of the characteristics of an organism by manipulating its genetic material"),
+            ("Recombinant DNA", "DNA molecules formed by laboratory methods of genetic recombination to bring together genetic material"),
+            ("PCR Testing", "Polymerase Chain Reaction - a method widely used to rapidly make millions of copies of a specific DNA sample"),
+            ("Gel Electrophoresis", "A laboratory method used to separate mixtures of DNA, RNA, or proteins according to molecular size"),
+            ("Ecology", "The branch of biology that deals with the relations of organisms to one another and to their physical surroundings"),
+            ("Food Webs", "System of interlocking and interdependent food chains in a biological community"),
+            ("Ecological Niche", "The match of a species to a specific environmental condition and habitat role"),
+            ("Population Growth", "The increase in the number of individuals in a population over time"),
+            ("Habitat Boundaries", "The physical limits of the area where an organism or community lives"),
+            ("CRISPR Gene Editing", "A technology that research scientists use to selectively modify the DNA of living organisms")
+        ],
+        "Final Assessment & Capstone": [
+            ("Human Physiology", "The study of the mechanical, physical, and biochemical functions of humans"),
+            ("Organ Systems", "Groups of organs that work together to perform vital body functions"),
+            ("Cardiovascular System", "The organ system that permits blood to circulate and transport nutrients throughout the body"),
+            ("Nervous System", "The network of nerve cells and fibers that transmits nerve impulses between parts of the body"),
+            ("Endocrine System", "The glands that produce hormones that regulate metabolism, growth, and tissue function"),
+            ("Physiological Homeostasis", "The tendency of biological systems to maintain internal stability while adjusting to conditions"),
+            ("Molecular Biology", "The branch of biology that concerns the molecular basis of biological activity in and between cells"),
+            ("Transcription Factors", "Proteins that control the rate of transcription of genetic information from DNA to messenger RNA"),
+            ("Operon Controls", "Genetic regulatory systems found in bacteria where genes coding for functional proteins are clustered"),
+            ("Epigenetic Modification", "Changes to DNA regulating gene expression without altering the underlying nucleotide sequence"),
+            ("Eukaryotic Genomes", "The complete set of genetic material contained in eukaryotic cells"),
+            ("Model Organisms", "Non-human species extensively studied to understand particular biological phenomena"),
+            ("Hormone Feedback Loops", "Biological pathways where hormones inhibit or stimulate their own release to maintain balance"),
+            ("Synaptic Transmission", "The process by which signaling molecules are released by a neuron to excite another"),
+            ("Nerve Impulse Speed", "The velocity at which action potentials propagate along nerve fibers")
+        ]
+    },
+    "agriculture": {
+        "Foundational Principles": [
+            ("Agronomy", "The science of soil management and crop production to optimize yields"),
+            ("Crop Farming", "The practice of growing crops for commercial sales or food consumption"),
+            ("Soil Horizon", "A layer parallel to the soil surface whose physical characteristics differ from layers above and beneath"),
+            ("Soil pH", "A measure of the acidity or alkalinity of a soil"),
+            ("Cation Exchange", "The capacity of soil to hold and exchange mineral nutrients for plant root uptake"),
+            ("Livestock Husbandry", "The management and care of farm animals for milk, meat, or fiber outputs"),
+            ("Genetic Selection", "Choosing parent plants or animals with desirable traits to breed offspring"),
+            ("Feed Rations", "The amount and composition of feed provided to farm animals daily"),
+            ("Dairy Processing", "Industrial procedures pasteurizing and packaging milk and cheese products"),
+            ("Nutrient Management", "Matching fertilizer applications to crop needs to protect soil quality"),
+            ("Nitrogen Cycle", "The biochemical path converting nitrogen gas into usable plant soil nutrients"),
+            ("Soil Horizons", "The distinct vertical layers of soil indicating aging and organic density"),
+            ("Horizons Mapping", "Identifying the specific sand, clay, and organic topsoil layers of a farm"),
+            ("Livestock Nutrition", "Optimizing animal feeds with protein, fiber, and trace minerals for growth"),
+            ("Poultry Systems", "Egg and broiler production facilities utilizing strict temperature and safety rules")
+        ],
+        "Intermediate Methodologies": [
+            ("Crop Rotation", "Growing different crops in sequence on the same land to improve soil health"),
+            ("Tillage Methods", "Preparing soil by mechanical agitation, such as plowing or digging"),
+            ("Drip Irrigation", "Micro-irrigation system saving water by dripping slowly to plant roots"),
+            ("Sprinkler Irrigation", "Applying irrigation water in a manner simulating natural rainfall"),
+            ("Plant Pathology", "The scientific study of diseases in plants caused by pathogens"),
+            ("Crop Blights", "Rapid and complete destruction of plant leaves and flowers by pathogens"),
+            ("Integrated Pest Management", "Combining chemical, biological, and physical controls to manage crop pests"),
+            ("Biological Control", "Using beneficial predatory insects or pathogens to suppress crop pest numbers"),
+            ("Commodity Markets", "Exchange platforms where agricultural crops are traded in futures contracts"),
+            ("Farm Bookkeeping", "Recording financial expenditures, crop yields, and revenues for agribusiness audits"),
+            ("Irrigation Schedules", "Timing water applications to match crop growth cycles and soil moisture levels"),
+            ("Agricultural Economics", "Applying economic principles to optimize farm outputs and distribution networks"),
+            ("Pesticides Chemistry", "Chemical formulas designed to control insect weeds or fungal crop diseases"),
+            ("Agribusiness Marketing", "The strategic distribution and branding of agricultural outputs to retail buyers"),
+            ("Farming Subsidies", "Government financial grants paid to farmers to stabilize national food prices")
+        ],
+        "Final Assessment & Capstone": [
+            ("Sustainable Farming", "Farming practices prioritizing ecological conservation and long-term soil health"),
+            ("Organic Farming", "Crop production avoiding synthetic chemical fertilizers and genetically modified seeds"),
+            ("Composting", "Biological decomposition of organic waste into nutrient-rich soil manure"),
+            ("Precision Agriculture", "Using technology to customize fertilizer and water applications to specific field zones"),
+            ("GPS Yield Maps", "Spatial data records tracking crop yield fluctuations across farm acreage boundaries"),
+            ("Drone Scouting", "Using remote aerial cameras to spot plant diseases or dry soil fields quickly"),
+            ("Soil Moisture Sensors", "Electronic probes measuring electrical resistance to track soil water levels"),
+            ("Agribusiness Technology", "The integration of automation, data analytics, and cloud software in farming"),
+            ("Conservation Tillage", "Farming methods leaving crop residue on soil surfaces to prevent erosion"),
+            ("Green Manure", "Growing cover crops and plowing them into soil to restore organic nitrogen levels"),
+            ("Farm Business Proposal", "A comprehensive business plan detailing crop budgets, machinery, and market sales"),
+            ("Yield Optimization", "Structuring farm resources to maximize crop output per acre under budget caps"),
+            ("Drones Scouting Analysis", "Interpreting multispectral crop photos to identify nitrogen deficits"),
+            ("Agribusiness Compliance", "Satisfying national food safety, labor wages, and environmental regulations on farms"),
+            ("Smart Sensors Networks", "Connecting field probes via wireless grids to automate water pump valves")
+        ]
+    },
+    "education": {
+        "Foundational Principles": [
+            ("Pedagogy", "The method and practice of teaching, especially as an academic subject"),
+            ("Educational Philosophy", "The study of the purpose, nature, and goals of classroom schooling"),
+            ("Cognitive Development", "How children construct thought processes, including memory and decision-making"),
+            ("Learning Styles", "The theories classification representing how individuals prefer to acquire knowledge"),
+            ("Behavioral Conditioning", "Learning behaviors through rewards and punishments in classroom environments"),
+            ("Curriculum Design", "The systematic structuring of educational courses, lectures, and exams"),
+            ("Bloom's Taxonomy", "A classification system used to define and distinguish levels of human cognition"),
+            ("Learning Objectives", "Statements describing what students should know and do by the end of a lesson"),
+            ("Educational Psychology", "The scientific study of human learning and cognitive retention processes"),
+            ("Memory Retention", "The ability of students to store and retrieve lesson concepts over time"),
+            ("Student Motivation", "The internal drive and environmental rewards pushing students to study"),
+            ("Academic Syllabi", "Formal course guides outlining weekly lectures, reading assignments, and grading rules"),
+            ("Instructional Goals", "High-level aims describing the expected achievements of an educational program"),
+            ("Teaching Philosophy", "A teacher's personal beliefs regarding student potential and instructional style"),
+            ("Behavioral Objectives", "Specific, measurable student actions proving mastery of a lesson concept")
+        ],
+        "Intermediate Methodologies": [
+            ("Classroom Routines", "Established patterns and habits regulating daily student movements and activities"),
+            ("Instructional Strategies", "Methods teachers use to deliver lesson contents, such as lectures or debates"),
+            ("Active Learning", "Instructional methods engaging students directly in processing lesson concepts"),
+            ("Educational Assessment", "The systematic process of measuring and evaluating student academic progress"),
+            ("Formative Quizzes", "Low-stakes assessments providing immediate feedback to guide student study"),
+            ("Summative Exams", "High-stakes assessments evaluating cumulative learning to assign course grades"),
+            ("Norm-Referenced Test", "Tests comparing a student's score against a national sample percentile"),
+            ("Inclusive Pedagogy", "Instructional designs supporting diverse learning needs and backgrounds"),
+            ("Learning Disability", "Neurological conditions limiting student reading, writing, or math skills"),
+            ("IEP Plans", "Individualized Education Programs outlining custom accommodations for disabled students"),
+            ("Classroom Management", "Techniques teachers use to maintain order and focus during lessons"),
+            ("Sensory Impairments", "Physical limitations, such as low vision or hearing, requiring custom classrooms"),
+            ("Instructional Accommodation", "Modifying lesson formats or testing rules to support diverse students"),
+            ("Differentiated Instruction", "Tailoring teaching methods to match individual student readiness levels"),
+            ("Testing Validity", "The degree to which a classroom exam measures the intended learning standards")
+        ],
+        "Final Assessment & Capstone": [
+            ("Educational Technology", "The integration of hardware and software to facilitate student learning"),
+            ("LMS Systems", "Learning Management Systems hosting course materials, grades, and student logins"),
+            ("Digital Classrooms", "Online learning environments using video calls and interactive whiteboards"),
+            ("School Administration", "The management of school budgets, hiring, student conduct, and scheduling"),
+            ("Teacher Evaluations", "Structured audits assessing teacher instructional efficacy and professionalism"),
+            ("Education Law", "The legislative codes regulating student civil rights, funding, and safety"),
+            ("Action Research", "Systematic inquiry conducted by teachers to solve specific classroom issues"),
+            ("School Budgeting", "Allocating financial resources to fund classroom materials, teachers, and facilities"),
+            ("Interactive Whiteboard", "Digital touch screens displaying visual lesson materials and saving notes"),
+            ("Online Classroom Quizzes", "Automated software grading and charting student assessment attempts"),
+            ("Student Conduct Code", "Established behavioral regulations defining suspension and detention rules"),
+            ("Federal Funding Laws", "State and national education laws allocating tax budgets based on school audits"),
+            ("Action Study Methods", "Designing classroom experiments to evaluate new teaching strategies"),
+            ("Professional Development", "Ongoing training programs keeping teachers updated on instructional standards"),
+            ("Curriculum Auditing", "Reviewing school course outlines to ensure alignment with national standards")
         ]
     }
 }
