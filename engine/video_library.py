@@ -259,6 +259,134 @@ LESSON_VIDEO_MAP = {
         "https://www.youtube.com/embed/pCzeT3vWl-s",
     "final education capstone research project":
         "https://www.youtube.com/embed/H0tDuXcX-o4",
+
+    # ── DYNAMIC CURRICULUM EXTENSIONS (63 LESSONS) ───────────────────────────
+    "2d animation and motion graphic design":
+        "https://www.youtube.com/embed/PkZNo7MFNFg",        # Graphic Design & Web Dev
+    "advanced calculus and linear algebra":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math & Calculus
+    "advanced solid state devices & laser systems":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics & Solid State
+    "advanced thermodynamics and heat transfer":
+        "https://www.youtube.com/embed/A27yjpECNL8",        # Physics Thermodynamics
+    "algorithmic trading and quantitative analysis":
+        "https://www.youtube.com/embed/IB6iFZKqZRQ",        # Economics & Finance
+    "behavioral analysis and social interaction":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Psychology
+    "behavioral criminology & penal systems":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Psychology / Criminology
+    "black-scholes and quantitative finance modeling":
+        "https://www.youtube.com/embed/IB6iFZKqZRQ",        # Finance
+    "blockchain, cryptocurrencies and decentralized finance":
+        "https://www.youtube.com/embed/f_BYsthkFZo",        # Fintech / MIS
+    "circuit theory and embedded systems":
+        "https://www.youtube.com/embed/HXV3zeQKqGY",        # Circuits & Embedded
+    "classical mechanics and wave systems":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics Mechanics
+    "clinical psychology & assessment models":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Psychology
+    "contemporary public policy implementation":
+        "https://www.youtube.com/embed/K2P2rRLl1Ik",        # Business Ethics / Public Policy
+    "corporate finance and asset valuation":
+        "https://www.youtube.com/embed/IB6iFZKqZRQ",        # Finance
+    "creative writing and storyboarding":
+        "https://www.youtube.com/embed/y2x83P4jVoA",        # Academic Writing
+    "developmental psychology across lifespans":
+        "https://www.youtube.com/embed/y_2634Vd6K4",        # Educational Psychology
+    "digital game art & user interface design":
+        "https://www.youtube.com/embed/PkZNo7MFNFg",        # Graphic Design / UI
+    "digital illustration and vector drafting":
+        "https://www.youtube.com/embed/PkZNo7MFNFg",        # Design
+    "electromagnetism and maxwell's equations":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics Electromagnetism
+    "final applied physics capstone project":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics Capstone
+    "final clinical case formulation capstone":
+        "https://www.youtube.com/embed/lDqL4WScGSw",        # Medicine Capstone
+    "final engineering capstone implementation":
+        "https://www.youtube.com/embed/bipTWWHya8A",        # Engineering Capstone
+    "final mathematical modeling capstone":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math Capstone
+    "final policy research proposal capstone":
+        "https://www.youtube.com/embed/3ODP-8T9x6s",        # Research Capstone
+    "final portfolio advisory capstone":
+        "https://www.youtube.com/embed/K2P2rRLl1Ik",        # Business Capstone
+    "final portfolio exhibition capstone":
+        "https://www.youtube.com/embed/bipTWWHya8A",        # Art/Design Capstone
+    "financial regulation, fintech security & compliance":
+        "https://www.youtube.com/embed/IB6iFZKqZRQ",        # Finance
+    "fluid dynamics and aerodynamics":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics Fluids
+    "fluid statics and subsurface exploration":
+        "https://www.youtube.com/embed/ODQudvbxNtI",        # Reservoir Engineering
+    "forensic accounting & auditing standards":
+        "https://www.youtube.com/embed/yYX4bvQSqbo",        # Accounting
+    "forensic psychology & criminal mind profiling":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Forensic Psychology
+    "graphic design fundamentals & color theory":
+        "https://www.youtube.com/embed/PkZNo7MFNFg",        # Design Basics
+    "history of art and architecture":
+        "https://www.youtube.com/embed/YMXnQqDlEqs",        # Art History
+    "history of modern art and photography":
+        "https://www.youtube.com/embed/YMXnQqDlEqs",        # Art History
+    "international relations & diplomatic frameworks":
+        "https://www.youtube.com/embed/K2P2rRLl1Ik",        # Ethics/History
+    "introduction to cad design and engineering materials":
+        "https://www.youtube.com/embed/9wD0Kq0cIag",        # CAD Design
+    "introduction to psychology and cognitive science":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Psychology
+    "introduction to sociology and social institutions":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Psychology/Sociology
+    "introductory thermodynamics & heat dynamics":
+        "https://www.youtube.com/embed/A27yjpECNL8",        # Physics Thermodynamics
+    "linear and integer programming":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math
+    "macroeconomics and public fiscal policy":
+        "https://www.youtube.com/embed/IB6iFZKqZRQ",        # Economics
+    "media studies and digital communication":
+        "https://www.youtube.com/embed/K2P2rRLl1Ik",        # Business Ethics
+    "microeconomics & market mechanisms":
+        "https://www.youtube.com/embed/IB6iFZKqZRQ",        # Economics
+    "neuropsychology & biological brain structure":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Neuropsychology
+    "non-linear optimization and sensitivity analysis":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math
+    "nuclear physics and crystalline materials":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics
+    "numerical approximation and solvers":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math
+    "operations research and optimization basics":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math
+    "optics, lasers and wave propagation":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics Optics
+    "ordinary differential equations and modeling":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math
+    "organizational psychology and team behavior":
+        "https://www.youtube.com/embed/vo4pMVb0R6M",        # Psychology
+    "philosophy of science and social inquiry":
+        "https://www.youtube.com/embed/3ODP-8T9x6s",        # Research
+    "political science & global governance models":
+        "https://www.youtube.com/embed/wYF_jnFOFCs",        # Governance
+    "principles of financial accounting":
+        "https://www.youtube.com/embed/yYX4bvQSqbo",        # Accounting
+    "public policy analysis & social audits":
+        "https://www.youtube.com/embed/K2P2rRLl1Ik",        # Public Policy
+    "quantum mechanics & solid state physics":
+        "https://www.youtube.com/embed/ZM8ECpBuQYE",        # Physics Quantum
+    "research methods and psychometrics":
+        "https://www.youtube.com/embed/3ODP-8T9x6s",        # Research Methods
+    "reservoir engineering and drill string dynamics":
+        "https://www.youtube.com/embed/ODQudvbxNtI",        # Reservoir Engineering
+    "robotics motion planning and microgrid design":
+        "https://www.youtube.com/embed/bipTWWHya8A",        # Engineering
+    "signal processing and network control":
+        "https://www.youtube.com/embed/qiQR5rTSshw",        # Network/Signals
+    "stochastic processes and probability theory":
+        "https://www.youtube.com/embed/OmJ-4B-mS-Y",        # Math Probability
+    "structural integrity and aerodynamic modeling":
+        "https://www.youtube.com/embed/bipTWWHya8A",        # Engineering
+    "visual communication & brand layouts":
+        "https://www.youtube.com/embed/PkZNo7MFNFg",        # Graphic Design
 }
 
 
@@ -394,7 +522,7 @@ CATEGORY_FALLBACKS = {
     "business":      "https://www.youtube.com/embed/K2P2rRLl1Ik",
     "law":           "https://www.youtube.com/embed/k8GMElKpIcA",
     "medicine":      "https://www.youtube.com/embed/uBGl2BujkPQ",
-    "engineering":   "https://www.youtube.com/embed/wYF_jnFOFCs",
+    "engineering":   "https://www.youtube.com/embed/bipTWWHya8A",  # Crash Course Engineering #1
     "math":          "https://www.youtube.com/embed/OmJ-4B-mS-Y",
     "physics":       "https://www.youtube.com/embed/ZM8ECpBuQYE",
     "chemistry":     "https://www.youtube.com/embed/bka20Q9TN6M",
@@ -402,10 +530,10 @@ CATEGORY_FALLBACKS = {
     "psychology":    "https://www.youtube.com/embed/vo4pMVb0R6M",
     "finance":       "https://www.youtube.com/embed/IB6iFZKqZRQ",
     "social_sciences":"https://www.youtube.com/embed/vo4pMVb0R6M",
-    "arts":          "https://www.youtube.com/embed/rfscVS0vtbw",
+    "arts":          "https://www.youtube.com/embed/YMXnQqDlEqs",  # Art History
     "agriculture":   "https://www.youtube.com/embed/fD14S92pW8I",
     "education":     "https://www.youtube.com/embed/H0tDuXcX-o4",
-    "default":       "https://www.youtube.com/embed/rfscVS0vtbw",
+    "default":       "https://www.youtube.com/embed/5MgBikcWnYU",  # Crash Course Study Skills
 }
 
 
@@ -413,11 +541,30 @@ def get_lesson_video(lesson_title: str, course_title: str = "") -> str:
     """
     Returns the guaranteed-accurate YouTube embed URL for a given lesson title.
     Three-tier lookup:
-      1. Exact match in LESSON_VIDEO_MAP
-      2. Keyword match in KEYWORD_VIDEO_MAP
-      3. Generic educational fallback (mapped dynamically by category)
+      1. Java-specific override for computing courses
+      2. Exact match in LESSON_VIDEO_MAP
+      3. Keyword match in KEYWORD_VIDEO_MAP
+      4. Generic educational fallback (mapped dynamically by category)
     """
     key = lesson_title.strip().lower()
+    course_lower = course_title.lower().strip()
+
+    # Java override logic to prevent Java courses from showing Python videos
+    is_java = "java" in course_lower or "csc 212" in course_lower
+    if is_java:
+        JAVA_MAP = {
+            "introduction to programming concepts": "https://www.youtube.com/embed/xk4_1vDrzzo", # Java Full Course
+            "control flow and logical operators": "https://www.youtube.com/embed/xk4_1vDrzzo",
+            "functions, scope, and modularity": "https://www.youtube.com/embed/xk4_1vDrzzo",
+            "object-oriented programming (oop) fundamentals": "https://www.youtube.com/embed/R9Z4c9P153M", # Java OOP
+            "error handling and exception management": "https://www.youtube.com/embed/xk4_1vDrzzo",
+            "file i/o operations and data serialization": "https://www.youtube.com/embed/xk4_1vDrzzo",
+            "writing clean, maintainable code": "https://www.youtube.com/embed/R9Z4c9P153M",
+            "refactoring and software optimization": "https://www.youtube.com/embed/R9Z4c9P153M",
+            "final capstone project implementation": "https://www.youtube.com/embed/xk4_1vDrzzo"
+        }
+        if key in JAVA_MAP:
+            return JAVA_MAP[key]
 
     # Tier 1 — exact title match
     if key in LESSON_VIDEO_MAP:

@@ -1,13 +1,13 @@
 {
   "Computer Science": [
-    "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", "Cloud Computing", 
+    "Python", "Java", "Programming", "C++", "JavaScript", "Software Engineering", "Artificial Intelligence", "Data Science", "Cybersecurity", "Cloud Computing", 
     "Web Development", "Mobile Dev", "Machine Learning", "Database Management", "Networks & Distributed Systems", 
     "Human-Computer Interaction", "Game Development", "Computer Graphics", "Natural Language Processing", 
     "DevOps", "Blockchain", "Cryptography", "Algorithms & Data Structures", "UI/UX Design", "Computer Vision",
     "Management Information System"
   ],
   "Information and Computer Engineering": [
-    "Software Engineering", "Computer Architecture", "Computer Networks", "Database Management", "Embedded Systems", 
+    "Python", "Java", "Programming", "C++", "JavaScript", "Software Engineering", "Computer Architecture", "Computer Networks", "Database Management", "Embedded Systems", 
     "Information Security", "System Architecture", "VLSI Design", "Digital Signal Processing", "Operating Systems", 
     "Microprocessors", "Compiler Design"
   ],

@@ -1368,7 +1368,7 @@ Prepare your final thesis/project application by applying all concepts learned a
             return "finance"
         elif has_match(["sociolog", "politic", "media", "social", "criminolog", "public policy", "relations", "anthropology", "peace", "conflict"]):
             return "social_sciences"
-        elif has_match(["mechanic", "circuit", "engineering", "petroleum", "reservoir", "drill", "power", "embedded", "vlsi", "device", "cad", "material", "civil", "aerospace", "mechatronics", "biomedical", "environmental"]):
+        elif has_match(["mechanic", "circuit", "engineering", "petroleum", "reservoir", "drill", "power", "embedded", "vlsi", "device", "cad", "material", "civil", "aerospace", "mechatronics", "biomedical", "environmental", "oil", "gas", "eor", "well", "geology", "subsurface", "logging", "hydrocarbon"]):
             return "engineering"
         elif has_match(["ethic", "business", "management", "market", "corporate", "administration", "human resource", "entrepreneurship", "supply chain"]):
             return "business"
@@ -1429,9 +1429,10 @@ Prepare your final thesis/project application by applying all concepts learned a
         curriculum = self.curriculum_data.get(category, self.default_category)
         
         # Determine module list to load (Foundational, Intermediate, or Capstone)
-        if "Principles" in module_title or "1" in module_title or "Foundational" in module_title:
+        m_title_clean = module_title.split(" of ")[0]
+        if "Principles" in m_title_clean or "1" in m_title_clean or "Foundational" in m_title_clean:
             lessons_pool = curriculum.get("Foundational Principles", self.default_category["Foundational Principles"])
-        elif "Methodologies" in module_title or "2" in module_title or "Intermediate" in module_title:
+        elif "Methodologies" in m_title_clean or "2" in m_title_clean or "Intermediate" in m_title_clean:
             lessons_pool = curriculum.get("Intermediate Methodologies", self.default_category["Intermediate Methodologies"])
         else:
             lessons_pool = curriculum.get("Final Assessment & Capstone", self.default_category["Final Assessment & Capstone"])
@@ -1454,9 +1455,10 @@ Prepare your final thesis/project application by applying all concepts learned a
         category = self._determine_category(course_title, module_title, course_category=course_category, course_dept=course_dept)
         
         # Determine module list
-        if "Principles" in module_title or "1" in module_title or "Foundational" in module_title:
+        m_title_clean = module_title.split(" of ")[0]
+        if "Principles" in m_title_clean or "1" in m_title_clean or "Foundational" in m_title_clean:
             module_key = "Foundational Principles"
-        elif "Methodologies" in module_title or "2" in module_title or "Intermediate" in module_title:
+        elif "Methodologies" in m_title_clean or "2" in m_title_clean or "Intermediate" in m_title_clean:
             module_key = "Intermediate Methodologies"
         else:
             module_key = "Final Assessment & Capstone"

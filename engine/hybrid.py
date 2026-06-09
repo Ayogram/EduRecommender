@@ -21,6 +21,27 @@ CONTENT_WEIGHT = 0.3
 MF_WEIGHT = 0.3
 COLD_START_THRESHOLD = 3  # min ratings before hybrid kicks in
 
+RELATED_DEPARTMENTS = {
+    "Computer Science": ["Information and Computer Engineering", "Industrial Mathematics", "Fintech"],
+    "Information and Computer Engineering": ["Computer Science", "Electrical Engineering", "Industrial Mathematics"],
+    "Electrical Engineering": ["Information and Computer Engineering", "Mechanical Engineering", "Industrial Physics", "Industrial Mathematics"],
+    "Mechanical Engineering": ["Electrical Engineering", "Industrial Physics", "Petroleum Engineering", "Industrial Mathematics"],
+    "Petroleum Engineering": ["Mechanical Engineering", "Electrical Engineering", "Industrial Physics", "Industrial Mathematics"],
+    "Industrial Mathematics": ["Computer Science", "Information and Computer Engineering", "Economics", "Industrial Physics"],
+    "Industrial Physics": ["Industrial Mathematics", "Mechanical Engineering", "Electrical Engineering"],
+    "Medicine": ["Psychology", "Social Sciences", "Others"],
+    "Psychology": ["Medicine", "Social Sciences"],
+    "Economics": ["Fintech", "Accounting", "Business Administration", "Industrial Mathematics"],
+    "Fintech": ["Economics", "Accounting", "Business Administration", "Computer Science"],
+    "Business Administration": ["Economics", "Fintech", "Accounting"],
+    "Accounting": ["Economics", "Fintech", "Business Administration"],
+    "Law": ["Business Administration", "Social Sciences"],
+    "Arts": ["Social Sciences"],
+    "Social Sciences": ["Law", "Psychology", "Economics", "Arts"],
+    "Others": ["Medicine", "Industrial Mathematics"]
+}
+COLD_START_THRESHOLD = 3  # min ratings before hybrid kicks in
+
 
 def _generate_explanation(user_id, course, method, cf_score, content_score, success_prob):
     """Build a structured JSON explanation string including success prediction and analysis."""
@@ -113,8 +134,13 @@ def generate_comparative_explanations(candidates, user_dept, user_field, user_in
                 strengths.append(f"Synergy with your interests in {', '.join(matching_tags[:2])}")
                 
         # 3. Department matching
-        if c_dept and user_dept and c_dept.lower().strip() == user_dept.lower().strip():
-            strengths.append(f"Direct match for your core department: {c_dept}")
+        if c_dept and user_dept:
+            if c_dept.lower().strip() == user_dept.lower().strip():
+                strengths.append(f"Direct match for your core department: {c_dept}")
+            else:
+                related = RELATED_DEPARTMENTS.get(user_dept, [])
+                if any(r_dept.lower().strip() == c_dept.lower().strip() for r_dept in related):
+                    strengths.append(f"Offered by related department: {c_dept}")
             
         if not strengths:
             strengths.append("Matches general academic performance patterns")
@@ -279,11 +305,39 @@ def get_recommendations(user_id, top_n=10):
                 pass
 
         # ACCURACY FILTER:
-        # A recommended course must have at least a minimum similarity score (score >= 0.05) OR 
-        # be profile-relevant (matching department, field, or interests) to be recommended.
-        # This completely filters out random unrelated courses (e.g. Law or Medicine for CS students).
-        if score < 0.05 and not is_profile_relevant:
-            continue
+        # If the user has a department specified, we restrict recommendations strictly to:
+        # 1. Courses in their own department.
+        # 2. Courses in related departments (defined in RELATED_DEPARTMENTS).
+        # 3. Courses that have an interest tag overlap.
+        # Otherwise, if no department is specified, the course must be profile-relevant or have score >= 0.05.
+        if user_dept:
+            is_own_dept = (course_row["department"] and user_dept.lower().strip() == course_row["department"].lower().strip())
+            is_related_dept = False
+            related = RELATED_DEPARTMENTS.get(user_dept, [])
+            if course_row["department"]:
+                if any(r_dept.lower().strip() == course_row["department"].lower().strip() for r_dept in related):
+                    is_related_dept = True
+            
+            has_interest_match = False
+            if user_interests:
+                try:
+                    c_tags = [t.lower().strip() for t in json.loads(course_row["tags"])] if course_row["tags"] else []
+                    for interest in user_interests:
+                        interest_lower = interest.lower().strip()
+                        for tag in c_tags:
+                            if tag in interest_lower or interest_lower in tag:
+                                has_interest_match = True
+                                break
+                        if has_interest_match:
+                            break
+                except Exception:
+                    pass
+
+            if not (is_own_dept or is_related_dept or has_interest_match):
+                continue
+        else:
+            if score < 0.05 and not is_profile_relevant:
+                continue
 
         cf_s = cf_scores.get(course_id, 0.0) if method == "hybrid" else 0.0
         ct_s = content_scores.get(course_id, 0.0)
@@ -301,16 +355,16 @@ def get_recommendations(user_id, top_n=10):
 
         # Direct department match
         if u_dept and (u_dept == c_dept or c_dept in u_dept or u_dept in c_dept):
-            primary_interest_boost += 0.12
+            primary_interest_boost += 0.35
         
         # Primary academic field interest matches department, category, or tags
         if u_field and (u_field == c_dept or c_dept in u_field or u_field in c_cat or c_cat in u_field):
-            primary_interest_boost += 0.22  # Significant weight for primary interest!
+            primary_interest_boost += 0.35  # Significant weight for primary interest!
         else:
             try:
                 c_tags = [t.lower().strip() for t in json.loads(course_row["tags"])] if course_row["tags"] else []
                 if u_field and any(tag in u_field or u_field in tag for tag in c_tags):
-                    primary_interest_boost += 0.12
+                    primary_interest_boost += 0.20
             except Exception:
                 pass
                 
@@ -320,36 +374,36 @@ def get_recommendations(user_id, top_n=10):
         # Add a tiny deterministic factor to ensure no duplicate match percentages
         success_prob += (course_id % 7) * 0.005
 
-        # CGPA-based difficulty adjustments
+        # CGPA-based difficulty adjustments (scaled to not overpower relevance)
         difficulty_adjust = 0.0
         if gpa >= (3.5 if gpa_scale == 4.0 else 4.25):
             if course_row["difficulty"] == "advanced":
-                difficulty_adjust = 0.35
+                difficulty_adjust = 0.05
             elif course_row["difficulty"] == "intermediate":
-                difficulty_adjust = 0.20
+                difficulty_adjust = 0.03
             elif course_row["difficulty"] == "beginner":
-                difficulty_adjust = -0.25
+                difficulty_adjust = -0.03
         elif gpa >= (3.0 if gpa_scale == 4.0 else 3.75):
             if course_row["difficulty"] == "advanced":
-                difficulty_adjust = 0.15
+                difficulty_adjust = 0.03
             elif course_row["difficulty"] == "intermediate":
-                difficulty_adjust = 0.10
+                difficulty_adjust = 0.01
             elif course_row["difficulty"] == "beginner":
-                difficulty_adjust = -0.05
+                difficulty_adjust = -0.01
         elif gpa >= (2.0 if gpa_scale == 4.0 else 2.5):
             if course_row["difficulty"] == "beginner":
-                difficulty_adjust = 0.20
+                difficulty_adjust = 0.03
             elif course_row["difficulty"] == "intermediate":
-                difficulty_adjust = 0.05
+                difficulty_adjust = 0.01
             elif course_row["difficulty"] == "advanced":
-                difficulty_adjust = -0.25
+                difficulty_adjust = -0.03
         else:
             if course_row["difficulty"] == "beginner":
-                difficulty_adjust = 0.35
+                difficulty_adjust = 0.05
             elif course_row["difficulty"] == "intermediate":
-                difficulty_adjust = -0.25
+                difficulty_adjust = -0.03
             elif course_row["difficulty"] == "advanced":
-                difficulty_adjust = -0.45
+                difficulty_adjust = -0.05
         success_prob += difficulty_adjust
 
         # Historical boost
@@ -724,12 +778,19 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
         except Exception:
             pass
 
+    # Determine if in a related department
+    is_related_dept = False
+    if u_dept_clean and c_dept_clean:
+        related = RELATED_DEPARTMENTS.get(user_dept, [])
+        if any(r_dept.lower().strip() == c_dept_clean for r_dept in related):
+            is_related_dept = True
+
     # ── FIELD MISMATCH PENALTY ──────────────────────────────────────────────
-    # If neither dept_boost nor field_boost fired, the course is from a completely
+    # If neither dept_boost nor field_boost nor is_related_dept fired, the course is from a completely
     # different domain. Apply a strong penalty so e.g. Psychology never scores
     # 70%+ for a Computer Science student.
     field_mismatch_penalty = 0.0
-    if dept_boost == 0.0 and field_boost == 0.0:
+    if dept_boost == 0.0 and field_boost == 0.0 and not is_related_dept:
         # Check whether interest tags at least partially overlap
         interest_overlap = False
         if user_interests and course_tags:
@@ -747,7 +808,7 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
             field_mismatch_penalty = -0.20
 
     # is_field_match is True when at least dept or field boost was earned
-    is_field_match = (dept_boost > 0 or field_boost > 0)
+    is_field_match = (dept_boost > 0 or field_boost > 0 or is_related_dept)
     # (reasons_pos entries for field match are added below after success_prob is computed)
 
     
@@ -836,6 +897,8 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
             reasons_pos.append(f"Matching core department: {course_dept} (+12% match boost).")
         if field_boost > 0:
             reasons_pos.append(f"Matching academic field / interest: {user_field} (+22% match boost).")
+        if is_related_dept:
+            reasons_pos.append(f"Offered by related department: {course_dept} (aligned domain).")
     elif field_mismatch_penalty < 0:
         reasons_neg.append(f"Offered by {course_dept} department — significantly outside your primary field ({user_field or user_dept}). This course covers concepts not typically covered in your programme.")
     else:

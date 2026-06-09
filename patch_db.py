@@ -92,11 +92,11 @@ def patch_db(db_path=None):
         print("Adding column video_url to module_lessons...")
         cursor.execute("ALTER TABLE module_lessons ADD COLUMN video_url TEXT")
 
-    # 8. Check and seed courses if empty or >= 500 (migrating back to custom courses)
+    # 8. Check and seed courses if empty, < 110, or >= 500 (migrating to the full 112 course catalog)
     cursor.execute("SELECT COUNT(*) FROM courses")
     count = cursor.fetchone()[0]
-    if count >= 500 or count == 0:
-        print("Migrating back to the custom 134 course catalog from seed_data_v2.py...")
+    if count < 110 or count >= 500:
+        print("Migrating to the custom 112 course catalog (seed_data_v2 + seed_cs_curriculum)...")
         cursor.execute("DELETE FROM courses")
         try:
             cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'courses'")
@@ -119,6 +119,35 @@ def patch_db(db_path=None):
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (title, desc, dept, cat, diff, prereq, creds, json.dumps(tags))
             )
+
+        CS_COURSES = [
+            ("CSC 111", "History, hardware, software, and basic logic.", "Computer Science", "Computer Science", "beginner", "None", 3, ["Basics", "Intro"]),
+            ("CSC 121", "Introductory programming concepts using Python.", "Computer Science", "Computer Science", "beginner", "None", 4, ["Python", "Programming"]),
+            ("MAT 111", "Fundamental math for scientists.", "Others", "Others", "beginner", "None", 3, ["Math", "Algebra"]),
+            ("CSC 211", "Arrays, Linked Lists, Stacks, Queues, and Trees.", "Computer Science", "Computer Science", "intermediate", "CSC 121", 4, ["Data Structures", "Algorithms"]),
+            ("CSC 212", "Classes, inheritance, and polymorphism in Java.", "Computer Science", "Computer Science", "intermediate", "CSC 121", 4, ["Java", "OOP"]),
+            ("CSC 221", "Digital logic, CPU design, and assembly language.", "Computer Science", "Computer Science", "intermediate", "CSC 111", 3, ["Hardware", "Digital Logic"]),
+            ("CSC 222", "Sets, graphs, and combinatorics for CS.", "Others", "Others", "intermediate", "MAT 111", 3, ["Math", "Discrete"]),
+            ("CSC 311", "Kernels, processes, memory management, and file systems.", "Computer Science", "Computer Science", "intermediate", "CSC 211, CSC 221", 4, ["OS", "Systems"]),
+            ("CSC 312", "Relational algebra, SQL, and database design.", "Computer Science", "Computer Science", "intermediate", "CSC 211", 4, ["SQL", "Databases"]),
+            ("CSC 313", "SDLC, requirements, and system design.", "Computer Science", "Computer Science", "intermediate", "CSC 212", 3, ["SE", "Design"]),
+            ("CSC 321", "Big O notation, sorting, and dynamic programming.", "Computer Science", "Computer Science", "intermediate", "CSC 211", 3, ["Algorithms", "Logic"]),
+            ("CSC 322", "Automata, formal languages, and computability.", "Computer Science", "Computer Science", "intermediate", "CSC 222", 3, ["Theory", "Automata"]),
+            ("CSC 323", "OSI model, TCP/IP, and network security.", "Computer Science", "Computer Science", "intermediate", "CSC 311", 3, ["Networking", "TCP/IP"]),
+            ("CSC 411", "Search algorithms, expert systems, and ML basics.", "Computer Science", "Computer Science", "advanced", "CSC 321, MAT 111", 4, ["AI", "Intelligence"]),
+            ("CSC 412", "UI/UX design principles and user testing.", "Computer Science", "Computer Science", "advanced", "CSC 313", 3, ["UI", "UX"]),
+            ("CSC 413", "Lexical analysis, parsing, and code generation.", "Computer Science", "Computer Science", "advanced", "CSC 322", 3, ["Compilers", "Languages"]),
+            ("CSC 421", "Supervised, unsupervised and deep learning.", "Computer Science", "Computer Science", "advanced", "CSC 411, MAT 111", 4, ["ML", "Data Science"]),
+            ("CSC 422", "Agile, Waterfall, and project tracking.", "Computer Science", "Computer Science", "advanced", "CSC 313", 3, ["Management", "PM"]),
+            ("CSC 499", "Independent research and development.", "Computer Science", "Computer Science", "advanced", "All 300 Level", 6, ["Research", "Development"])
+        ]
+        for title, desc, dept, cat, diff, prereq, creds, tags in CS_COURSES:
+            cursor.execute(
+                """INSERT INTO courses (title, description, department, category, difficulty, prerequisites, credits, tags)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (title, desc, dept, cat, diff, prereq, creds, json.dumps(tags))
+            )
+        print(f"Successfully seeded {len(COURSES) + len(CS_COURSES)} courses.")
 
     conn.commit()
     conn.close()
