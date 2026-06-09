@@ -92,18 +92,28 @@ def patch_db(db_path=None):
         print("Adding column video_url to module_lessons...")
         cursor.execute("ALTER TABLE module_lessons ADD COLUMN video_url TEXT")
 
-    # 8. Check and seed courses if fewer than 500
+    # 8. Check and seed courses if empty or >= 500 (migrating back to custom courses)
     cursor.execute("SELECT COUNT(*) FROM courses")
     count = cursor.fetchone()[0]
-    if count < 500:
-        print("Fewer than 500 courses found. Seeding the massive curriculum of 595 courses...")
+    if count >= 500 or count == 0:
+        print("Migrating back to the custom 134 course catalog from seed_data_v2.py...")
         cursor.execute("DELETE FROM courses")
+        try:
+            cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'courses'")
+        except Exception:
+            pass
+        # Clear student_courses, recommendations, and modules
+        cursor.execute("DELETE FROM student_courses")
+        cursor.execute("DELETE FROM recommendations")
+        cursor.execute("DELETE FROM course_modules")
+        
         import sys
+        root_dir = os.path.dirname(os.path.abspath(__file__))
+        if root_dir not in sys.path:
+            sys.path.append(root_dir)
         import json
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-        from models.courses_generator import generate_all_courses
-        generated_courses = generate_all_courses()
-        for title, desc, dept, cat, diff, prereq, creds, tags in generated_courses:
+        from seed_data_v2 import COURSES
+        for title, desc, dept, cat, diff, prereq, creds, tags in COURSES:
             cursor.execute(
                 """INSERT INTO courses (title, description, department, category, difficulty, prerequisites, credits, tags)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",

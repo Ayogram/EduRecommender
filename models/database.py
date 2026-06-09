@@ -247,9 +247,9 @@ def init_db():
     db.executescript(db_schema)
     db.commit()
     
-    # Check if courses are empty or fewer than 500 (meaning we need to seed the massive curriculum)
+    # Restore the custom course catalog of 134 courses from seed_data_v2.py
     count = db.execute("SELECT COUNT(*) FROM courses").fetchone()[0]
-    if count < 500:
+    if count >= 500 or count == 0:
         db.execute("DELETE FROM courses")
         if not db.is_postgres:
             try:
@@ -257,9 +257,19 @@ def init_db():
             except Exception:
                 pass
         db.commit()
-        from models.courses_generator import generate_all_courses
-        generated_courses = generate_all_courses()
-        for title, desc, dept, cat, diff, prereq, creds, tags in generated_courses:
+        
+        # Clear student_courses and recommendations to prevent invalid foreign keys pointing to deleted courses
+        db.execute("DELETE FROM student_courses")
+        db.execute("DELETE FROM recommendations")
+        db.execute("DELETE FROM course_modules")
+        db.commit()
+        
+        import sys
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root_dir not in sys.path:
+            sys.path.append(root_dir)
+        from seed_data_v2 import COURSES
+        for title, desc, dept, cat, diff, prereq, creds, tags in COURSES:
             db.execute(
                 """INSERT INTO courses (title, description, department, category, difficulty, prerequisites, credits, tags)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",

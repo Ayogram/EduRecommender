@@ -143,6 +143,15 @@ def seed():
 
     # Clear existing courses to avoid duplicates during testing
     cursor.execute("DELETE FROM courses")
+    try:
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'courses'")
+    except Exception:
+        pass
+        
+    # Clear progress and recommendations to keep database references consistent
+    cursor.execute("DELETE FROM student_courses")
+    cursor.execute("DELETE FROM recommendations")
+    cursor.execute("DELETE FROM course_modules")
 
     for title, desc, dept, cat, diff, prereq, creds, tags in COURSES:
         cursor.execute(
