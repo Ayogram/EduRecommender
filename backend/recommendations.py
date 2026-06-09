@@ -181,7 +181,66 @@ def enroll(course_id):
     return redirect(url_for("recommendations.course_details", course_id=course_id))
 
 
+@recs_bp.route("/unenroll/<int:course_id>", methods=["POST"])
+@login_required
+def unenroll(course_id):
+    """Unenroll the current user from a course, deleting all progress and exam results."""
+    db = get_db()
+    
+    # Verify enrollment exists
+    enrollment = db.execute(
+        "SELECT id FROM student_courses WHERE user_id = ? AND course_id = ?",
+        (current_user.id, course_id),
+    ).fetchone()
+    
+    if not enrollment:
+        flash("You are not enrolled in this course.", "error")
+        return redirect(url_for("main.dashboard"))
+        
+    course = Course.get_by_id(course_id)
+    if not course:
+        flash("Course not found.", "error")
+        return redirect(url_for("main.dashboard"))
+        
+    # Get all module IDs for this course
+    modules = db.execute(
+        "SELECT id FROM course_modules WHERE course_id = ?",
+        (course_id,)
+    ).fetchall()
+    module_ids = [m['id'] for m in modules]
+    
+    # Delete exam results for this course's modules
+    if module_ids:
+        placeholders = ",".join("?" for _ in module_ids)
+        db.execute(
+            f"DELETE FROM exam_results WHERE user_id = ? AND module_id IN ({placeholders})",
+            [current_user.id] + module_ids
+        )
+        
+    # Delete enrollment record
+    db.execute(
+        "DELETE FROM student_courses WHERE user_id = ? AND course_id = ?",
+        (current_user.id, course_id)
+    )
+    
+    # Insert notification
+    db.execute(
+        "INSERT INTO notifications (user_id, message) VALUES (?, ?)",
+        (current_user.id, f"Successfully unenrolled from {course.title}. All progress and exam history have been reset.")
+    )
+    db.commit()
+    
+    # Sync session's enrolled_courses
+    from flask import session
+    enrolled_db = db.execute("SELECT course_id FROM student_courses WHERE user_id = ?", (current_user.id,)).fetchall()
+    session['enrolled_courses'] = [r['course_id'] for r in enrolled_db]
+    
+    flash(f"Successfully unenrolled from {course.title}.", "success")
+    return redirect(url_for("main.dashboard"))
+
+
 @recs_bp.route("/rate/<int:course_id>", methods=["POST"])
+
 @login_required
 def rate_course(course_id):
     """Rate and update course progress the user is enrolled in."""

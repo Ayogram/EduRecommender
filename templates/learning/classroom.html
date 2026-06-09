@@ -14,7 +14,7 @@
 <div class="classroom-container fade-in">
   <div class="row g-0 h-100">
     <!-- Sidebar (Course Navigation) -->
-    <div class="col-lg-3 col-md-4 classroom-sidebar border-end bg-white">
+    <div class="col-lg-3 col-md-4 classroom-sidebar border-end bg-white order-2 order-md-1">
       <div class="p-4 border-bottom bg-light">
         <h6 class="text-uppercase small fw-bold text-muted tracking-wide mb-1">Current Course</h6>
         <h5 class="fw-bold mb-0 text-dark" style="font-size:0.95rem; line-height: 1.4;">{{ course.title if course else module.course_id }}</h5> 
@@ -64,11 +64,11 @@
     </div>
 
     <!-- Main Content Area -->
-    <div class="col-lg-9 col-md-8 classroom-main bg-light">
+    <div class="col-lg-9 col-md-8 classroom-main bg-light order-1 order-md-2">
       <div class="content-wrapper p-4 p-md-5">
         
         <!-- Modern Custom Video Player (Udemy Style) -->
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-dark position-relative" style="height: 440px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-dark position-relative video-player-container" style="box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
           {% if current_lesson.video_url %}
             <iframe id="classroom-video" class="w-100 h-100" src="{{ current_lesson.video_url }}?autoplay=1&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border: none;"></iframe>
           {% else %}
@@ -194,6 +194,20 @@
 </div>
 
 <style>
+.video-player-container {
+  height: 440px;
+}
+@media (max-width: 991px) {
+  .video-player-container {
+    height: 320px;
+  }
+}
+@media (max-width: 576px) {
+  .video-player-container {
+    height: 220px;
+  }
+}
+
 .classroom-container {
   height: auto;
   min-height: calc(100vh - 120px);

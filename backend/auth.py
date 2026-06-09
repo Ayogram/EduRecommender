@@ -355,8 +355,8 @@ def login():
         save_user_to_session(user)
         flash(f"Welcome back, {user.name}!", "success")
         
-        # Onboarding redirect: only send to complete_profile if never completed before
-        if not getattr(user, 'profile_completed', 0):
+        # Onboarding redirect: only send to complete_profile if academic field or department is missing
+        if not user.academic_field or not user.department:
             return redirect(url_for("auth.complete_profile"))
 
         next_page = request.args.get("next")
@@ -453,8 +453,8 @@ def google_callback():
         save_user_to_session(user)
         flash(f"Welcome, {user.name}!", "success")
         
-        # Onboarding redirect: only send to complete_profile if never completed before
-        if not getattr(user, 'profile_completed', 0):
+        # Onboarding redirect: only send to complete_profile if academic field or department is missing
+        if not user.academic_field or not user.department:
             return redirect(url_for("auth.complete_profile"))
 
         return redirect(url_for("main.dashboard"))
