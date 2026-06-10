@@ -550,7 +550,7 @@ def get_lesson_video(lesson_title: str, course_title: str = "") -> str:
     course_lower = course_title.lower().strip()
 
     # Java override logic to prevent Java courses from showing Python videos
-    is_java = "java" in course_lower or "csc 212" in course_lower
+    is_java = "java" in course_lower
     if is_java:
         JAVA_MAP = {
             "introduction to programming concepts": "https://www.youtube.com/embed/xk4_1vDrzzo", # Java Full Course

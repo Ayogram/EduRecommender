@@ -92,11 +92,14 @@ def patch_db(db_path=None):
         print("Adding column video_url to module_lessons...")
         cursor.execute("ALTER TABLE module_lessons ADD COLUMN video_url TEXT")
 
-    # 8. Check and seed courses if empty, < 110, or >= 500 (migrating to the full 112 course catalog)
+    # 8. Check and seed courses if empty, < 110, or >= 500, or if database contains old course codes
+    cursor.execute("SELECT COUNT(*) FROM courses WHERE title LIKE 'CSC %' OR title LIKE 'MAT %'")
+    has_codes = cursor.fetchone()[0] > 0
+
     cursor.execute("SELECT COUNT(*) FROM courses")
     count = cursor.fetchone()[0]
-    if count < 110 or count >= 500:
-        print("Migrating to the custom 112 course catalog (seed_data_v2 + seed_cs_curriculum)...")
+    if count < 110 or count >= 500 or has_codes:
+        print("Migrating to the custom 112 course catalog without course codes...")
         cursor.execute("DELETE FROM courses")
         try:
             cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'courses'")
@@ -121,25 +124,25 @@ def patch_db(db_path=None):
             )
 
         CS_COURSES = [
-            ("CSC 111", "History, hardware, software, and basic logic.", "Computer Science", "Computer Science", "beginner", "None", 3, ["Basics", "Intro"]),
-            ("CSC 121", "Introductory programming concepts using Python.", "Computer Science", "Computer Science", "beginner", "None", 4, ["Python", "Programming"]),
-            ("MAT 111", "Fundamental math for scientists.", "Others", "Others", "beginner", "None", 3, ["Math", "Algebra"]),
-            ("CSC 211", "Arrays, Linked Lists, Stacks, Queues, and Trees.", "Computer Science", "Computer Science", "intermediate", "CSC 121", 4, ["Data Structures", "Algorithms"]),
-            ("CSC 212", "Classes, inheritance, and polymorphism in Java.", "Computer Science", "Computer Science", "intermediate", "CSC 121", 4, ["Java", "OOP"]),
-            ("CSC 221", "Digital logic, CPU design, and assembly language.", "Computer Science", "Computer Science", "intermediate", "CSC 111", 3, ["Hardware", "Digital Logic"]),
-            ("CSC 222", "Sets, graphs, and combinatorics for CS.", "Others", "Others", "intermediate", "MAT 111", 3, ["Math", "Discrete"]),
-            ("CSC 311", "Kernels, processes, memory management, and file systems.", "Computer Science", "Computer Science", "intermediate", "CSC 211, CSC 221", 4, ["OS", "Systems"]),
-            ("CSC 312", "Relational algebra, SQL, and database design.", "Computer Science", "Computer Science", "intermediate", "CSC 211", 4, ["SQL", "Databases"]),
-            ("CSC 313", "SDLC, requirements, and system design.", "Computer Science", "Computer Science", "intermediate", "CSC 212", 3, ["SE", "Design"]),
-            ("CSC 321", "Big O notation, sorting, and dynamic programming.", "Computer Science", "Computer Science", "intermediate", "CSC 211", 3, ["Algorithms", "Logic"]),
-            ("CSC 322", "Automata, formal languages, and computability.", "Computer Science", "Computer Science", "intermediate", "CSC 222", 3, ["Theory", "Automata"]),
-            ("CSC 323", "OSI model, TCP/IP, and network security.", "Computer Science", "Computer Science", "intermediate", "CSC 311", 3, ["Networking", "TCP/IP"]),
-            ("CSC 411", "Search algorithms, expert systems, and ML basics.", "Computer Science", "Computer Science", "advanced", "CSC 321, MAT 111", 4, ["AI", "Intelligence"]),
-            ("CSC 412", "UI/UX design principles and user testing.", "Computer Science", "Computer Science", "advanced", "CSC 313", 3, ["UI", "UX"]),
-            ("CSC 413", "Lexical analysis, parsing, and code generation.", "Computer Science", "Computer Science", "advanced", "CSC 322", 3, ["Compilers", "Languages"]),
-            ("CSC 421", "Supervised, unsupervised and deep learning.", "Computer Science", "Computer Science", "advanced", "CSC 411, MAT 111", 4, ["ML", "Data Science"]),
-            ("CSC 422", "Agile, Waterfall, and project tracking.", "Computer Science", "Computer Science", "advanced", "CSC 313", 3, ["Management", "PM"]),
-            ("CSC 499", "Independent research and development.", "Computer Science", "Computer Science", "advanced", "All 300 Level", 6, ["Research", "Development"])
+            ("Introduction to Computing", "History, hardware, software, and basic logic.", "Computer Science", "Computer Science", "beginner", "None", 3, ["Basics", "Intro"]),
+            ("Programming in Python", "Introductory programming concepts using Python.", "Computer Science", "Computer Science", "beginner", "None", 4, ["Python", "Programming"]),
+            ("Algebra and Trigonometry", "Fundamental math for scientists.", "Others", "Others", "beginner", "None", 3, ["Math", "Algebra"]),
+            ("Data Structures", "Arrays, Linked Lists, Stacks, Queues, and Trees.", "Computer Science", "Computer Science", "intermediate", "Programming in Python", 4, ["Data Structures", "Algorithms"]),
+            ("Java Programming", "Classes, inheritance, and polymorphism in Java.", "Computer Science", "Computer Science", "intermediate", "Programming in Python", 4, ["Java", "OOP"]),
+            ("Computer Architecture", "Digital logic, CPU design, and assembly language.", "Computer Science", "Computer Science", "intermediate", "Introduction to Computing", 3, ["Hardware", "Digital Logic"]),
+            ("Discrete Mathematics", "Sets, graphs, and combinatorics for CS.", "Others", "Others", "intermediate", "Algebra and Trigonometry", 3, ["Math", "Discrete"]),
+            ("Operating Systems", "Kernels, processes, memory management, and file systems.", "Computer Science", "Computer Science", "intermediate", "Data Structures, Computer Architecture", 4, ["OS", "Systems"]),
+            ("Database Management Systems", "Relational algebra, SQL, and database design.", "Computer Science", "Computer Science", "intermediate", "Data Structures", 4, ["SQL", "Databases"]),
+            ("Software Engineering I", "SDLC, requirements, and system design.", "Computer Science", "Computer Science", "intermediate", "Java Programming", 3, ["SE", "Design"]),
+            ("Algorithm Design & Analysis", "Big O notation, sorting, and dynamic programming.", "Computer Science", "Computer Science", "intermediate", "Data Structures", 3, ["Algorithms", "Logic"]),
+            ("Theory of Computation", "Automata, formal languages, and computability.", "Computer Science", "Computer Science", "intermediate", "Discrete Mathematics", 3, ["Theory", "Automata"]),
+            ("Computer Networks", "OSI model, TCP/IP, and network security.", "Computer Science", "Computer Science", "intermediate", "Operating Systems", 3, ["Networking", "TCP/IP"]),
+            ("Artificial Intelligence", "Search algorithms, expert systems, and ML basics.", "Computer Science", "Computer Science", "advanced", "Algorithm Design & Analysis, Algebra and Trigonometry", 4, ["AI", "Intelligence"]),
+            ("Human Computer Interaction", "UI/UX design principles and user testing.", "Computer Science", "Computer Science", "advanced", "Software Engineering I", 3, ["UI", "UX"]),
+            ("Compiler Construction", "Lexical analysis, parsing, and code generation.", "Computer Science", "Computer Science", "advanced", "Theory of Computation", 3, ["Compilers", "Languages"]),
+            ("Machine Learning", "Supervised, unsupervised and deep learning.", "Computer Science", "Computer Science", "advanced", "Artificial Intelligence, Algebra and Trigonometry", 4, ["ML", "Data Science"]),
+            ("Project Management", "Agile, Waterfall, and project tracking.", "Computer Science", "Computer Science", "advanced", "Software Engineering I", 3, ["Management", "PM"]),
+            ("Final Year Project", "Independent research and development.", "Computer Science", "Computer Science", "advanced", "Operating Systems, Database Management Systems, Software Engineering I, Algorithm Design & Analysis, Theory of Computation, Computer Networks", 6, ["Research", "Development"])
         ]
         for title, desc, dept, cat, diff, prereq, creds, tags in CS_COURSES:
             cursor.execute(

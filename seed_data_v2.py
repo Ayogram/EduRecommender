@@ -102,7 +102,7 @@ COURSES = [
 
     # Business Administration
     ("Principles of Management", "Core management theories and practices.", "Business Administration", "Management", "beginner", "None", 3, ["management", "business", "leadership"]),
-    ("Management Information", "Study of the design, implementation, and strategic management of information systems (MIS) in corporate organizations to support business decision-making, operational control, and competitive advantage.", "Business Administration", "Management", "intermediate", "Principles of Management (3 Units)", 3, ["management", "information systems", "business", "technology", "database"]),
+    ("Management Information", "Study of the design, implementation, and strategic management of information systems (MIS) in corporate organizations to support business decision-making, operational control, and competitive advantage.", "Business Administration", "Management", "intermediate", "Principles of Management", 3, ["management", "information systems", "business", "technology", "database"]),
     ("Strategic Marketing", "Advanced marketing strategies for global brands.", "Business Administration", "Marketing", "advanced", "Principles of Management", 3, ["marketing", "strategy", "branding"]),
     ("Business Ethics", "Moral principles in the world of business.", "Business Administration", "Business Ethics", "intermediate", "None", 2, ["ethics", "philosophy", "business"]),
     ("Strategic Management & Leadership", "Analyzing market environments, mapping competitive advantages, setting corporate goals, and leading organizational growth.", "Business Administration", "Management", "beginner", "None", 3, ["strategy", "leadership", "management", "corporate"]),
