@@ -59,8 +59,15 @@ class Course:
 
     @staticmethod
     def search(query):
-        rows = get_db().execute(
-            "SELECT * FROM courses WHERE title LIKE ? OR description LIKE ? OR category LIKE ? OR department LIKE ?",
-            (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"),
-        ).fetchall()
+        db = get_db()
+        if db.is_postgres:
+            rows = db.execute(
+                "SELECT * FROM courses WHERE title ILIKE ? OR description ILIKE ? OR category ILIKE ? OR department ILIKE ?",
+                (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"),
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT * FROM courses WHERE title LIKE ? OR description LIKE ? OR category LIKE ? OR department LIKE ?",
+                (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"),
+            ).fetchall()
         return [Course(r) for r in rows]

@@ -273,10 +273,16 @@ def autocomplete_courses():
         return jsonify([])
     db = get_db()
     # Search for matching courses
-    rows = db.execute(
-        "SELECT id, title, department FROM courses WHERE title LIKE ? LIMIT 10",
-        (f"%{q}%",)
-    ).fetchall()
+    if db.is_postgres:
+        rows = db.execute(
+            "SELECT id, title, department FROM courses WHERE title ILIKE ? LIMIT 10",
+            (f"%{q}%",)
+        ).fetchall()
+    else:
+        rows = db.execute(
+            "SELECT id, title, department FROM courses WHERE title LIKE ? LIMIT 10",
+            (f"%{q}%",)
+        ).fetchall()
     results = [{"id": r["id"], "title": r["title"], "department": r["department"]} for r in rows]
     return jsonify(results)
 

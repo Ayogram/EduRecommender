@@ -101,7 +101,10 @@ class User(UserMixin):
         params = []
 
         if search:
-            sql += " AND (name LIKE ? OR email LIKE ? OR academic_field LIKE ?)"
+            if db.is_postgres:
+                sql += " AND (name ILIKE ? OR email ILIKE ? OR academic_field ILIKE ?)"
+            else:
+                sql += " AND (name LIKE ? OR email LIKE ? OR academic_field LIKE ?)"
             q = f"%{search}%"
             params.extend([q, q, q])
         

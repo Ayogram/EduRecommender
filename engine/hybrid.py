@@ -833,7 +833,10 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
             except (ValueError, TypeError):
                 pass
             if not p_row:
-                p_row = db.execute("SELECT title, department, category FROM courses WHERE title LIKE ?", (f"%{p_course}%",)).fetchone()
+                if db.is_postgres:
+                    p_row = db.execute("SELECT title, department, category FROM courses WHERE title ILIKE ?", (f"%{p_course}%",)).fetchone()
+                else:
+                    p_row = db.execute("SELECT title, department, category FROM courses WHERE title LIKE ?", (f"%{p_course}%",)).fetchone()
                 
             if p_row:
                 p_title = p_row["title"]
