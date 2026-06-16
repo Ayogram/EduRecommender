@@ -315,7 +315,7 @@ def create_app():
         for i, row in enumerate(rankings):
             d = dict(row)
             d['rank'] = i + 1
-            d['avg_score'] = round(d['avg_score'], 1) if d['avg_score'] is not None else 0.0
+            d['avg_score'] = round(float(d['avg_score']), 1) if d['avg_score'] is not None else 0.0
             ranking_list.append(d)
             
         return render_template("leaderboard.html", rankings=ranking_list)

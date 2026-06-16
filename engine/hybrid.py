@@ -267,7 +267,7 @@ def get_recommendations(user_id, top_n=10):
            WHERE sc.user_id = ? GROUP BY c.department""",
         (user_id,)
     ).fetchall()
-    dept_performance_map = {r["department"]: r["avg_grade"] for r in history_rows if r["department"]}
+    dept_performance_map = {r["department"]: float(r["avg_grade"]) if r["avg_grade"] is not None else 0.0 for r in history_rows if r["department"]}
 
     candidates = []
     for course_id, score in combined.items():
@@ -711,7 +711,7 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
         
         if peer_stats:
             peer_count = peer_stats["count"] or 0
-            avg_peer_rating = peer_stats["avg_rating"] or 4.0
+            avg_peer_rating = float(peer_stats["avg_rating"]) if peer_stats["avg_rating"] is not None else 4.0
             passing = peer_stats["passing"] or 0
             fails = peer_stats["fails"] or 0
             if peer_count > 0:
