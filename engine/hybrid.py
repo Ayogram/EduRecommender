@@ -660,10 +660,16 @@ def predict_performance_detailed(user_id, course_title_or_id, sim_gpa=None, sim_
         pass
         
     if not course_row:
-        course_row = db.execute(
-            "SELECT * FROM courses WHERE title LIKE ? COLLATE NOCASE", 
-            (str(course_title_or_id).strip(),)
-        ).fetchone()
+        if db.is_postgres:
+            course_row = db.execute(
+                "SELECT * FROM courses WHERE title ILIKE ?", 
+                (str(course_title_or_id).strip(),)
+            ).fetchone()
+        else:
+            course_row = db.execute(
+                "SELECT * FROM courses WHERE title LIKE ? COLLATE NOCASE", 
+                (str(course_title_or_id).strip(),)
+            ).fetchone()
         
     if not course_row:
         mock_data = _infer_course_metadata(str(course_title_or_id))

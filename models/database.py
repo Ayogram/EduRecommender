@@ -191,7 +191,10 @@ class DBWrapper:
     def execute(self, query, params=()):
         q = self._convert_query(query)
         cursor = self.conn.conn.cursor() if hasattr(self.conn, 'conn') else self.conn.cursor()
-        cursor.execute(q, params)
+        if params:
+            cursor.execute(q, params)
+        else:
+            cursor.execute(q)
         return cursor
 
     def executescript(self, script):
