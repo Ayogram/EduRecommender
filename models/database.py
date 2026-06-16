@@ -256,6 +256,11 @@ def init_db():
                 db.execute("DELETE FROM sqlite_sequence WHERE name = 'courses'")
             except Exception:
                 pass
+        else:
+            try:
+                db.execute("ALTER SEQUENCE courses_id_seq RESTART WITH 1")
+            except Exception:
+                pass
         db.commit()
         
         # Clear student_courses and recommendations to prevent invalid foreign keys pointing to deleted courses

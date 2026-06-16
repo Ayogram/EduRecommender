@@ -1519,13 +1519,23 @@ div.interest-chip {
    RESPONSIVE
    ══════════════════════════════════════════════════════════════ */
 
-@media (max-width: 1024px) {
-  .top-cards-grid { grid-template-columns: repeat(2, 1fr); }
-  .bottom-grid { grid-template-columns: 1fr; }
-  .updates-panel { display: block; width: 100%; margin-top: 20px; }
+/* Recommendation Card Content Responsiveness */
+.rec-card-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  padding: 24px 28px;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .rec-card-content {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 16px;
+  }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .mobile-toggle { display: flex; align-items: center; justify-content: center; }
 
   .sidebar {
@@ -1539,16 +1549,24 @@ div.interest-chip {
 
   .page-content { padding: 20px; }
 
-  .top-cards-grid { grid-template-columns: 1fr; }
-
-  .topbar { padding: 0 20px; }
+  .topbar {
+    padding-left: 60px !important; /* Make room for the mobile toggle button */
+  }
   .topbar-search { display: none; }
 
+  .bottom-grid { grid-template-columns: 1fr; }
+  .updates-panel { display: block; width: 100%; margin-top: 20px; }
+
+  .top-cards-grid { grid-template-columns: repeat(2, 1fr); }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .rec-grid { grid-template-columns: 1fr; }
   .course-grid { grid-template-columns: 1fr; }
   .metrics-bar { flex-direction: column; gap: 10px; }
   .auth-card { padding: 28px 20px; }
+}
+
+@media (max-width: 768px) {
+  .top-cards-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
